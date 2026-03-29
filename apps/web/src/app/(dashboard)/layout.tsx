@@ -149,6 +149,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">{children}</main>
+
+      <footer className="border-t border-emerald-900/20 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between text-xs text-gray-600">
+          <span>MeetNotes HK</span>
+          <div className="flex gap-4">
+            <Link href="/privacy" className="hover:text-gray-400 transition">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-gray-400 transition">Terms of Service</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

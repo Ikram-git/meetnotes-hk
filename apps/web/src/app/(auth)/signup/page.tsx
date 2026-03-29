@@ -11,10 +11,12 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [agreed, setAgreed] = useState(false);
   const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!agreed) { setError('Please agree to the Privacy Policy and Terms of Service.'); return; }
     setLoading(true);
     setError(null);
 
@@ -105,7 +107,17 @@ export default function SignupPage() {
               <input id="password" type="password" autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-white/5 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition" placeholder="Min 6 characters" />
             </div>
-            <button type="submit" disabled={loading}
+            <div className="flex items-start gap-2.5">
+              <input id="agree" type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-gray-700 bg-white/5 text-emerald-500 focus:ring-emerald-500/30 focus:ring-offset-0" />
+              <label htmlFor="agree" className="text-xs text-gray-500 leading-relaxed">
+                I agree to the{' '}
+                <Link href="/privacy" target="_blank" className="text-emerald-400 hover:underline">Privacy Policy</Link>
+                {' '}and{' '}
+                <Link href="/terms" target="_blank" className="text-emerald-400 hover:underline">Terms of Service</Link>
+              </label>
+            </div>
+            <button type="submit" disabled={loading || !agreed}
               className="w-full bg-emerald-500 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-emerald-400 transition disabled:opacity-50">
               {loading ? 'Creating account...' : 'Create account'}
             </button>
