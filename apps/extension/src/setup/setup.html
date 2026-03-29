@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MeetNotes HK - Setup</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: #080c0a;
+      color: #f0fdf4;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #111916;
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 400px;
+      text-align: center;
+    }
+    h1 { font-size: 22px; color: #34d399; margin-bottom: 8px; }
+    p { color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+    button {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover { background: #059669; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    .success { color: #34d399; font-size: 15px; font-weight: 600; }
+    .error { color: #f87171; font-size: 13px; margin-top: 12px; }
+    #status { margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>MeetNotes HK</h1>
+    <p>To record meetings with your voice included, we need microphone access. Click below and allow when prompted.</p>
+    <button id="grant">Allow Microphone Access</button>
+    <div id="status"></div>
+  </div>
+  <script src="setup.js"></script>
+</body>
+</html>
