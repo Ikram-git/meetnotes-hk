@@ -55,3 +55,4 @@ apps/extension/build/
 
 # OS
 Thumbs.db
+vercel-env.env
