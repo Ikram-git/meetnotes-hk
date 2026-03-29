@@ -27,7 +27,7 @@ export default function SignupPage() {
     });
 
     if (error) { setError(error.message); setLoading(false); }
-    else { router.push('/meetings'); }
+    else { router.push('/'); }
   };
 
   const handleGoogleSignup = async () => {

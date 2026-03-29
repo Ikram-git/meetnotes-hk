@@ -26,7 +26,7 @@ export default async function LandingPage() {
             {isLoggedIn ? (
               <>
                 <Link href="/meetings" className="text-sm font-medium text-gray-400 hover:text-white transition px-4 py-2">
-                  My Meetings
+                  Dashboard
                 </Link>
                 <Link href="/upload" className="text-sm font-medium bg-emerald-500 text-white px-5 py-2 rounded-lg hover:bg-emerald-400 transition">
                   Upload Meeting
@@ -67,11 +67,11 @@ export default async function LandingPage() {
           <div className="flex items-center justify-center gap-4">
             {isLoggedIn ? (
               <>
-                <Link href="/upload" className="bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
-                  Upload Meeting
+                <Link href="/meetings" className="bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
+                  Go to Dashboard
                 </Link>
-                <Link href="/meetings" className="text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
-                  My Meetings
+                <Link href="/upload" className="text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
+                  Upload Meeting
                 </Link>
               </>
             ) : (
@@ -187,8 +187,8 @@ export default async function LandingPage() {
             {isLoggedIn ? 'Upload a recording or use the Chrome extension to capture your next meeting.' : 'Start with 300 free minutes every month. No credit card required.'}
           </p>
           {isLoggedIn ? (
-            <Link href="/upload" className="inline-block bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
-              Upload Meeting
+            <Link href="/meetings" className="inline-block bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
+              Go to Dashboard
             </Link>
           ) : (
             <Link href="/signup" className="inline-block bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
