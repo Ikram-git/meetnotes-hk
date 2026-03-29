@@ -51,7 +51,7 @@ function App() {
       if (message.type === 'UPLOAD_COMPLETE') {
         setMeetingId(message.meetingId);
         setScreen('done');
-        chrome.tabs.create({ url: `http://localhost:3000/meetings/${message.meetingId}` });
+        chrome.tabs.create({ url: `https://meetnotes-g1iih3ne9-sattarikram81-7707s-projects.vercel.app/meetings/${message.meetingId}` });
       }
       if (message.type === 'UPLOAD_ERROR') {
         setErrorMsg(message.error || 'Upload failed');
@@ -246,7 +246,7 @@ function App() {
             <p>Uploaded successfully!</p>
             <p className="small">Your meeting is being transcribed and summarised. The page opened automatically.</p>
             <button
-              onClick={() => chrome.tabs.create({ url: `http://localhost:3000/meetings/${meetingId}` })}
+              onClick={() => chrome.tabs.create({ url: `https://meetnotes-g1iih3ne9-sattarikram81-7707s-projects.vercel.app/meetings/${meetingId}` })}
               className="btn btn-primary"
             >
               View Meeting

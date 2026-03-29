@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = process.env.NODE_ENV === 'production'
+  ? 'https://meetnotes-g1iih3ne9-sattarikram81-7707s-projects.vercel.app'
+  : 'http://localhost:3000';
 
 export async function uploadAudio(blob: Blob, filename: string, token: string | null) {
   const formData = new FormData();

@@ -12,6 +12,8 @@
   ],
   "host_permissions": [
     "http://localhost:3000/*",
+    "https://meetnotes-g1iih3ne9-sattarikram81-7707s-projects.vercel.app/*",
+    "https://*.vercel.app/*",
     "https://meet.google.com/*",
     "https://zoom.us/*",
     "https://*.zoom.us/*",
