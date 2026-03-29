@@ -1,6 +1,14 @@
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  let isLoggedIn = false;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    isLoggedIn = !!user;
+  } catch {}
+
   return (
     <div className="min-h-screen bg-[#080c0a]">
       {/* Navbar */}
@@ -15,12 +23,25 @@ export default function LandingPage() {
             <span className="text-xl font-bold text-white">MeetNotes <span className="text-emerald-400">HK</span></span>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm font-medium text-gray-400 hover:text-white transition px-4 py-2">
-              Log in
-            </Link>
-            <Link href="/signup" className="text-sm font-medium bg-emerald-500 text-white px-5 py-2 rounded-lg hover:bg-emerald-400 transition">
-              Get Started
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link href="/meetings" className="text-sm font-medium text-gray-400 hover:text-white transition px-4 py-2">
+                  My Meetings
+                </Link>
+                <Link href="/upload" className="text-sm font-medium bg-emerald-500 text-white px-5 py-2 rounded-lg hover:bg-emerald-400 transition">
+                  Upload Meeting
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm font-medium text-gray-400 hover:text-white transition px-4 py-2">
+                  Log in
+                </Link>
+                <Link href="/signup" className="text-sm font-medium bg-emerald-500 text-white px-5 py-2 rounded-lg hover:bg-emerald-400 transition">
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -44,12 +65,25 @@ export default function LandingPage() {
             The first meeting notes tool built for English + Cantonese code-mixed conversations. Record, transcribe, and get AI summaries in seconds.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Link href="/signup" className="bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
-              Start Free
-            </Link>
-            <a href="#features" className="text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
-              Learn more
-            </a>
+            {isLoggedIn ? (
+              <>
+                <Link href="/upload" className="bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
+                  Upload Meeting
+                </Link>
+                <Link href="/meetings" className="text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
+                  My Meetings
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/signup" className="bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
+                  Start Free
+                </Link>
+                <a href="#features" className="text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
+                  Learn more
+                </a>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -146,11 +180,21 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to transform your meetings?</h2>
-          <p className="text-lg text-gray-500 mb-8">Start with 300 free minutes every month. No credit card required.</p>
-          <Link href="/signup" className="inline-block bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
-            Get Started Free
-          </Link>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            {isLoggedIn ? 'Ready for your next meeting?' : 'Ready to transform your meetings?'}
+          </h2>
+          <p className="text-lg text-gray-500 mb-8">
+            {isLoggedIn ? 'Upload a recording or use the Chrome extension to capture your next meeting.' : 'Start with 300 free minutes every month. No credit card required.'}
+          </p>
+          {isLoggedIn ? (
+            <Link href="/upload" className="inline-block bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
+              Upload Meeting
+            </Link>
+          ) : (
+            <Link href="/signup" className="inline-block bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
+              Get Started Free
+            </Link>
+          )}
         </div>
       </section>
 
@@ -165,7 +209,10 @@ export default function LandingPage() {
             </div>
             <span>MeetNotes HK</span>
           </div>
-          <span>Built for Hong Kong</span>
+          <div className="flex gap-4">
+            <Link href="/privacy" className="hover:text-gray-400 transition">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-gray-400 transition">Terms of Service</Link>
+          </div>
         </div>
       </footer>
     </div>
