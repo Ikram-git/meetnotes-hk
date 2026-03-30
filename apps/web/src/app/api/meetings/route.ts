@@ -23,3 +23,42 @@ export async function GET() {
 
   return NextResponse.json(meetings);
 }
+
+export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+
+  // Try cookie auth first, then Bearer token
+  let { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    const token = req.headers.get('authorization')?.replace('Bearer ', '');
+    if (token) {
+      const { data } = await supabase.auth.getUser(token);
+      user = data.user;
+    }
+  }
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await req.json();
+
+  const { data: meeting, error } = await supabase
+    .from('meetings')
+    .insert({
+      user_id: user.id,
+      audio_storage_path: body.audio_storage_path,
+      audio_format: body.audio_format,
+      audio_size_bytes: body.audio_size_bytes,
+      source: body.source || 'upload',
+      status: 'uploaded',
+    })
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json(meeting);
+}

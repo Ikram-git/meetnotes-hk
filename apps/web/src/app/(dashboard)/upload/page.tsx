@@ -18,12 +18,45 @@ export default function UploadPage() {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { setError('Please sign in to upload.'); setUploading(false); return; }
-      const formData = new FormData();
-      formData.append('audio', file);
-      const response = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${session.access_token}` }, body: formData });
+
+      const userId = session.user.id;
+      const fileId = crypto.randomUUID();
+      const ext = file.name.split('.').pop() || 'webm';
+      const storagePath = `${userId}/${fileId}.${ext}`;
+
+      // Upload directly to Supabase Storage (bypasses Vercel 4.5MB limit)
+      let contentType = file.type;
+      if (contentType === 'video/mp4') contentType = 'audio/mp4';
+      if (contentType === 'video/webm') contentType = 'audio/webm';
+
+      const { error: uploadError } = await supabase.storage
+        .from('meeting-audio')
+        .upload(storagePath, file, { contentType, upsert: false });
+
+      if (uploadError) { setError(`Upload failed: ${uploadError.message}`); setUploading(false); return; }
+
+      // Create meeting record via API (small JSON payload, no size issue)
+      const response = await fetch('/api/meetings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({
+          audio_storage_path: storagePath,
+          audio_format: ext,
+          audio_size_bytes: file.size,
+          source: 'upload',
+        }),
+      });
       const data = await response.json();
-      if (!response.ok) { setError(data.error || 'Upload failed.'); setUploading(false); return; }
-      router.push(`/meetings/${data.meetingId}`);
+      if (!response.ok) { setError(data.error || 'Failed to create meeting.'); setUploading(false); return; }
+
+      // Trigger transcription
+      fetch('/api/transcribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ meetingId: data.id }),
+      }).catch(console.error);
+
+      router.push(`/meetings/${data.id}`);
     } catch { setError('Upload failed. Please try again.'); setUploading(false); }
   };
 
