@@ -4,73 +4,64 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { UploadDropzone } from '@/components/upload-dropzone';
-import { compressAudio } from '@/lib/compress-audio';
+import * as tus from 'tus-js-client';
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('');
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleUpload = async () => {
     if (!file) return;
-    setUploading(true); setError(null);
+    setUploading(true); setError(null); setProgress(0);
     try {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { setError('Please sign in to upload.'); setUploading(false); return; }
 
-      // Compress if over 45MB
-      let uploadFile = file;
-      if (file.size > 45 * 1024 * 1024) {
-        setStatus('Compressing audio...');
-        try {
-          uploadFile = await compressAudio(file, (p) => setStatus(`Compressing... ${p}%`));
-        } catch (err) {
-          console.error('Compression failed, uploading original:', err);
-          uploadFile = file;
-        }
-      }
-
-      setStatus('Uploading...');
-
       const userId = session.user.id;
       const fileId = crypto.randomUUID();
-      const ext = uploadFile.name.split('.').pop() || 'webm';
+      const ext = file.name.split('.').pop() || 'webm';
       const storagePath = `${userId}/${fileId}.${ext}`;
 
-      let contentType = uploadFile.type;
+      let contentType = file.type;
       if (contentType === 'video/mp4') contentType = 'audio/mp4';
       if (contentType === 'video/webm') contentType = 'audio/webm';
 
-      // Get signed upload URL via API (uses service role)
-      const signRes = await fetch('/api/upload/signed-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-        body: JSON.stringify({ storagePath, contentType }),
+      setStatus('Uploading...');
+
+      // Use TUS resumable upload — handles any file size, uploads in chunks
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const uploadUrl = `${supabaseUrl}/storage/v1/upload/resumable`;
+
+      await new Promise<void>((resolve, reject) => {
+        const upload = new tus.Upload(file, {
+          endpoint: uploadUrl,
+          retryDelays: [0, 1000, 3000, 5000],
+          chunkSize: 6 * 1024 * 1024, // 6MB chunks
+          headers: {
+            authorization: `Bearer ${session.access_token}`,
+            'x-upsert': 'false',
+          },
+          metadata: {
+            bucketName: 'meeting-audio',
+            objectName: storagePath,
+            contentType: contentType,
+            cacheControl: '3600',
+          },
+          onError: (err) => reject(err),
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const pct = Math.round((bytesUploaded / bytesTotal) * 100);
+            setProgress(pct);
+            setStatus(`Uploading... ${pct}%`);
+          },
+          onSuccess: () => resolve(),
+        });
+        upload.start();
       });
-      const signedData = await signRes.json();
-
-      if (!signRes.ok || !signedData.signedUrl) {
-        setError(`Upload failed: ${signedData.error || 'Could not create upload URL'}`);
-        setUploading(false);
-        return;
-      }
-
-      // Upload directly via signed URL
-      const uploadRes = await fetch(signedData.signedUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': contentType },
-        body: uploadFile,
-      });
-
-      if (!uploadRes.ok) {
-        const errText = await uploadRes.text();
-        setError(`Upload failed: ${errText}`);
-        setUploading(false);
-        return;
-      }
 
       setStatus('Processing...');
 
@@ -81,7 +72,7 @@ export default function UploadPage() {
         body: JSON.stringify({
           audio_storage_path: storagePath,
           audio_format: ext,
-          audio_size_bytes: uploadFile.size,
+          audio_size_bytes: file.size,
           source: 'upload',
         }),
       });
@@ -96,7 +87,10 @@ export default function UploadPage() {
       }).catch(console.error);
 
       router.push(`/meetings/${data.id}`);
-    } catch { setError('Upload failed. Please try again.'); setUploading(false); }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
+      setUploading(false);
+    }
   };
 
   return (
@@ -114,17 +108,20 @@ export default function UploadPage() {
         />
         {file && (
           <>
-            {file.size > 45 * 1024 * 1024 && !uploading && (
-              <p className="mt-3 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-2">
-                File is over 45MB — it will be automatically compressed to MP3 before uploading.
-              </p>
+            {uploading && progress > 0 && (
+              <div className="mt-4">
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                </div>
+                <p className="text-xs text-gray-500 mt-1.5 text-center">{status}</p>
+              </div>
             )}
             <button onClick={handleUpload} disabled={uploading}
               className="mt-4 w-full bg-emerald-500 text-white py-3 px-4 rounded-xl font-medium hover:bg-emerald-400 transition disabled:opacity-50 text-sm">
               {uploading ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
-                  {status || 'Uploading & Processing...'}
+                  {status || 'Uploading...'}
                 </span>
               ) : 'Upload & Transcribe'}
             </button>
