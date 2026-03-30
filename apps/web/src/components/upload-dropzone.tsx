@@ -50,7 +50,7 @@ const PLATFORM_GUIDES = [
 ];
 
 const ACCEPTED_TYPES = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/webm', 'audio/x-m4a', 'video/mp4'];
-const MAX_FILE_SIZE = 500 * 1024 * 1024;
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB (Supabase free plan limit)
 
 interface UploadDropzoneProps {
   onFileSelected: (file: File) => void;
@@ -77,7 +77,7 @@ export function UploadDropzone({ onFileSelected, file, onClear, error }: UploadD
       return;
     }
     if (f.size > MAX_FILE_SIZE) {
-      setLocalError('File too large. Maximum size is 500MB.');
+      setLocalError('File too large. Maximum size is 50MB. Try compressing your audio or trimming the recording.');
       return;
     }
     onFileSelected(f);
@@ -164,7 +164,7 @@ export function UploadDropzone({ onFileSelected, file, onClear, error }: UploadD
               Drag & drop your audio file here, or{' '}
               <span className="text-emerald-400 font-semibold">browse</span>
             </p>
-            <p className="mt-2 text-xs text-gray-600">Supports MP3, WAV, M4A, or WebM up to 500MB</p>
+            <p className="mt-2 text-xs text-gray-600">Supports MP3, WAV, M4A, MP4, or WebM up to 50MB</p>
           </div>
         )}
         <input id="audio-file-input" type="file" className="hidden" accept=".mp3,.wav,.m4a,.webm,.mp4" onChange={handleFileChange} />
