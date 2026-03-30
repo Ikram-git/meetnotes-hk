@@ -13,6 +13,14 @@ export async function POST(req: NextRequest) {
 
   if (!plan) return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
 
+  // Check if user already has this plan
+  const { data: profile } = await supabase
+    .from('profiles').select('subscription_tier, stripe_customer_id, email').eq('id', user.id).single();
+
+  if (profile?.subscription_tier === planId) {
+    return NextResponse.json({ error: 'You are already subscribed to this plan' }, { status: 400 });
+  }
+
   const priceId = interval === 'yearly' ? plan.stripePriceIdYearly : plan.stripePriceId;
   if (!priceId) return NextResponse.json({ error: 'Stripe not configured for this plan' }, { status: 400 });
 
@@ -20,9 +28,6 @@ export async function POST(req: NextRequest) {
     const stripe = getStripe();
 
     // Get or create Stripe customer
-    const { data: profile } = await supabase
-      .from('profiles').select('stripe_customer_id, email').eq('id', user.id).single();
-
     let customerId = profile?.stripe_customer_id;
     if (!customerId) {
       const customer = await stripe.customers.create({

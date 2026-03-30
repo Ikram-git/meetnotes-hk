@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: 'MeetNotes HK - AI Meeting Notes for Hong Kong Professionals',
   description:
     'AI-powered meeting notes optimised for English + Cantonese code-mixed meetings',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({

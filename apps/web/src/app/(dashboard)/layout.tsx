@@ -19,6 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
+  const [userTier, setUserTier] = useState('free');
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,6 +29,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (user) {
         setUserEmail(user.email || '');
         setUserName(user.user_metadata?.full_name || '');
+        const { data: profile } = await supabase.from('profiles').select('subscription_tier').eq('id', user.id).single();
+        if (profile?.subscription_tier) setUserTier(profile.subscription_tier);
       }
     }
     loadUser();
@@ -90,6 +93,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 New Meeting
               </Link>
 
+              {userTier !== 'free' && (
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+                  userTier === 'team'
+                    ? 'text-purple-400 bg-purple-500/10 border-purple-500/20'
+                    : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                }`}>
+                  {userTier === 'team' ? 'TEAM' : 'PRO'}
+                </span>
+              )}
+
               <div className="relative" ref={menuRef}>
                 <button onClick={() => setMenuOpen(!menuOpen)}
                   className="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-semibold hover:bg-emerald-500/30 transition">
@@ -98,7 +111,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-[#111916] rounded-xl shadow-xl border border-emerald-900/30 py-1 z-50">
                     <div className="px-4 py-3 border-b border-emerald-900/20">
-                      {userName && <p className="text-sm font-medium text-white">{userName}</p>}
+                      <div className="flex items-center gap-2">
+                        {userName && <p className="text-sm font-medium text-white">{userName}</p>}
+                        {userTier !== 'free' && (
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            userTier === 'team'
+                              ? 'text-purple-400 bg-purple-500/10'
+                              : 'text-amber-400 bg-amber-500/10'
+                          }`}>
+                            {userTier.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-500 truncate">{userEmail}</p>
                     </div>
                     <Link href="/settings" onClick={() => setMenuOpen(false)}
