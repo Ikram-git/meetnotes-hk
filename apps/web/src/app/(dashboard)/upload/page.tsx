@@ -28,13 +28,16 @@ export default function UploadPage() {
       if (contentType === 'video/mp4') contentType = 'audio/mp4';
       if (contentType === 'video/webm') contentType = 'audio/webm';
 
-      // Get a signed upload URL (no size limit on the PUT)
-      const { data: signedData, error: signError } = await supabase.storage
-        .from('meeting-audio')
-        .createSignedUploadUrl(storagePath);
+      // Get a signed upload URL via our API (uses service role — no size limits)
+      const signRes = await fetch('/api/upload/signed-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ storagePath, contentType }),
+      });
+      const signedData = await signRes.json();
 
-      if (signError || !signedData) {
-        setError(`Upload failed: ${signError?.message || 'Could not create upload URL'}`);
+      if (!signRes.ok || !signedData.signedUrl) {
+        setError(`Upload failed: ${signedData.error || 'Could not create upload URL'}`);
         setUploading(false);
         return;
       }
