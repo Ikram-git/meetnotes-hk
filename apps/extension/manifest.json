@@ -7,8 +7,7 @@
     "tabCapture",
     "offscreen",
     "storage",
-    "activeTab",
-    "microphone"
+    "activeTab"
   ],
   "host_permissions": [
     "http://localhost:3000/*",
