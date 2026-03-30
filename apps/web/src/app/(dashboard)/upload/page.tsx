@@ -24,18 +24,36 @@ export default function UploadPage() {
       const ext = file.name.split('.').pop() || 'webm';
       const storagePath = `${userId}/${fileId}.${ext}`;
 
-      // Upload directly to Supabase Storage (bypasses Vercel 4.5MB limit)
       let contentType = file.type;
       if (contentType === 'video/mp4') contentType = 'audio/mp4';
       if (contentType === 'video/webm') contentType = 'audio/webm';
 
-      const { error: uploadError } = await supabase.storage
+      // Get a signed upload URL (no size limit on the PUT)
+      const { data: signedData, error: signError } = await supabase.storage
         .from('meeting-audio')
-        .upload(storagePath, file, { contentType, upsert: false });
+        .createSignedUploadUrl(storagePath);
 
-      if (uploadError) { setError(`Upload failed: ${uploadError.message}`); setUploading(false); return; }
+      if (signError || !signedData) {
+        setError(`Upload failed: ${signError?.message || 'Could not create upload URL'}`);
+        setUploading(false);
+        return;
+      }
 
-      // Create meeting record via API (small JSON payload, no size issue)
+      // Upload directly via signed URL (bypasses both Vercel and Supabase client limits)
+      const uploadRes = await fetch(signedData.signedUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': contentType },
+        body: file,
+      });
+
+      if (!uploadRes.ok) {
+        const errText = await uploadRes.text();
+        setError(`Upload failed: ${errText}`);
+        setUploading(false);
+        return;
+      }
+
+      // Create meeting record via API
       const response = await fetch('/api/meetings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
