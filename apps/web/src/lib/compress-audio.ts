@@ -1,59 +1,72 @@
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
-
-let ffmpeg: FFmpeg | null = null;
-
-async function getFFmpeg(): Promise<FFmpeg> {
-  if (ffmpeg && ffmpeg.loaded) return ffmpeg;
-
-  ffmpeg = new FFmpeg();
-
-  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm';
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-  });
-
-  return ffmpeg;
-}
-
 export async function compressAudio(
   file: File,
   onProgress?: (progress: number) => void
 ): Promise<File> {
-  // If already under 45MB, no need to compress
   if (file.size <= 45 * 1024 * 1024) return file;
 
-  const ff = await getFFmpeg();
+  onProgress?.(5);
 
-  if (onProgress) {
-    ff.on('progress', ({ progress }) => {
-      onProgress(Math.round(progress * 100));
-    });
-  }
+  // Decode audio using Web Audio API
+  const arrayBuffer = await file.arrayBuffer();
+  onProgress?.(15);
 
-  const inputName = `input.${file.name.split('.').pop() || 'mp4'}`;
-  const outputName = 'output.mp3';
+  const audioContext = new AudioContext();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+  onProgress?.(30);
 
-  await ff.writeFile(inputName, await fetchFile(file));
+  // Create an offline source and pipe through MediaRecorder for compression
+  const dest = audioContext.createMediaStreamDestination();
+  const source = audioContext.createBufferSource();
+  source.buffer = audioBuffer;
+  source.connect(dest);
 
-  // Convert to MP3 at 128kbps mono — good quality for speech, much smaller
-  await ff.exec([
-    '-i', inputName,
-    '-vn',              // strip video
-    '-ac', '1',         // mono
-    '-ab', '128k',      // 128kbps bitrate
-    '-ar', '44100',     // 44.1kHz sample rate
-    outputName,
-  ]);
+  // Use MediaRecorder to encode as WebM/Opus (very small for speech)
+  const mediaRecorder = new MediaRecorder(dest.stream, {
+    mimeType: 'audio/webm;codecs=opus',
+    audioBitsPerSecond: 64000, // 64kbps — great for speech
+  });
 
-  const data = await ff.readFile(outputName);
-  const blob = new Blob([data], { type: 'audio/mpeg' });
+  const chunks: Blob[] = [];
 
-  // Clean up
-  await ff.deleteFile(inputName);
-  await ff.deleteFile(outputName);
+  const recordingDone = new Promise<Blob>((resolve) => {
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+    mediaRecorder.onstop = () => {
+      resolve(new Blob(chunks, { type: 'audio/webm' }));
+    };
+  });
 
-  const compressedName = file.name.replace(/\.[^.]+$/, '.mp3');
-  return new File([blob], compressedName, { type: 'audio/mpeg' });
+  // Track progress based on time
+  const duration = audioBuffer.duration;
+  const progressInterval = setInterval(() => {
+    if (audioContext.currentTime > 0) {
+      const pct = Math.min(90, 30 + Math.round((audioContext.currentTime / duration) * 60));
+      onProgress?.(pct);
+    }
+  }, 500);
+
+  mediaRecorder.start(1000);
+  source.start(0);
+
+  // Wait for playback to finish
+  await new Promise<void>((resolve) => {
+    source.onended = () => {
+      setTimeout(() => {
+        mediaRecorder.stop();
+        resolve();
+      }, 500);
+    };
+  });
+
+  clearInterval(progressInterval);
+  onProgress?.(90);
+
+  const blob = await recordingDone;
+  await audioContext.close();
+
+  onProgress?.(100);
+
+  const compressedName = file.name.replace(/\.[^.]+$/, '.webm');
+  return new File([blob], compressedName, { type: 'audio/webm' });
 }
