@@ -81,9 +81,9 @@ export default async function LandingPage() {
                 <Link href="/signup" className="bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
                   Start Free
                 </Link>
-                <a href="#features" className="text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
-                  Learn more
-                </a>
+                <Link href="/demo" className="text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
+                  Watch Demo
+                </Link>
               </>
             )}
           </div>
