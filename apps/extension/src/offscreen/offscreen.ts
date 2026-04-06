@@ -56,6 +56,18 @@ chrome.runtime.sendMessage({ type: 'OFFSCREEN_READY' }, async (config) => {
 });
 
 chrome.runtime.onMessage.addListener(async (message) => {
+  if (message.type === 'OFFSCREEN_DISCARD') {
+    // Stop recording and discard — don't upload
+    try {
+      await recorder.stopRecording();
+    } catch {}
+    if (audioContext) { audioContext.close().catch(() => {}); audioContext = null; }
+    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+    if (tabStream) { tabStream.getTracks().forEach(t => t.stop()); tabStream = null; }
+    console.log('[MeetNotes] Recording discarded');
+    return;
+  }
+
   if (message.type !== 'OFFSCREEN_STOP_RECORDING') return;
 
   try {

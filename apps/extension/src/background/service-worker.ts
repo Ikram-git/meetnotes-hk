@@ -53,6 +53,9 @@ chrome.runtime.onMessage.addListener(
         closeOffscreen();
         sendResponse({ success: true });
         break;
+      case 'DISCARD_RECORDING':
+        discardRecording().then(() => sendResponse({ success: true }));
+        break;
     }
     return true;
   }
@@ -101,6 +104,14 @@ async function stopRecording() {
     tabId: recState.tabId,
     startTime: recState.startTime,
   };
+}
+
+async function discardRecording() {
+  // Tell offscreen to stop without uploading
+  chrome.runtime.sendMessage({ type: 'OFFSCREEN_DISCARD' }).catch(() => {});
+  chrome.action.setBadgeText({ text: '' });
+  recState = { isRecording: false };
+  await closeOffscreen();
 }
 
 chrome.tabs.onRemoved.addListener((tabId: number) => {

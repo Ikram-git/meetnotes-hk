@@ -114,6 +114,14 @@ function App() {
     setScreen('uploading');
   };
 
+  const discardRecording = () => {
+    if (!confirm('Discard this recording? It will not be saved.')) return;
+    chrome.runtime.sendMessage({ type: 'DISCARD_RECORDING' });
+    setScreen('idle');
+    setElapsed(0);
+    setStartTime(null);
+  };
+
   const formatElapsed = (sec: number) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
@@ -205,6 +213,9 @@ function App() {
             <div className="elapsed">{formatElapsed(elapsed)}</div>
             <button onClick={stopRecording} className="btn btn-danger">
               Stop & Upload
+            </button>
+            <button onClick={discardRecording} className="btn-text" style={{ marginTop: 8, fontSize: 11, color: '#9ca3af' }}>
+              Discard recording
             </button>
           </div>
         </div>
