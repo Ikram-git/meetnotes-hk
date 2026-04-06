@@ -25,6 +25,9 @@ export default async function LandingPage() {
             <span className="text-xl font-bold text-white">MeetNotes</span>
           </div>
           <div className="flex items-center gap-3">
+            <Link href="/demo" className="text-sm font-medium text-gray-400 hover:text-white transition px-4 py-2">
+              Demo
+            </Link>
             {isLoggedIn ? (
               <>
                 <Link href="/meetings" className="text-sm font-medium text-gray-400 hover:text-white transition px-4 py-2">
