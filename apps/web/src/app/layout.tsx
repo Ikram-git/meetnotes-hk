@@ -5,9 +5,9 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'MeetNotes HK - AI Meeting Notes for Hong Kong Professionals',
+  title: 'MeetNotes - AI Meeting Notes for Professionals',
   description:
-    'AI-powered meeting notes optimised for English + Cantonese code-mixed meetings',
+    'AI-powered meeting notes with multilingual transcription and smart summaries',
   icons: {
     icon: '/favicon.svg',
   },

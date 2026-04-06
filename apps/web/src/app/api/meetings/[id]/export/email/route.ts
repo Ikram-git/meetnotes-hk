@@ -31,7 +31,7 @@ export async function POST(
     to,
     meeting,
     summary,
-    senderName: senderName || 'MeetNotes HK',
+    senderName: senderName || 'MeetNotes',
     appUrl,
   };
 

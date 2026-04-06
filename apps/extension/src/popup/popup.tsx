@@ -132,7 +132,7 @@ function App() {
   if (screen === 'loading') {
     return (
       <div className="popup-container">
-        <div className="header"><h1 className="logo">MeetNotes <span>HK</span></h1></div>
+        <div className="header"><h1 className="logo">MeetNotes</h1></div>
         <div className="loading">
           <div className="spinner" />
         </div>
@@ -145,7 +145,7 @@ function App() {
     return (
       <div className="popup-container">
         <div className="header">
-          <h1 className="logo">MeetNotes <span>HK</span></h1>
+          <h1 className="logo">MeetNotes</h1>
           <p className="subtitle">Sign in to start recording</p>
         </div>
         <div className="auth-form">
@@ -170,7 +170,7 @@ function App() {
         <div className="header">
           <div className="header-row">
             <div>
-              <h1 className="logo">MeetNotes <span>HK</span></h1>
+              <h1 className="logo">MeetNotes</h1>
               <p className="user-email">{user?.email}</p>
             </div>
             <button onClick={handleSignOut} className="btn-text">Sign out</button>
@@ -200,7 +200,7 @@ function App() {
       <div className="popup-container">
         <div className="header">
           <div className="header-row">
-            <h1 className="logo">MeetNotes <span>HK</span></h1>
+            <h1 className="logo">MeetNotes</h1>
             <button onClick={handleSignOut} className="btn-text">Sign out</button>
           </div>
         </div>
@@ -228,7 +228,7 @@ function App() {
     return (
       <div className="popup-container">
         <div className="header">
-          <h1 className="logo">MeetNotes <span>HK</span></h1>
+          <h1 className="logo">MeetNotes</h1>
         </div>
         <div className="content">
           <div className="uploading">
@@ -247,7 +247,7 @@ function App() {
       <div className="popup-container">
         <div className="header">
           <div className="header-row">
-            <h1 className="logo">MeetNotes <span>HK</span></h1>
+            <h1 className="logo">MeetNotes</h1>
             <button onClick={handleSignOut} className="btn-text">Sign out</button>
           </div>
         </div>
@@ -275,7 +275,7 @@ function App() {
   return (
     <div className="popup-container">
       <div className="header">
-        <h1 className="logo">MeetNotes <span>HK</span></h1>
+        <h1 className="logo">MeetNotes</h1>
       </div>
       <div className="content">
         <div className="upload-complete">

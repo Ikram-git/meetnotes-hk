@@ -47,17 +47,17 @@ export default function LoginPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
           </div>
-          <span className="text-xl font-bold text-white">MeetNotes <span className="text-emerald-400">HK</span></span>
+          <span className="text-xl font-bold text-white">MeetNotes</span>
         </Link>
         <div>
           <h2 className="text-3xl font-bold text-white mb-4">
             AI meeting notes that understand code-switching.
           </h2>
           <p className="text-gray-400 text-lg leading-relaxed">
-            Built for Hong Kong professionals who mix English and Cantonese naturally.
+            Built for professionals who work across languages.
           </p>
         </div>
-        <p className="text-gray-600 text-sm">Built for Hong Kong</p>
+        <p className="text-gray-600 text-sm">AI-powered meeting notes</p>
       </div>
 
       {/* Right panel */}
@@ -69,7 +69,7 @@ export default function LoginPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </div>
-            <span className="text-lg font-bold text-white">MeetNotes <span className="text-emerald-400">HK</span></span>
+            <span className="text-lg font-bold text-white">MeetNotes</span>
           </Link>
 
           <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>

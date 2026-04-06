@@ -48,13 +48,13 @@ export default function SignupPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
           </div>
-          <span className="text-xl font-bold text-white">MeetNotes <span className="text-emerald-400">HK</span></span>
+          <span className="text-xl font-bold text-white">MeetNotes</span>
         </Link>
         <div>
           <h2 className="text-3xl font-bold text-white mb-4">Start with 300 free minutes every month.</h2>
           <p className="text-gray-400 text-lg leading-relaxed">No credit card required. Record, transcribe, and summarise your meetings with AI.</p>
         </div>
-        <p className="text-gray-600 text-sm">Built for Hong Kong</p>
+        <p className="text-gray-600 text-sm">AI-powered meeting notes</p>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-6 py-12">
@@ -65,7 +65,7 @@ export default function SignupPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </div>
-            <span className="text-lg font-bold text-white">MeetNotes <span className="text-emerald-400">HK</span></span>
+            <span className="text-lg font-bold text-white">MeetNotes</span>
           </Link>
 
           <h1 className="text-2xl font-bold text-white mb-1">Create your account</h1>

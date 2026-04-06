@@ -53,10 +53,10 @@ export function PricingTable({ currentTier = 'free', onSelectPlan, loading }: Pr
               )}
               <h3 className="text-lg font-bold text-white">{plan.name}</h3>
               <div className="mt-3 mb-5">
-                <span className="text-3xl font-bold text-white">{plan.currency === 'HKD' ? 'HK$' : '$'}{monthlyPrice}</span>
+                <span className="text-3xl font-bold text-white">${monthlyPrice}</span>
                 <span className="text-sm text-gray-500">/month</span>
                 {interval === 'yearly' && plan.price > 0 && (
-                  <p className="text-xs text-gray-600 mt-1">Billed {plan.currency === 'HKD' ? 'HK$' : '$'}{price}/year</p>
+                  <p className="text-xs text-gray-600 mt-1">Billed ${price}/year</p>
                 )}
               </div>
               <ul className="space-y-2.5 mb-6 flex-1">

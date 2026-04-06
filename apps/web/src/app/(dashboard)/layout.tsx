@@ -67,7 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                   </svg>
                 </div>
-                <span className="text-lg font-bold text-white hidden sm:block">MeetNotes <span className="text-emerald-400">HK</span></span>
+                <span className="text-lg font-bold text-white hidden sm:block">MeetNotes</span>
               </Link>
               <nav className="hidden md:flex items-center gap-1">
                 {navItems.map((item) => {
@@ -176,7 +176,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <footer className="border-t border-emerald-900/20 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between text-xs text-gray-600">
-          <span>MeetNotes HK</span>
+          <span>MeetNotes</span>
           <div className="flex gap-4">
             <Link href="/privacy" className="hover:text-gray-400 transition">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-gray-400 transition">Terms of Service</Link>

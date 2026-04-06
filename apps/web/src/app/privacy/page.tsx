@@ -4,14 +4,14 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-[#080c0a] text-gray-300">
       <div className="max-w-3xl mx-auto px-6 py-16">
-        <Link href="/" className="text-emerald-400 text-sm hover:text-emerald-300 mb-8 inline-block">&larr; Back to MeetNotes HK</Link>
+        <Link href="/" className="text-emerald-400 text-sm hover:text-emerald-300 mb-8 inline-block">&larr; Back to MeetNotes</Link>
         <h1 className="text-3xl font-bold text-white mb-2">Privacy Policy</h1>
         <p className="text-sm text-gray-500 mb-10">Last updated: 29 March 2026</p>
 
         <div className="space-y-8 text-sm leading-relaxed">
           <section>
             <h2 className="text-lg font-semibold text-white mb-3">1. Introduction</h2>
-            <p>MeetNotes HK ("we", "our", "us") is an AI-powered meeting notes tool designed for Hong Kong professionals. This Privacy Policy explains how we collect, use, and protect your personal data in compliance with the Hong Kong Personal Data (Privacy) Ordinance (Cap. 486).</p>
+            <p>MeetNotes ("we", "our", "us") is an AI-powered meeting notes tool designed for professionals worldwide. This Privacy Policy explains how we collect, use, and protect your personal data.</p>
           </section>
 
           <section>
@@ -60,7 +60,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-white mb-3">7. Your Rights</h2>
-            <p>Under the Hong Kong PDPO, you have the right to:</p>
+            <p>You have the right to:</p>
             <ul className="list-disc pl-5 space-y-2 mt-2">
               <li>Access your personal data held by us.</li>
               <li>Request correction of inaccurate data.</li>

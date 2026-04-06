@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "MeetNotes HK",
+  "name": "MeetNotes",
   "version": "0.1.0",
-  "description": "AI meeting notes for HK professionals. Handles English + Cantonese perfectly.",
+  "description": "AI meeting notes for professionals. Record, transcribe, and summarise meetings with AI.",
   "permissions": [
     "tabCapture",
     "offscreen",

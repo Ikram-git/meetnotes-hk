@@ -22,7 +22,7 @@ export default async function LandingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </div>
-            <span className="text-xl font-bold text-white">MeetNotes <span className="text-emerald-400">HK</span></span>
+            <span className="text-xl font-bold text-white">MeetNotes</span>
           </div>
           <div className="flex items-center gap-3">
             {isLoggedIn ? (
@@ -54,7 +54,7 @@ export default async function LandingPage() {
         <div className="max-w-4xl mx-auto text-center relative">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-sm font-medium px-4 py-1.5 rounded-full mb-8 border border-emerald-500/20">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-            Built for Hong Kong professionals
+            Built for global professionals
           </div>
           <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight mb-6">
             AI Meeting Notes
@@ -64,7 +64,7 @@ export default async function LandingPage() {
             </span>
           </h1>
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            The first meeting notes tool built for English + Cantonese code-mixed conversations. Record, transcribe, and get AI summaries in seconds.
+            The smart meeting notes tool built for multilingual conversations. Record, transcribe, and get AI summaries in seconds.
           </p>
           <div className="flex items-center justify-center gap-4">
             {isLoggedIn ? (
@@ -93,7 +93,7 @@ export default async function LandingPage() {
       {/* Social proof bar */}
       <section className="border-y border-emerald-900/20 bg-emerald-950/20 py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm text-gray-500">
-          {['300 free minutes/month', 'English + Cantonese', 'Chrome Extension', 'Export to PDF'].map((item) => (
+          {['300 free minutes/month', 'English + Chinese', 'Chrome Extension', 'Export to PDF'].map((item) => (
             <div key={item} className="flex items-center gap-2">
               <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -112,7 +112,7 @@ export default async function LandingPage() {
               Everything you need after every meeting
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              From recording to action items, MeetNotes HK handles the entire workflow.
+              From recording to action items, MeetNotes handles the entire workflow.
             </p>
           </div>
 
@@ -137,7 +137,7 @@ export default async function LandingPage() {
               </div>
               <h3 className="text-lg font-semibold text-white mb-3">Bilingual Transcription</h3>
               <p className="text-gray-400 text-sm leading-relaxed">
-                Powered by Deepgram Nova-2. Handles English, Cantonese, and seamless code-switching between both.
+                Powered by Deepgram Nova-2. Handles English, Chinese, and seamless code-switching between languages.
               </p>
             </div>
 
@@ -209,7 +209,7 @@ export default async function LandingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </div>
-            <span>MeetNotes HK</span>
+            <span>MeetNotes</span>
           </div>
           <div className="flex gap-4">
             <Link href="/privacy" className="hover:text-gray-400 transition">Privacy Policy</Link>

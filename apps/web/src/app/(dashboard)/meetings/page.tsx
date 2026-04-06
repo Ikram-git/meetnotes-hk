@@ -56,7 +56,7 @@ export default async function MeetingsPage() {
           </div>
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-white">Record meetings directly from your browser</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Install the MeetNotes HK Chrome extension to capture Google Meet, Zoom, and Teams meetings with one click.</p>
+            <p className="text-xs text-gray-400 mt-0.5">Install the MeetNotes Chrome extension to capture Google Meet, Zoom, and Teams meetings with one click.</p>
           </div>
           <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-400 transition whitespace-nowrap">
