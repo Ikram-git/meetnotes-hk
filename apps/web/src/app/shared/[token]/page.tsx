@@ -1,7 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { formatDate, formatDuration, formatTime } from '@/lib/utils';
+
+export const dynamic = 'force-dynamic';
 
 export default async function SharedMeetingPage({
   params,
@@ -9,7 +11,12 @@ export default async function SharedMeetingPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const supabase = await createClient();
+
+  // Use service role client to bypass RLS — shared pages are public
+  const supabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   // Find meeting by share token (no auth required)
   const { data: meeting } = await supabase
