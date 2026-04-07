@@ -24,25 +24,25 @@ export default async function LandingPage() {
             </div>
             <span className="text-xl font-bold text-white">MeetNotes</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/demo" className="text-sm font-medium text-gray-400 hover:text-white transition px-4 py-2">
+          <div className="flex items-center gap-1 sm:gap-3">
+            <Link href="/demo" className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition px-2 sm:px-4 py-2 hidden sm:block">
               Demo
             </Link>
             {isLoggedIn ? (
               <>
-                <Link href="/meetings" className="text-sm font-medium text-gray-400 hover:text-white transition px-4 py-2">
+                <Link href="/meetings" className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition px-2 sm:px-4 py-2">
                   Dashboard
                 </Link>
-                <Link href="/upload" className="text-sm font-medium bg-emerald-500 text-white px-5 py-2 rounded-lg hover:bg-emerald-400 transition">
-                  Upload Meeting
+                <Link href="/upload" className="text-xs sm:text-sm font-medium bg-emerald-500 text-white px-3 sm:px-5 py-2 rounded-lg hover:bg-emerald-400 transition">
+                  Upload
                 </Link>
               </>
             ) : (
               <>
-                <Link href="/login" className="text-sm font-medium text-gray-400 hover:text-white transition px-4 py-2">
+                <Link href="/login" className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition px-2 sm:px-4 py-2">
                   Log in
                 </Link>
-                <Link href="/signup" className="text-sm font-medium bg-emerald-500 text-white px-5 py-2 rounded-lg hover:bg-emerald-400 transition">
+                <Link href="/signup" className="text-xs sm:text-sm font-medium bg-emerald-500 text-white px-3 sm:px-5 py-2 rounded-lg hover:bg-emerald-400 transition">
                   Get Started
                 </Link>
               </>
@@ -52,14 +52,14 @@ export default async function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-6 relative overflow-hidden">
+      <section className="pt-24 sm:pt-32 pb-16 sm:pb-20 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/30 via-transparent to-transparent" />
         <div className="max-w-4xl mx-auto text-center relative">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-sm font-medium px-4 py-1.5 rounded-full mb-8 border border-emerald-500/20">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
             Built for global professionals
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight mb-6">
             AI Meeting Notes
             <br />
             <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
@@ -69,22 +69,22 @@ export default async function LandingPage() {
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
             The smart meeting notes tool built for multilingual conversations. Record, transcribe, and get AI summaries in seconds.
           </p>
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             {isLoggedIn ? (
               <>
-                <Link href="/meetings" className="bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
+                <Link href="/meetings" className="w-full sm:w-auto text-center bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
                   Go to Dashboard
                 </Link>
-                <Link href="/upload" className="text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
+                <Link href="/upload" className="w-full sm:w-auto text-center text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
                   Upload Meeting
                 </Link>
               </>
             ) : (
               <>
-                <Link href="/signup" className="bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
+                <Link href="/signup" className="w-full sm:w-auto text-center bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
                   Start Free
                 </Link>
-                <Link href="/demo" className="text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
+                <Link href="/demo" className="w-full sm:w-auto text-center text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
                   Watch Demo
                 </Link>
               </>
@@ -108,7 +108,7 @@ export default async function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-24 px-6">
+      <section id="features" className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
@@ -160,7 +160,7 @@ export default async function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section className="py-24 px-6 bg-emerald-950/15">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-emerald-950/15">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-16">How it works</h2>
           <div className="grid md:grid-cols-4 gap-8">
@@ -183,7 +183,7 @@ export default async function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-6">
+      <section className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             {isLoggedIn ? 'Ready for your next meeting?' : 'Ready to transform your meetings?'}

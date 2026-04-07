@@ -47,19 +47,21 @@ export default async function MeetingsPage() {
       </div>
 
       {/* Chrome Extension Banner */}
-      <div className="mb-6 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-xl p-5">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0h4a1 1 0 011 1v3a4 4 0 01-4 4h-1m-8 0H5a4 4 0 01-4-4V5a1 1 0 011-1h4m8 0H8" />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-white">Record meetings directly from your browser</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Install the MeetNotes Chrome extension to capture Google Meet, Zoom, and Teams meetings with one click.</p>
+      <div className="mb-6 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-xl p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0h4a1 1 0 011 1v3a4 4 0 01-4 4h-1m-8 0H5a4 4 0 01-4-4V5a1 1 0 011-1h4m8 0H8" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-white">Record meetings from your browser</h3>
+              <p className="text-xs text-gray-400 mt-0.5 hidden sm:block">Install the MeetNotes Chrome extension to capture Google Meet, Zoom, and Teams meetings with one click.</p>
+            </div>
           </div>
           <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-400 transition whitespace-nowrap">
+            className="flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-400 transition whitespace-nowrap sm:flex-shrink-0">
             Get Extension
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
