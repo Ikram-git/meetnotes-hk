@@ -242,52 +242,54 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
       />
 
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          {editingTitle ? (
-            <div className="flex items-center gap-2">
-              <input
-                autoFocus
-                value={titleDraft}
-                onChange={(e) => setTitleDraft(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleTitleSave(); if (e.key === 'Escape') setEditingTitle(false); }}
-                className="text-2xl font-bold text-white bg-transparent border-b-2 border-emerald-500 outline-none py-0.5 px-1 -ml-1"
-              />
-              <button onClick={handleTitleSave} className="text-emerald-400 hover:text-emerald-300 text-sm">Save</button>
-              <button onClick={() => setEditingTitle(false)} className="text-gray-500 hover:text-gray-300 text-sm">Cancel</button>
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="min-w-0">
+            {editingTitle ? (
+              <div className="flex items-center gap-2">
+                <input
+                  autoFocus
+                  value={titleDraft}
+                  onChange={(e) => setTitleDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleTitleSave(); if (e.key === 'Escape') setEditingTitle(false); }}
+                  className="text-xl sm:text-2xl font-bold text-white bg-transparent border-b-2 border-emerald-500 outline-none py-0.5 px-1 -ml-1 w-full"
+                />
+                <button onClick={handleTitleSave} className="text-emerald-400 hover:text-emerald-300 text-sm">Save</button>
+                <button onClick={() => setEditingTitle(false)} className="text-gray-500 hover:text-gray-300 text-sm">Cancel</button>
+              </div>
+            ) : (
+              <h1 className="text-xl sm:text-2xl font-bold text-white group cursor-pointer truncate" onClick={() => { setTitleDraft(meeting.title || ''); setEditingTitle(true); }}>
+                {meeting.title || 'Untitled Meeting'}
+                <svg className="w-4 h-4 inline-block ml-2 text-gray-700 group-hover:text-emerald-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </h1>
+            )}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-500">
+              <span>{formatDate(meeting.created_at)}</span>
+              {meeting.audio_duration_seconds && <span>{formatDuration(meeting.audio_duration_seconds)}</span>}
+              <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${STATUS_STYLES[meeting.status] || ''}`}>{meeting.status}</span>
             </div>
-          ) : (
-            <h1 className="text-2xl font-bold text-white group cursor-pointer" onClick={() => { setTitleDraft(meeting.title || ''); setEditingTitle(true); }}>
-              {meeting.title || 'Untitled Meeting'}
-              <svg className="w-4 h-4 inline-block ml-2 text-gray-700 group-hover:text-emerald-400 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </h1>
-          )}
-          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-            <span>{formatDate(meeting.created_at)}</span>
-            {meeting.audio_duration_seconds && <span>{formatDuration(meeting.audio_duration_seconds)}</span>}
-            <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${STATUS_STYLES[meeting.status] || ''}`}>{meeting.status}</span>
+            {meeting.error_message && (
+              <div className="mt-3 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm">{meeting.error_message}</div>
+            )}
           </div>
-          {meeting.error_message && (
-            <div className="mt-3 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm">{meeting.error_message}</div>
-          )}
-        </div>
 
-        <div className="flex items-center gap-3">
-          {(meeting.status === 'uploaded' || (meeting.status === 'error' && segments.length === 0)) && (
-            <button onClick={handleRetryTranscription} disabled={isProcessing}
-              className="px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-lg hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed">
-              {isProcessing ? 'Processing...' : meeting.status === 'error' ? 'Retry Transcription' : 'Start Transcription'}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {(meeting.status === 'uploaded' || (meeting.status === 'error' && segments.length === 0)) && (
+              <button onClick={handleRetryTranscription} disabled={isProcessing}
+                className="px-3 py-2 bg-emerald-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                {isProcessing ? 'Processing...' : meeting.status === 'error' ? 'Retry' : 'Transcribe'}
+              </button>
+            )}
+            {summary && <ExportDropdown meetingId={meeting.id} />}
+            <button onClick={handleDelete} title="Delete meeting"
+              className="p-2 text-gray-600 hover:text-red-400 transition rounded-lg hover:bg-red-500/10">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
             </button>
-          )}
-          {summary && <ExportDropdown meetingId={meeting.id} />}
-          <button onClick={handleDelete} title="Delete meeting"
-            className="p-2 text-gray-600 hover:text-red-400 transition rounded-lg hover:bg-red-500/10">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+          </div>
         </div>
       </div>
 
@@ -300,7 +302,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="space-y-6">
           {/* Summary */}
-          <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-6">
+          <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-4 sm:p-6">
             {editingSummary && summary ? (
               <SummaryEditor
                 meetingId={meeting.id}
@@ -310,9 +312,9 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
               />
             ) : (
               <>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                   <h2 className="text-lg font-semibold text-white">Summary</h2>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {segments.length > 0 && (
                       <>
                         {/* Language pill toggle */}
@@ -434,7 +436,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
         </div>
 
         {/* Transcript */}
-        <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-6">
+        <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-4 sm:p-6">
           {editingTranscript ? (
             <TranscriptEditor
               meetingId={meeting.id}
