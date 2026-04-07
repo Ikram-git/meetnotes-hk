@@ -50,7 +50,7 @@ const PLATFORM_GUIDES = [
 ];
 
 const ACCEPTED_TYPES = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/webm', 'audio/x-m4a', 'video/mp4'];
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 
 interface UploadDropzoneProps {
   onFileSelected: (file: File) => void;
@@ -77,7 +77,7 @@ export function UploadDropzone({ onFileSelected, file, onClear, error }: UploadD
       return;
     }
     if (f.size > MAX_FILE_SIZE) {
-      setLocalError('File too large. Maximum size is 50MB. Tip: Use MP3 or WebM format for smaller files — a 1-hour MP3 is typically 15-30MB.');
+      setLocalError('File too large. Maximum size is 200MB.');
       return;
     }
     onFileSelected(f);
@@ -164,7 +164,7 @@ export function UploadDropzone({ onFileSelected, file, onClear, error }: UploadD
               Drag & drop your audio file here, or{' '}
               <span className="text-emerald-400 font-semibold">browse</span>
             </p>
-            <p className="mt-2 text-xs text-gray-600">Supports MP3, WAV, M4A, MP4, or WebM up to 50MB</p>
+            <p className="mt-2 text-xs text-gray-600">Supports MP3, WAV, M4A, MP4, or WebM up to 200MB</p>
           </div>
         )}
         <input id="audio-file-input" type="file" className="hidden" accept=".mp3,.wav,.m4a,.webm,.mp4" onChange={handleFileChange} />
