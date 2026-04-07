@@ -27,7 +27,7 @@ export default async function MeetingsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 stagger-children">
         <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-4">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Meetings</p>
           <p className="text-2xl font-bold text-white mt-1">{totalMeetings}</p>
