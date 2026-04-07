@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useToast } from './toast';
 
 interface ExportDropdownProps {
   meetingId: string;
@@ -11,6 +12,7 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -31,9 +33,9 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to create link');
         await navigator.clipboard.writeText(data.shareUrl);
-        alert('Share link copied to clipboard!');
+        toast('Share link copied to clipboard!');
       } catch (err) {
-        alert(err instanceof Error ? err.message : 'Failed to create share link');
+        toast(err instanceof Error ? err.message : 'Failed to create share link', 'error');
       } finally {
         setExporting(null);
       }
@@ -51,7 +53,6 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
       });
 
       if (!response.ok) throw new Error('Export failed');
-
       const data = await response.json();
 
       switch (type) {
@@ -63,6 +64,7 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
             pdfWindow.document.write(html);
             pdfWindow.document.close();
           }
+          toast('PDF opened in new tab');
           break;
         }
         case 'clipboard': {
@@ -86,12 +88,12 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
           ].join('\n');
 
           await navigator.clipboard.writeText(text);
-          alert('Copied to clipboard!');
+          toast('Meeting notes copied to clipboard!');
           break;
         }
       }
     } catch (err) {
-      alert('Export failed. Please try again.');
+      toast('Export failed. Please try again.', 'error');
     } finally {
       setExporting(null);
     }
@@ -125,17 +127,30 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
         </svg>
-        {exporting ? 'Sharing...' : 'Share'}
+        <span className="hidden sm:inline">{exporting ? 'Sharing...' : 'Share'}</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 sm:right-0 mt-2 w-48 bg-[#111916] rounded-xl shadow-xl border border-emerald-900/30 py-1 z-50">
+        <div className="fixed inset-0 z-40 sm:hidden" onClick={() => setOpen(false)}>
+          {/* Mobile: bottom sheet */}
+          <div className="absolute bottom-0 left-0 right-0 bg-[#111916] rounded-t-2xl border-t border-emerald-900/30 p-2 pb-6" onClick={e => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-gray-700 rounded-full mx-auto mb-3" />
+            {exportOptions.map(({ type, label, icon }) => (
+              <button key={type} onClick={() => handleExport(type)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-xl transition">
+                <span className="text-gray-500">{icon}</span>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {open && (
+        <div className="hidden sm:block absolute right-0 mt-2 w-48 bg-[#111916] rounded-xl shadow-xl border border-emerald-900/30 py-1 z-50">
           {exportOptions.map(({ type, label, icon }) => (
-            <button
-              key={type}
-              onClick={() => handleExport(type)}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition"
-            >
+            <button key={type} onClick={() => handleExport(type)}
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition">
               <span className="text-gray-500">{icon}</span>
               {label}
             </button>

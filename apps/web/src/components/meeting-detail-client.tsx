@@ -9,6 +9,7 @@ import { SummaryEditor } from './summary-editor';
 import { ActionItemsList } from './action-items-list';
 import { ExportDropdown } from './export-dropdown';
 import { SpeakerNamingModal } from './speaker-naming-modal';
+import { useToast } from './toast';
 import { formatDate, formatDuration } from '@/lib/utils';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -37,6 +38,7 @@ interface MeetingDetailClientProps {
 }
 
 export function MeetingDetailClient({ meeting: initialMeeting, segments: initialSegments, summary: initialSummary, speakerMappings, audioUrl }: MeetingDetailClientProps) {
+  const { toast } = useToast();
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [seekTimeMs, setSeekTimeMs] = useState<number | undefined>(undefined);
   const [speakerMap, setSpeakerMap] = useState<Record<string, string>>(() => {
@@ -180,8 +182,8 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
     try {
       const res = await fetch(`/api/meetings/${meeting.id}`, { method: 'DELETE' });
       if (res.ok) router.push('/meetings');
-      else alert('Failed to delete meeting');
-    } catch { alert('Failed to delete meeting'); }
+      else toast('Failed to delete meeting', 'error');
+    } catch { toast('Failed to delete meeting', 'error'); }
   };
 
   const handleRetryTranscription = useCallback(async () => {
@@ -194,11 +196,11 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
       });
       if (!res.ok) {
         const data = await res.json();
-        alert(`Transcription failed: ${data.error || 'Unknown error'}`);
+        toast(`Transcription failed: ${data.error || 'Unknown error'}`, 'error');
       } else {
         window.location.reload();
       }
-    } catch { alert('Failed to start transcription'); }
+    } catch { toast('Failed to start transcription', 'error'); }
     finally { setIsProcessing(false); }
   }, [meeting.id]);
 
@@ -213,13 +215,13 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
       });
       if (!res.ok) {
         const data = await res.json();
-        alert(`Summary failed: ${data.error || 'Unknown error'}`);
+        toast(`Summary failed: ${data.error || 'Unknown error'}`, 'error');
         setIsProcessing(false);
         return;
       }
       window.location.reload();
     } catch {
-      alert('Failed to generate summary');
+      toast('Failed to generate summary', 'error');
       setIsProcessing(false);
     }
   };
