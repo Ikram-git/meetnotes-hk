@@ -59,7 +59,9 @@ export default async function SharedMeetingPage({
             </div>
             <span className="text-base font-bold text-white">MeetNotes</span>
           </Link>
-          <span className="text-xs text-gray-600">Shared meeting notes</span>
+          <Link href="/signup" className="text-xs sm:text-sm font-medium bg-emerald-500 text-white px-3 sm:px-4 py-1.5 rounded-lg hover:bg-emerald-400 transition">
+            Try Free
+          </Link>
         </div>
       </header>
 
