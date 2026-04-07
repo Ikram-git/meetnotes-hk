@@ -10,6 +10,7 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL('/', requestUrl.origin));
+  // Redirect to returnTo URL if present, otherwise home
+  const returnTo = requestUrl.searchParams.get('returnTo');
+  return NextResponse.redirect(new URL(returnTo || '/', requestUrl.origin));
 }

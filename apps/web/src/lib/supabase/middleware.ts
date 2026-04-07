@@ -40,21 +40,26 @@ export async function updateSession(request: NextRequest) {
     p === '/' ? request.nextUrl.pathname === '/' : request.nextUrl.pathname.startsWith(p)
   );
 
-  // Protected routes — redirect to login
+  // Protected routes — redirect to login with return URL
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
+    const returnTo = request.nextUrl.pathname + request.nextUrl.search;
     url.pathname = '/login';
+    url.searchParams.set('returnTo', returnTo);
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from auth pages (but NOT landing page)
+  // Redirect authenticated users away from auth pages
   if (
     user &&
     (request.nextUrl.pathname.startsWith('/login') ||
       request.nextUrl.pathname.startsWith('/signup'))
   ) {
+    // Check if there's a returnTo URL
+    const returnTo = request.nextUrl.searchParams.get('returnTo');
     const url = request.nextUrl.clone();
-    url.pathname = '/';
+    url.pathname = returnTo || '/';
+    url.search = '';
     return NextResponse.redirect(url);
   }
 
