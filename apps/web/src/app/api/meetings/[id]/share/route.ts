@@ -1,6 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
+
+function getAdminSupabase() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // POST — generate or update share link
 export async function POST(
@@ -17,7 +25,7 @@ export async function POST(
 
   // Verify ownership
   const { data: meeting } = await supabase
-    .from('meetings').select('id, share_token').eq('id', meetingId).eq('user_id', user.id).single();
+    .from('meetings').select('id, share_token, user_id').eq('id', meetingId).eq('user_id', user.id).single();
   if (!meeting) return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
 
   // Reuse existing token or create new
@@ -26,10 +34,17 @@ export async function POST(
     token = nanoid(12);
   }
 
-  await supabase.from('meetings').update({
+  // Use admin client to bypass RLS for the update
+  const admin = getAdminSupabase();
+  const { error: updateError } = await admin.from('meetings').update({
     share_token: token,
     share_password: password,
   }).eq('id', meetingId);
+
+  if (updateError) {
+    console.error('[Share] Update failed:', updateError.message);
+    return NextResponse.json({ error: 'Failed to create share link' }, { status: 500 });
+  }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   return NextResponse.json({
@@ -48,9 +63,10 @@ export async function DELETE(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  await supabase.from('meetings').update({
+  const admin = getAdminSupabase();
+  await admin.from('meetings').update({
     share_token: null,
     share_password: null,
-  }).eq('id', meetingId).eq('user_id', user.id);
+  }).eq('id', meetingId);
   return NextResponse.json({ success: true });
 }
