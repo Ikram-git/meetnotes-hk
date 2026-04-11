@@ -19,13 +19,13 @@ export default async function SharedMeetingPage({
   );
 
   // Find meeting by share token
-  const { data: meeting } = await supabase
+  const { data: meeting, error } = await supabase
     .from('meetings')
     .select('*')
     .eq('share_token', token)
     .single();
 
-  if (!meeting) notFound();
+  if (!meeting || error) notFound();
 
   const hasPassword = !!meeting.share_password;
 
