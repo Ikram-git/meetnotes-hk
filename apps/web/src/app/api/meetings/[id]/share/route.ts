@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
 
-// POST — generate a share token
+// POST — generate or update share link
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -11,6 +11,9 @@ export async function POST(
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const body = await req.json().catch(() => ({}));
+  const password = body.password || null;
 
   // Verify ownership
   const { data: meeting } = await supabase
@@ -21,11 +24,18 @@ export async function POST(
   let token = meeting.share_token;
   if (!token) {
     token = nanoid(12);
-    await supabase.from('meetings').update({ share_token: token }).eq('id', meetingId);
   }
 
+  await supabase.from('meetings').update({
+    share_token: token,
+    share_password: password,
+  }).eq('id', meetingId);
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  return NextResponse.json({ shareUrl: `${appUrl}/shared/${token}` });
+  return NextResponse.json({
+    shareUrl: `${appUrl}/shared/${token}`,
+    hasPassword: !!password,
+  });
 }
 
 // DELETE — revoke share link
@@ -38,6 +48,9 @@ export async function DELETE(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  await supabase.from('meetings').update({ share_token: null }).eq('id', meetingId).eq('user_id', user.id);
+  await supabase.from('meetings').update({
+    share_token: null,
+    share_password: null,
+  }).eq('id', meetingId).eq('user_id', user.id);
   return NextResponse.json({ success: true });
 }
