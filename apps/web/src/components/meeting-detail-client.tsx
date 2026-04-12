@@ -9,7 +9,13 @@ import { SummaryEditor } from './summary-editor';
 import { ActionItemsList } from './action-items-list';
 import { ExportDropdown } from './export-dropdown';
 import { SpeakerNamingModal } from './speaker-naming-modal';
+import { ProcessingBanner } from './processing-banner';
+import { SkeletonTranscript } from './skeleton-transcript';
+import { SkeletonSummary, SkeletonActionItems } from './skeleton-summary';
 import { useToast } from './toast';
+
+const PROCESSING_STATUSES = ['uploaded', 'transcribing', 'transcribed', 'summarising'] as const;
+type ProcessingStatus = typeof PROCESSING_STATUSES[number];
 import { formatDate, formatDuration } from '@/lib/utils';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -63,10 +69,11 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
     open: false, label: '', name: '',
   });
 
+  const isProcessingStatus = (PROCESSING_STATUSES as readonly string[]).includes(meeting.status);
+
   // Auto-poll when meeting is still processing
   useEffect(() => {
-    const processingStatuses = ['uploaded', 'transcribing', 'transcribed', 'summarising'];
-    if (!processingStatuses.includes(meeting.status)) return;
+    if (!isProcessingStatus) return;
 
     const interval = setInterval(async () => {
       try {
@@ -98,7 +105,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
     }, 3000); // Poll every 3 seconds
 
     return () => clearInterval(interval);
-  }, [meeting.status, meeting.id, segments.length]);
+  }, [isProcessingStatus, meeting.id, segments.length]);
 
   // Persist language selection per meeting in localStorage
   const storageKey = `meetnotes-lang-${initialMeeting.id}`;
@@ -295,6 +302,15 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
         </div>
       </div>
 
+      {/* Processing banner — shown only while the meeting is still being processed */}
+      {isProcessingStatus && meeting.status !== 'error' && (
+        <ProcessingBanner
+          status={meeting.status as ProcessingStatus}
+          audioDurationSeconds={meeting.audio_duration_seconds}
+          startedAt={meeting.updated_at || meeting.created_at}
+        />
+      )}
+
       {/* Audio Player */}
       <div className="mb-6">
         <AudioPlayer audioUrl={audioUrl} currentTimeMs={seekTimeMs} onTimeUpdate={handleTimeUpdate} />
@@ -369,14 +385,10 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
                   </div>
                 </div>
 
-                {isProcessing && meeting.status === 'summarising' ? (
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    <svg className="w-4 h-4 animate-spin text-emerald-500" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                    </svg>
-                    Generating summary...
-                  </div>
+                {isProcessingStatus && !summary ? (
+                  <SkeletonSummary />
+                ) : isProcessing && meeting.status === 'summarising' ? (
+                  <SkeletonSummary />
                 ) : summary ? (
                   <div className="space-y-4">
                     {primarySummary && <p className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed">{primarySummary}</p>}
@@ -405,7 +417,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
                   </div>
                 ) : (
                   <p className="text-gray-500 text-sm">
-                    {segments.length > 0 ? 'Select a language above and click Generate.' : 'Waiting for transcription to complete.'}
+                    {segments.length > 0 ? 'Select a language above and click Generate.' : 'Your summary will appear here once transcription completes.'}
                   </p>
                 )}
               </>
@@ -413,12 +425,17 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
           </div>
 
           {/* Action Items */}
-          {summary && Array.isArray(summary.action_items) && summary.action_items.length > 0 && (
+          {summary && Array.isArray(summary.action_items) && summary.action_items.length > 0 ? (
             <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-6">
               <h2 className="text-lg font-semibold text-white mb-4">Action Items</h2>
               <ActionItemsList items={summary.action_items as any[]} speakerMap={speakerMap} onStatusChange={handleActionStatusChange} />
             </div>
-          )}
+          ) : isProcessingStatus && !summary ? (
+            <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-6">
+              <h2 className="text-lg font-semibold text-white mb-4">Action Items</h2>
+              <SkeletonActionItems />
+            </div>
+          ) : null}
 
           {/* Key Decisions */}
           {summary && Array.isArray(summary.key_decisions) && summary.key_decisions.length > 0 && (
@@ -474,8 +491,10 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
                   onSegmentClick={handleSegmentClick}
                   onSpeakerRename={(label) => openSpeakerModal(label)}
                 />
+              ) : isProcessingStatus ? (
+                <SkeletonTranscript />
               ) : (
-                <p className="text-gray-500 text-sm">{meeting.status === 'transcribing' ? 'Transcription in progress...' : 'No transcript available yet.'}</p>
+                <p className="text-gray-500 text-sm">No transcript available yet.</p>
               )}
             </>
           )}
