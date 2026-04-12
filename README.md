@@ -7,7 +7,7 @@ AI-powered meeting notes tool optimised for Hong Kong professionals. Handles Eng
 - 🎙️ Record or upload meeting audio
 - 🗣️ Bilingual transcription (English + Cantonese)
 - 🤖 AI-generated summaries, action items, and key decisions
-- 📤 Export to PDF, Notion, Slack, or Email
+- 📤 Export to PDF or Email
 - 🔒 Secure and private (your data, your control)
 
 ## Tech Stack

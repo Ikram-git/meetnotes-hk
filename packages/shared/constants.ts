@@ -1,7 +1,7 @@
 // Subscription limits
 export const SUBSCRIPTION_LIMITS = {
   free: {
-    minutes: 300, // 5 hours per month
+    minutes: 100, // ~1.6 hours per month
     maxFileSize: 100 * 1024 * 1024, // 100 MB
   },
   pro: {

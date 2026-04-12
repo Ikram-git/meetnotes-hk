@@ -5,28 +5,28 @@ import Link from 'next/link';
 
 const DEMO_TRANSCRIPT = [
   { speaker: 'Sarah', time: '0:00', text: 'Alright everyone, let\'s get started. The main topic today is the Q3 product roadmap.' },
-  { speaker: 'James', time: '0:08', text: 'Sure. I\'ve been looking at the user feedback from last quarter. The top three requests are better export options, mobile support, and faster transcription.' },
+  { speaker: 'James', time: '0:08', text: 'Sure. I\'ve been looking at the user feedback from last quarter. The top three requests are better exports, mobile support, and faster transcription.' },
   { speaker: 'Sarah', time: '0:18', text: 'Good. Let\'s prioritize. I think mobile support should be our main focus since 40% of our users access from phones.' },
   { speaker: 'Lisa', time: '0:28', text: 'Agreed. I can have the mobile responsive design ready in two weeks. We should also consider a React Native app for phase two.' },
-  { speaker: 'James', time: '0:38', text: 'For the export options, I can add Notion and Slack integration by end of month. The API work is mostly done.' },
-  { speaker: 'Sarah', time: '0:48', text: 'Perfect. So the decision is: mobile first, then integrations, then transcription speed improvements. Lisa owns mobile, James owns integrations.' },
+  { speaker: 'James', time: '0:38', text: 'On the export side, I can ship improved PDF and email templates by end of month. The groundwork is already done.' },
+  { speaker: 'Sarah', time: '0:48', text: 'Perfect. So the decision is: mobile first, then export polish, then transcription speed improvements. Lisa owns mobile, James owns exports.' },
   { speaker: 'Lisa', time: '0:58', text: 'I\'ll have a prototype ready by next Friday for review.' },
-  { speaker: 'James', time: '1:05', text: 'And I\'ll set up a demo of the Notion integration next Wednesday.' },
+  { speaker: 'James', time: '1:05', text: 'And I\'ll share the new PDF layout with the team next Wednesday.' },
   { speaker: 'Sarah', time: '1:12', text: 'Great. Let\'s reconvene next week. Thanks everyone.' },
 ];
 
 const DEMO_SUMMARY = {
-  text: 'The team discussed the Q3 product roadmap, prioritizing features based on user feedback. Mobile support was identified as the top priority (40% of users on mobile), followed by export integrations (Notion & Slack), and transcription speed improvements. Clear ownership and timelines were established.',
+  text: 'The team discussed the Q3 product roadmap, prioritizing features based on user feedback. Mobile support was identified as the top priority (40% of users on mobile), followed by export polish, and transcription speed improvements. Clear ownership and timelines were established.',
   decisions: [
     { text: 'Mobile support is the #1 priority for Q3', speaker: 'Sarah' },
-    { text: 'Roadmap order: mobile → integrations → transcription speed', speaker: 'Sarah' },
+    { text: 'Roadmap order: mobile → exports → transcription speed', speaker: 'Sarah' },
   ],
   actions: [
     { text: 'Deliver mobile responsive prototype', assignee: 'Lisa', due: 'Next Friday' },
-    { text: 'Demo Notion integration to team', assignee: 'James', due: 'Next Wednesday' },
-    { text: 'Complete Notion + Slack integrations', assignee: 'James', due: 'End of month' },
+    { text: 'Share new PDF export layout with team', assignee: 'James', due: 'Next Wednesday' },
+    { text: 'Ship updated PDF + email exports', assignee: 'James', due: 'End of month' },
   ],
-  topics: ['Q3 Roadmap', 'Mobile Support', 'Integrations', 'User Feedback'],
+  topics: ['Q3 Roadmap', 'Mobile Support', 'Exports', 'User Feedback'],
   sentiment: 'positive',
 };
 
@@ -229,7 +229,7 @@ export default function DemoPage() {
           {step === 3 && (
             <div className="text-center mt-12 animate-fade-in">
               <h2 className="text-2xl font-bold text-white mb-3">That's MeetNotes.</h2>
-              <p className="text-gray-500 mb-8">From recording to structured notes — automatically. Start with 300 free minutes.</p>
+              <p className="text-gray-500 mb-8">From recording to structured notes — automatically. Start with 100 free minutes.</p>
               <div className="flex items-center justify-center gap-4">
                 <Link href="/signup" className="bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
                   Get Started Free

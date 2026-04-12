@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       const customerId = subscription.customer as string;
       const priceId = subscription.items.data[0]?.price?.id;
       const tier = mapPriceToTier(priceId);
-      const minutesLimit = tier === 'team' ? 10000 : tier === 'pro' ? 3000 : 300;
+      const minutesLimit = tier === 'team' ? 10000 : tier === 'pro' ? 3000 : 100;
 
       await supabase
         .from('profiles')
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
         .update({
           subscription_tier: 'free',
           subscription_status: 'cancelled',
-          minutes_limit: 300,
+          minutes_limit: 100,
         })
         .eq('stripe_customer_id', customerId);
 

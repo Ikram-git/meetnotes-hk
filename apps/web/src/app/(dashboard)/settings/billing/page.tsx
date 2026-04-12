@@ -10,7 +10,7 @@ import { PLANS } from '@/lib/billing/plans';
 export default function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [upgradeLoading, setUpgradeLoading] = useState<string | null>(null);
-  const [usage, setUsage] = useState({ minutesUsed: 0, minutesLimit: 300, tier: 'free', percentUsed: 0 });
+  const [usage, setUsage] = useState({ minutesUsed: 0, minutesLimit: 100, tier: 'free', percentUsed: 0 });
 
   useEffect(() => {
     async function load() {

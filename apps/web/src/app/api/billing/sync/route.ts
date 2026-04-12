@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     await supabase.from('profiles').update({
       subscription_tier: 'free',
       subscription_status: 'active',
-      minutes_limit: 300,
+      minutes_limit: 100,
     }).eq('id', user.id);
     return NextResponse.json({ synced: true, tier: 'free' });
   }
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   const teamIds = [process.env.STRIPE_TEAM_MONTHLY_PRICE_ID, process.env.STRIPE_TEAM_YEARLY_PRICE_ID];
 
   let tier = 'free';
-  let minutesLimit = 300;
+  let minutesLimit = 100;
   if (proIds.includes(priceId)) { tier = 'pro'; minutesLimit = 3000; }
   if (teamIds.includes(priceId)) { tier = 'team'; minutesLimit = 10000; }
 

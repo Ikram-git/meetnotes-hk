@@ -32,7 +32,7 @@ export default function PrivacyPage() {
               <li>To provide, maintain, and improve our services.</li>
               <li>To process payments and manage your subscription.</li>
               <li>To send you service-related notifications (not marketing).</li>
-              <li>To export meeting notes to third-party services you connect (Notion, Slack, email) at your request.</li>
+              <li>To export meeting notes via email at your request.</li>
             </ul>
           </section>
 
