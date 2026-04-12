@@ -51,7 +51,7 @@ export default function SignupPage() {
           <span className="text-xl font-bold text-white">MeetNotes</span>
         </Link>
         <div>
-          <h2 className="text-3xl font-bold text-white mb-4">Start with 300 free minutes every month.</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">Start with 100 free minutes every month.</h2>
           <p className="text-gray-400 text-lg leading-relaxed">No credit card required. Record, transcribe, and summarise your meetings with AI.</p>
         </div>
         <p className="text-gray-600 text-sm">AI-powered meeting notes</p>

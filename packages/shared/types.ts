@@ -23,7 +23,7 @@ export type SubscriptionTier = 'free' | 'pro' | 'team';
 export type SubscriptionStatus = 'active' | 'cancelled' | 'past_due';
 
 // Export types
-export type ExportType = 'pdf' | 'notion' | 'slack' | 'email' | 'clipboard';
+export type ExportType = 'pdf' | 'email' | 'clipboard';
 
 export type ExportStatus = 'pending' | 'completed' | 'error';
 

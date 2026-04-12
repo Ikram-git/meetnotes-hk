@@ -21,7 +21,7 @@ export function UpgradePrompt({ currentTier, message }: UpgradePromptProps) {
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-white">Upgrade to Pro</h3>
           <p className="text-xs text-gray-400 mt-1">
-            {message || 'Get 3,000 minutes/month, email export, Notion & Slack integration, and more.'}
+            {message || 'Get 3,000 minutes/month, email export, priority transcription, and more.'}
           </p>
           <Link href="/settings/billing"
             className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-400 transition">

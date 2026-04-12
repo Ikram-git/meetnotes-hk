@@ -96,7 +96,7 @@ export default async function LandingPage() {
       {/* Social proof bar */}
       <section className="border-y border-emerald-900/20 bg-emerald-950/20 py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm text-gray-500">
-          {['300 free minutes/month', 'English + Chinese', 'Chrome Extension', 'Export to PDF'].map((item) => (
+          {['100 free minutes/month', 'English + Chinese', 'Chrome Extension', 'Export to PDF'].map((item) => (
             <div key={item} className="flex items-center gap-2">
               <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -189,7 +189,7 @@ export default async function LandingPage() {
             {isLoggedIn ? 'Ready for your next meeting?' : 'Ready to transform your meetings?'}
           </h2>
           <p className="text-lg text-gray-500 mb-8">
-            {isLoggedIn ? 'Upload a recording or use the Chrome extension to capture your next meeting.' : 'Start with 300 free minutes every month. No credit card required.'}
+            {isLoggedIn ? 'Upload a recording or use the Chrome extension to capture your next meeting.' : 'Start with 100 free minutes every month. No credit card required.'}
           </p>
           {isLoggedIn ? (
             <Link href="/meetings" className="inline-block bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">

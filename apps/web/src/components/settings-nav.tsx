@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 const tabs = [
   { href: '/settings', label: 'Profile' },
   { href: '/settings/billing', label: 'Billing' },
-  { href: '/settings/integrations', label: 'Integrations' },
 ];
 
 export function SettingsNav() {

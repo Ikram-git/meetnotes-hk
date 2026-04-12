@@ -55,7 +55,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold text-white mb-3">7. Subscriptions & Billing</h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li>Free accounts include 300 minutes of transcription per month.</li>
+              <li>Free accounts include 100 minutes of transcription per month.</li>
               <li>Paid subscriptions are billed monthly or annually in USD via Stripe.</li>
               <li>You may cancel your subscription at any time. Access continues until the end of your billing period.</li>
               <li>Refunds are handled on a case-by-case basis.</li>

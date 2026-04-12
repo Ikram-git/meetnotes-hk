@@ -17,7 +17,7 @@ CREATE TABLE public.profiles (
   subscription_tier TEXT DEFAULT 'free',          -- 'free', 'pro', 'team'
   subscription_status TEXT DEFAULT 'active',      -- 'active', 'cancelled', 'past_due'
   minutes_used_this_month INTEGER DEFAULT 0,
-  minutes_limit INTEGER DEFAULT 300,              -- Free tier: 300 min/month
+  minutes_limit INTEGER DEFAULT 100,              -- Free tier: 100 min/month
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -129,10 +129,10 @@ CREATE TABLE public.exports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   meeting_id UUID NOT NULL REFERENCES public.meetings(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  export_type TEXT NOT NULL,                      -- 'pdf', 'notion', 'slack', 'email', 'clipboard'
+  export_type TEXT NOT NULL,                      -- 'pdf', 'email', 'clipboard'
   export_language TEXT DEFAULT 'en',              -- 'en', 'zh-Hant', 'both'
   status TEXT DEFAULT 'pending',                  -- 'pending', 'completed', 'error'
-  metadata JSONB,                                 -- Type-specific data (e.g. Notion page ID)
+  metadata JSONB,                                 -- Type-specific data
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

@@ -18,9 +18,9 @@ export const PLANS: Plan[] = [
     price: 0,
     priceYearly: 0,
     currency: 'USD',
-    minutesLimit: 300,
+    minutesLimit: 100,
     features: [
-      '300 minutes/month',
+      '100 minutes/month',
       'English + Chinese transcription',
       'AI summaries & action items',
       'PDF & clipboard export',
@@ -43,7 +43,6 @@ export const PLANS: Plan[] = [
       'Email export',
       'Priority transcription',
       'Speaker identification',
-      'Notion & Slack export',
     ],
   },
   {
@@ -72,5 +71,5 @@ export function getPlanById(id: string): Plan | undefined {
 
 export function getPlanLimits(tier: string): { minutesLimit: number } {
   const plan = getPlanById(tier);
-  return { minutesLimit: plan?.minutesLimit || 300 };
+  return { minutesLimit: plan?.minutesLimit || 100 };
 }
