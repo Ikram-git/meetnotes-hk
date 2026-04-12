@@ -2,6 +2,10 @@ import { createClient } from '@/lib/supabase/server';
 import { getSTTProvider } from '@/lib/stt';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Deepgram transcription can take 10-40s depending on audio length.
+// Default Vercel timeout of 10s is too short.
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
 
@@ -94,18 +98,11 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Auto-trigger summarisation — forward whichever auth the request used
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const triggerHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
-    const cookie = req.headers.get('cookie');
-    const authorization = req.headers.get('authorization');
-    if (cookie) triggerHeaders['Cookie'] = cookie;
-    if (authorization) triggerHeaders['Authorization'] = authorization;
-    fetch(`${appUrl}/api/meetings/${meetingId}/summarise`, {
-      method: 'POST',
-      headers: triggerHeaders,
-    }).catch(console.error);
-
+    // Summarisation is triggered from the client after it observes the
+    // transcribed status. We deliberately don't fire-and-forget an HTTP
+    // call from here because on Vercel, once this handler returns, the
+    // serverless container terminates and the in-flight fetch can be
+    // killed along with it — leading to meetings stuck in 'summarising'.
     return NextResponse.json({
       status: 'transcribed',
       segmentCount: segments.length,
