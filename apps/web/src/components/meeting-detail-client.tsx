@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AudioPlayer } from './audio-player';
 import { TranscriptViewer } from './transcript-viewer';
@@ -70,6 +70,35 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
   });
 
   const isProcessingStatus = (PROCESSING_STATUSES as readonly string[]).includes(meeting.status);
+
+  // Auto-trigger summarisation once transcription completes — this replaces
+  // the old fire-and-forget server→server fetch from /api/transcribe, which
+  // was unreliable on Vercel (container kill + function timeout).
+  const autoSummaryTriggered = useRef(false);
+  useEffect(() => {
+    if (autoSummaryTriggered.current) return;
+    if (meeting.status !== 'transcribed') return;
+    if (initialSummary) return; // Already has a summary from a previous run
+    if (initialSegments.length === 0) return; // Wait for segments to load
+    autoSummaryTriggered.current = true;
+
+    // Read the persisted language preference synchronously from localStorage
+    // so we don't race with the language-loading effect.
+    let language: Language = 'en';
+    try {
+      const saved = localStorage.getItem(`meetnotes-lang-${initialMeeting.id}`) as Language | null;
+      if (saved && ['en', 'zh-Hant', 'both'].includes(saved)) language = saved;
+    } catch {}
+
+    fetch(`/api/meetings/${initialMeeting.id}/summarise`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language }),
+    }).catch(() => {
+      // Non-fatal — the polling loop will eventually surface any status
+      // change, and the user can still click Regenerate manually.
+    });
+  }, [meeting.status, initialSummary, initialSegments.length, initialMeeting.id]);
 
   // Auto-poll when meeting is still processing
   useEffect(() => {

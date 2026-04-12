@@ -3,6 +3,11 @@ import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Claude Sonnet summarisation of a full meeting transcript typically takes
+// 15-25s. Vercel functions default to 10s — give this one up to 60s
+// (works on both Hobby and Pro plans).
+export const maxDuration = 60;
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
