@@ -78,9 +78,6 @@ importers:
       '@meetnotes-hk/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@notionhq/client':
-        specifier: ^5.13.0
-        version: 5.13.0
       '@react-pdf/renderer':
         specifier: ^4.0.0
         version: 4.3.2(react@19.2.4)
@@ -483,10 +480,6 @@ packages:
   '@nolyfill/is-core-module@1.0.39':
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
-
-  '@notionhq/client@5.13.0':
-    resolution: {integrity: sha512-SWVaqYVNaecLzAAllups4vklxxomaFenEMEkoUs3ylvhK1KFTU5Jevgu9Uwm/TSdhsErV0ru5YHcLd3SNyPi6Q==}
-    engines: {node: '>=18'}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -3418,8 +3411,6 @@ snapshots:
       fastq: 1.20.1
 
   '@nolyfill/is-core-module@1.0.39': {}
-
-  '@notionhq/client@5.13.0': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
