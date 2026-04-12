@@ -21,7 +21,7 @@ export const PLANS: Plan[] = [
     minutesLimit: 100,
     features: [
       '100 minutes/month',
-      'English + Chinese transcription',
+      '30+ languages auto-detected',
       'AI summaries & action items',
       'PDF & clipboard export',
       'Chrome extension',

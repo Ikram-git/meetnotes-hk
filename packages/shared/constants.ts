@@ -25,11 +25,27 @@ export const SUPPORTED_AUDIO_FORMATS = [
 
 export const AUDIO_FILE_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.webm'] as const;
 
-// Language codes
+// Language codes — see apps/web/src/lib/i18n/languages.ts for the full
+// registry of summary-output languages. These constants are legacy
+// helpers kept for the STT side.
 export const LANGUAGE_CODES = {
   english: 'en',
   cantonese: 'yue-Hant-HK',
   mandarin: 'cmn-Hans-CN',
+  japanese: 'ja',
+  korean: 'ko',
+  spanish: 'es',
+  french: 'fr',
+  german: 'de',
+  portuguese: 'pt',
+  italian: 'it',
+  hindi: 'hi',
+  arabic: 'ar',
+  russian: 'ru',
+  dutch: 'nl',
+  indonesian: 'id',
+  vietnamese: 'vi',
+  thai: 'th',
 } as const;
 
 // Meeting status display names

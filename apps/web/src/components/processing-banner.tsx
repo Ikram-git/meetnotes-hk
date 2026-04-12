@@ -12,13 +12,13 @@ interface ProcessingBannerProps {
 
 const STAGES = [
   { id: 'upload', label: 'Upload', description: 'Audio received' },
-  { id: 'transcribe', label: 'Transcribe', description: 'Deepgram is listening for speakers and transcribing in English + Cantonese…' },
+  { id: 'transcribe', label: 'Transcribe', description: 'Deepgram is listening for speakers and auto-detecting the language…' },
   { id: 'summarise', label: 'Summarise', description: 'Claude is extracting action items, key decisions, and topics…' },
   { id: 'ready', label: 'Ready', description: 'Your meeting notes are ready to review.' },
 ] as const;
 
 const TIPS = [
-  '💡 Tip: MeetNotes handles English + Cantonese code-switched meetings natively.',
+  '💡 Tip: MeetNotes auto-detects 30+ languages — including code-switched HK-style meetings.',
   '💡 Tip: Click any speaker name on the transcript to rename them — it sticks.',
   '💡 Tip: You can regenerate the summary in English, 繁中, or both at any time.',
   '💡 Tip: Action items can be checked off from the meeting detail page.',

@@ -14,7 +14,9 @@ export type AudioFormat = 'mp3' | 'wav' | 'm4a' | 'webm';
 export type STTProvider = 'deepgram' | 'google' | 'assemblyai';
 
 // User preferences
-export type PreferredLanguage = 'en' | 'zh-Hant' | 'both';
+// Any supported language code (see apps/web/src/lib/i18n/languages.ts)
+// or 'both' for a special bilingual EN+Traditional Chinese output.
+export type PreferredLanguage = string;
 
 export type SummaryStyle = 'concise' | 'detailed' | 'bullet';
 

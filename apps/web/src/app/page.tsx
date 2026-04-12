@@ -96,7 +96,7 @@ export default async function LandingPage() {
       {/* Social proof bar */}
       <section className="border-y border-emerald-900/20 bg-emerald-950/20 py-8 px-6">
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-x-12 gap-y-4 text-sm text-gray-500">
-          {['100 free minutes/month', 'English + Chinese', 'Chrome Extension', 'Export to PDF'].map((item) => (
+          {['100 free minutes/month', '30+ languages auto-detected', 'Chrome Extension', 'Export to PDF'].map((item) => (
             <div key={item} className="flex items-center gap-2">
               <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -138,9 +138,9 @@ export default async function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-white mb-3">Bilingual Transcription</h3>
+              <h3 className="text-lg font-semibold text-white mb-3">Multilingual Transcription</h3>
               <p className="text-gray-400 text-sm leading-relaxed">
-                Powered by Deepgram Nova-2. Handles English, Chinese, and seamless code-switching between languages.
+                Powered by Deepgram Nova-2. Auto-detects 30+ languages including English, Cantonese, Mandarin, Japanese, Korean, Spanish, French and more — plus seamless code-switching.
               </p>
             </div>
 
@@ -152,7 +152,7 @@ export default async function LandingPage() {
               </div>
               <h3 className="text-lg font-semibold text-white mb-3">AI Summaries</h3>
               <p className="text-gray-400 text-sm leading-relaxed">
-                Claude AI generates summaries, action items, key decisions, and notable quotes in English and Chinese.
+                Claude AI generates summaries, action items, key decisions, and notable quotes in 18 languages — your pick.
               </p>
             </div>
           </div>

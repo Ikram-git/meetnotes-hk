@@ -16,7 +16,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-white mb-3">2. Description of Service</h2>
-            <p>MeetNotes provides AI-powered meeting transcription and summarisation for professionals. The Service includes a web application, Chrome browser extension, and related APIs. The Service supports English and Chinese (multilingual) audio.</p>
+            <p>MeetNotes provides AI-powered meeting transcription and summarisation for professionals. The Service includes a web application, Chrome browser extension, and related APIs. The Service supports audio in 30+ languages with automatic language detection.</p>
           </section>
 
           <section>

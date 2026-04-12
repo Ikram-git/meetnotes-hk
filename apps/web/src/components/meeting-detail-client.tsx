@@ -13,10 +13,11 @@ import { ProcessingBanner } from './processing-banner';
 import { SkeletonTranscript } from './skeleton-transcript';
 import { SkeletonSummary, SkeletonActionItems } from './skeleton-summary';
 import { useToast } from './toast';
+import { formatDate, formatDuration } from '@/lib/utils';
+import { SUPPORTED_LANGUAGES, BILINGUAL_OPTION, isValidLanguageCode } from '@/lib/i18n/languages';
 
 const PROCESSING_STATUSES = ['uploaded', 'transcribing', 'transcribed', 'summarising'] as const;
 type ProcessingStatus = typeof PROCESSING_STATUSES[number];
-import { formatDate, formatDuration } from '@/lib/utils';
 
 const STATUS_STYLES: Record<string, string> = {
   uploaded: 'bg-gray-800 text-gray-400',
@@ -27,13 +28,8 @@ const STATUS_STYLES: Record<string, string> = {
   error: 'bg-red-500/15 text-red-400',
 };
 
-type Language = 'en' | 'zh-Hant' | 'both';
-
-const LANG_OPTIONS: { value: Language; label: string }[] = [
-  { value: 'en', label: 'EN' },
-  { value: 'zh-Hant', label: '繁中' },
-  { value: 'both', label: 'Both' },
-];
+// Any supported language code from SUPPORTED_LANGUAGES or 'both' for bilingual EN+繁中.
+type Language = string;
 
 interface MeetingDetailClientProps {
   meeting: any;
@@ -141,8 +137,8 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
   const [lang, setLangState] = useState<Language>('en');
 
   useEffect(() => {
-    const saved = localStorage.getItem(storageKey) as Language | null;
-    if (saved && ['en', 'zh-Hant', 'both'].includes(saved)) {
+    const saved = localStorage.getItem(storageKey);
+    if (saved && isValidLanguageCode(saved)) {
       setLangState(saved);
     }
   }, [storageKey]);
@@ -364,16 +360,24 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
                   <div className="flex items-center gap-2 flex-wrap">
                     {segments.length > 0 && (
                       <>
-                        {/* Language pill toggle */}
-                        <div className="flex items-center bg-white/5 border border-emerald-900/30 rounded-lg p-0.5">
-                          {LANG_OPTIONS.map((opt) => (
-                            <button key={opt.value} onClick={() => setLang(opt.value)}
-                              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
-                                lang === opt.value ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'
-                              }`}>
-                              {opt.label}
-                            </button>
-                          ))}
+                        {/* Language dropdown */}
+                        <div className="relative">
+                          <select
+                            value={lang}
+                            onChange={(e) => setLang(e.target.value)}
+                            className="appearance-none bg-white/5 border border-emerald-900/30 rounded-lg pl-3 pr-8 py-1.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/10 transition cursor-pointer focus:outline-none focus:border-emerald-500/50"
+                            aria-label="Summary language"
+                          >
+                            <option value={BILINGUAL_OPTION.code}>{BILINGUAL_OPTION.flag} {BILINGUAL_OPTION.name}</option>
+                            {SUPPORTED_LANGUAGES.map((l) => (
+                              <option key={l.code} value={l.code}>
+                                {l.flag} {l.nativeName}
+                              </option>
+                            ))}
+                          </select>
+                          <svg className="w-3 h-3 text-gray-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
                         </div>
 
                         {/* Generate / Regenerate button */}

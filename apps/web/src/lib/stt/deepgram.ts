@@ -31,11 +31,14 @@ export class DeepgramProvider implements STTProvider {
       : 'audio/webm';
     console.log(`[Deepgram] Downloaded ${audioBuffer.length} bytes (${mimetype}), sending to Deepgram...`);
 
+    // We deliberately do NOT set a fixed `language` here — Deepgram Nova-2
+    // with `detect_language: true` auto-detects from ~36 supported languages
+    // and picks the right model for each. Setting `language: 'en'` would
+    // bias towards English and hurt accuracy for non-English meetings.
     const transcribePromise = this.client.listen.prerecorded.transcribeFile(
       audioBuffer,
       {
         model: 'nova-2',
-        language: 'en',
         detect_language: true,
         smart_format: true,
         diarize: options?.enableDiarisation ?? true,

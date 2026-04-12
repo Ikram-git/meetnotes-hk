@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { SettingsNav } from '@/components/settings-nav';
+import { SUPPORTED_LANGUAGES, BILINGUAL_OPTION } from '@/lib/i18n/languages';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -82,11 +83,14 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-400 mb-1.5">Summary Language</label>
               <select value={settings.preferred_language} onChange={(e) => setSettings({ ...settings, preferred_language: e.target.value })}
                 className="w-full px-3.5 py-2.5 bg-white/5 border border-gray-800 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition">
-                <option value="en">English</option>
-                <option value="zh-Hant">Traditional Chinese</option>
-                <option value="both">Both / Bilingual</option>
+                <option value={BILINGUAL_OPTION.code}>{BILINGUAL_OPTION.flag} {BILINGUAL_OPTION.name}</option>
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.flag} {lang.name} — {lang.nativeName}
+                  </option>
+                ))}
               </select>
-              <p className="text-xs text-gray-600 mt-1.5">The language used for AI-generated summaries</p>
+              <p className="text-xs text-gray-600 mt-1.5">The language used for AI-generated summaries. Audio is auto-detected and can be in any language.</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1.5">Summary Style</label>
