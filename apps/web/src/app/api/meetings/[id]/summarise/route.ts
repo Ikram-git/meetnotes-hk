@@ -67,9 +67,10 @@ export async function POST(
     );
   }
 
-  // Language from request body overrides profile preference
+  // Language from request body overrides profile preference.
+  // Accepts any supported code ('en', 'zh-Hant', 'ja', 'es', …) or 'both'.
   const body = await req.json().catch(() => ({}));
-  const requestedLanguage = body.language as 'en' | 'zh-Hant' | 'both' | undefined;
+  const requestedLanguage = typeof body.language === 'string' ? body.language : undefined;
 
   // Get user preferences (fallback only)
   const { data: profile } = await supabase
@@ -95,7 +96,7 @@ export async function POST(
     const result = await summariseMeeting(transcriptText, {
       language:
         requestedLanguage ||
-        (profile?.preferred_language as 'en' | 'zh-Hant' | 'both') ||
+        profile?.preferred_language ||
         'en',
       style:
         (profile?.preferred_summary_style as 'concise' | 'detailed' | 'bullet') ||

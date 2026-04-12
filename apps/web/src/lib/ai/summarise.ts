@@ -38,7 +38,8 @@ export interface SummaryResult {
 export async function summariseMeeting(
   transcript: string,
   options: {
-    language: 'en' | 'zh-Hant' | 'both';
+    /** Any code from SUPPORTED_LANGUAGES (e.g. 'en', 'zh-Hant', 'ja', 'es') or 'both' for bilingual EN+繁中 */
+    language: string;
     style: 'concise' | 'detailed' | 'bullet';
   }
 ): Promise<SummaryResult> {
