@@ -14,7 +14,8 @@ import { SkeletonTranscript } from './skeleton-transcript';
 import { SkeletonSummary, SkeletonActionItems } from './skeleton-summary';
 import { useToast } from './toast';
 import { formatDate, formatDuration } from '@/lib/utils';
-import { SUPPORTED_LANGUAGES, BILINGUAL_OPTION, isValidLanguageCode } from '@/lib/i18n/languages';
+import { isValidLanguageCode } from '@/lib/i18n/languages';
+import { LanguageSelector } from './language-selector';
 
 const PROCESSING_STATUSES = ['uploaded', 'transcribing', 'transcribed', 'summarising'] as const;
 type ProcessingStatus = typeof PROCESSING_STATUSES[number];
@@ -260,6 +261,21 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
 
   const handleActionStatusChange = useCallback(async (_index: number, _status: string) => {}, []);
 
+  // When the user picks a new language from the top selector, immediately
+  // regenerate the summary + action items + decisions + topics in that
+  // language. We don't regenerate the transcript — it stays in the original
+  // audio language. Only runs if a summary already exists and we have
+  // segments to work from.
+  const handleLanguageChange = useCallback((newLang: string) => {
+    if (newLang === lang) return;
+    setLang(newLang);
+    if (summary && segments.length > 0 && !isProcessing) {
+      toast('Regenerating summary in the new language…');
+      runSummary(newLang);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang, summary, segments.length, isProcessing]);
+
   const canGenerate = segments.length > 0;
   const primarySummary = summary?.summary_text || '';
   const chineseSummary = summary?.summary_text_zh || '';
@@ -309,7 +325,18 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
             )}
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+            {/* Global language selector — changing this re-translates the
+                summary, action items, decisions, and topics into the chosen
+                language. The transcript stays in the original audio language. */}
+            {segments.length > 0 && (
+              <LanguageSelector
+                value={lang}
+                onChange={handleLanguageChange}
+                label="Language:"
+                disabled={isProcessing}
+              />
+            )}
             {(meeting.status === 'uploaded' || (meeting.status === 'error' && segments.length === 0)) && (
               <button onClick={handleRetryTranscription} disabled={isProcessing}
                 className="px-3 py-2 bg-emerald-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -360,27 +387,8 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
                   <div className="flex items-center gap-2 flex-wrap">
                     {segments.length > 0 && (
                       <>
-                        {/* Language dropdown */}
-                        <div className="relative">
-                          <select
-                            value={lang}
-                            onChange={(e) => setLang(e.target.value)}
-                            className="appearance-none bg-white/5 border border-emerald-900/30 rounded-lg pl-3 pr-8 py-1.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-white/10 transition cursor-pointer focus:outline-none focus:border-emerald-500/50"
-                            aria-label="Summary language"
-                          >
-                            <option value={BILINGUAL_OPTION.code}>{BILINGUAL_OPTION.flag} {BILINGUAL_OPTION.name}</option>
-                            {SUPPORTED_LANGUAGES.map((l) => (
-                              <option key={l.code} value={l.code}>
-                                {l.flag} {l.nativeName}
-                              </option>
-                            ))}
-                          </select>
-                          <svg className="w-3 h-3 text-gray-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-
-                        {/* Generate / Regenerate button */}
+                        {/* Generate / Regenerate button (language is picked
+                            from the selector in the page header) */}
                         {canGenerate && (
                           <button onClick={() => runSummary(lang)} disabled={isProcessing}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed">

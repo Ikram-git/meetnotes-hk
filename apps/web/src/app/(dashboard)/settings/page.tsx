@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { SettingsNav } from '@/components/settings-nav';
-import { SUPPORTED_LANGUAGES, BILINGUAL_OPTION } from '@/lib/i18n/languages';
+import { LanguageSelector } from '@/components/language-selector';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -81,25 +81,40 @@ export default function SettingsPage() {
           <div className="p-6 space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1.5">Summary Language</label>
-              <select value={settings.preferred_language} onChange={(e) => setSettings({ ...settings, preferred_language: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-white/5 border border-gray-800 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition">
-                <option value={BILINGUAL_OPTION.code}>{BILINGUAL_OPTION.flag} {BILINGUAL_OPTION.name}</option>
-                {SUPPORTED_LANGUAGES.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.flag} {lang.name} — {lang.nativeName}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-gray-600 mt-1.5">The language used for AI-generated summaries. Audio is auto-detected and can be in any language.</p>
+              <LanguageSelector
+                value={settings.preferred_language}
+                onChange={(code) => setSettings({ ...settings, preferred_language: code })}
+                size="md"
+                className="w-full"
+              />
+              <p className="text-xs text-gray-600 mt-1.5">The language used for AI-generated summaries. Audio is auto-detected and can be in any of 30+ languages.</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1.5">Summary Style</label>
-              <select value={settings.preferred_summary_style} onChange={(e) => setSettings({ ...settings, preferred_summary_style: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-white/5 border border-gray-800 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition">
-                <option value="concise">Concise</option>
-                <option value="detailed">Detailed</option>
-                <option value="bullet">Bullet Points</option>
-              </select>
+              <div className="flex gap-2">
+                {[
+                  { value: 'concise', label: 'Concise', desc: 'Short & scannable' },
+                  { value: 'detailed', label: 'Detailed', desc: 'Full paragraphs' },
+                  { value: 'bullet', label: 'Bullet Points', desc: 'Quick list' },
+                ].map((opt) => {
+                  const active = settings.preferred_summary_style === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setSettings({ ...settings, preferred_summary_style: opt.value })}
+                      className={`flex-1 px-3 py-2.5 rounded-lg border text-left transition ${
+                        active
+                          ? 'bg-emerald-500/15 border-emerald-500/40 text-white'
+                          : 'bg-white/5 border-emerald-900/30 text-gray-400 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="text-sm font-medium">{opt.label}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">{opt.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
               <p className="text-xs text-gray-600 mt-1.5">How your meeting summaries are formatted</p>
             </div>
           </div>
