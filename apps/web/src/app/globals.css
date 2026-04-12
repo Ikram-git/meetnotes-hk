@@ -163,6 +163,11 @@
   );
 }
 
+/* Indeterminate progress bar (used by the regenerating banner) */
+.animate-progress-sweep {
+  animation: shimmer-sweep 1.6s ease-in-out infinite;
+}
+
 /* Waveform bouncing bars */
 @keyframes wave-bounce {
   0%, 100% { transform: scaleY(0.35); }

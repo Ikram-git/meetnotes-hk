@@ -14,7 +14,7 @@ import { SkeletonTranscript } from './skeleton-transcript';
 import { SkeletonSummary, SkeletonActionItems } from './skeleton-summary';
 import { useToast } from './toast';
 import { formatDate, formatDuration } from '@/lib/utils';
-import { isValidLanguageCode } from '@/lib/i18n/languages';
+import { isValidLanguageCode, getLanguageByCode } from '@/lib/i18n/languages';
 import { LanguageSelector } from './language-selector';
 
 const PROCESSING_STATUSES = ['uploaded', 'transcribing', 'transcribed', 'summarising'] as const;
@@ -54,6 +54,8 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
   const [segments, setSegments] = useState(initialSegments);
   const [meeting, setMeeting] = useState(initialMeeting);
   const [isProcessing, setIsProcessing] = useState(false);
+  /** The language we're currently regenerating the summary into, or null if idle. */
+  const [regeneratingTo, setRegeneratingTo] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(initialMeeting.title || '');
 
@@ -240,6 +242,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
   const runSummary = async (language: Language) => {
     localStorage.setItem(storageKey, language);
     setIsProcessing(true);
+    setRegeneratingTo(language);
     try {
       const res = await fetch(`/api/meetings/${meeting.id}/summarise`, {
         method: 'POST',
@@ -250,12 +253,14 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
         const data = await res.json();
         toast(`Summary failed: ${data.error || 'Unknown error'}`, 'error');
         setIsProcessing(false);
+        setRegeneratingTo(null);
         return;
       }
       window.location.reload();
     } catch {
       toast('Failed to generate summary', 'error');
       setIsProcessing(false);
+      setRegeneratingTo(null);
     }
   };
 
@@ -269,8 +274,10 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
   const handleLanguageChange = useCallback((newLang: string) => {
     if (newLang === lang) return;
     setLang(newLang);
+    // Only auto-regenerate if there's already a summary to translate.
+    // The prominent banner at the top of the page replaces the toast
+    // we used to show here.
     if (summary && segments.length > 0 && !isProcessing) {
-      toast('Regenerating summary in the new language…');
       runSummary(newLang);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -361,6 +368,47 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
           audioDurationSeconds={meeting.audio_duration_seconds}
           startedAt={meeting.updated_at || meeting.created_at}
         />
+      )}
+
+      {/* Regenerating banner — shown while the summary is being re-translated
+          to a new language (or regenerated manually). Prominent, page-wide. */}
+      {regeneratingTo && !isProcessingStatus && (
+        <div className="mb-6 bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-cyan-500/15 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 animate-fade-in">
+          <div className="flex items-center gap-4">
+            <div className="relative flex-shrink-0">
+              <div className="w-11 h-11 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-emerald-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              </div>
+              <span className="absolute inset-0 rounded-xl animate-ping bg-emerald-500/20" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-semibold text-white truncate">
+                  Translating your meeting notes…
+                </h3>
+                {(() => {
+                  const target = getLanguageByCode(regeneratingTo);
+                  return target ? (
+                    <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-0.5">
+                      <span className="text-sm leading-none">{target.flag}</span>
+                      {target.nativeName}
+                    </span>
+                  ) : null;
+                })()}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Claude is rewriting the summary, action items, key decisions, and topics. The transcript stays in the original audio language. This takes about 15–25 seconds.
+              </p>
+              {/* Indeterminate shimmer bar */}
+              <div className="mt-3 h-1 bg-emerald-900/30 rounded-full overflow-hidden">
+                <div className="h-full w-1/3 bg-gradient-to-r from-transparent via-emerald-400 to-transparent rounded-full animate-progress-sweep" />
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Audio Player */}
