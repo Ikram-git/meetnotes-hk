@@ -1,5 +1,5 @@
 {
-  "name": "@meetnotes-hk/extension",
+  "name": "@meetnotes/extension",
   "version": "0.1.0",
   "private": true,
   "scripts": {
