@@ -10,9 +10,11 @@ interface PdfData {
     audio_duration_seconds: number | null;
   };
   summary: {
+    overview?: string | null;
+    overview_zh?: string | null;
     summary_text: string;
     summary_text_zh?: string | null;
-    key_decisions: Array<{ text: string; speaker?: string }>;
+    key_points?: Array<{ text: string; text_zh?: string }>;
     action_items: Array<{
       text: string;
       assignee?: string;
@@ -59,7 +61,8 @@ export function generatePdfHtml(data: PdfData): string {
   .checkbox { width: 14px; height: 14px; border: 2px solid #d1d5db; border-radius: 3px; flex-shrink: 0; margin-top: 3px; }
   .checkbox.done { background: #22c55e; border-color: #22c55e; }
   .assignee { color: #2563eb; font-size: 12px; background: #eff6ff; padding: 2px 8px; border-radius: 10px; }
-  .decision { margin-bottom: 8px; padding-left: 16px; border-left: 3px solid #2563eb; }
+  .key-point { margin-bottom: 6px; padding-left: 16px; position: relative; font-size: 14px; }
+  .key-point:before { content: '•'; position: absolute; left: 4px; color: #10b981; font-weight: bold; }
   .topics { display: flex; flex-wrap: wrap; gap: 6px; }
   .topic { background: #eff6ff; color: #1e40af; padding: 4px 12px; border-radius: 16px; font-size: 13px; }
   .segment { margin-bottom: 8px; font-size: 14px; }
@@ -74,9 +77,18 @@ export function generatePdfHtml(data: PdfData): string {
 <h1>${meeting.title || 'Untitled Meeting'}</h1>
 <div class="meta">${date}${meeting.audio_duration_seconds ? ` &bull; ${Math.round(meeting.audio_duration_seconds / 60)} min` : ''}</div>
 
+${summary.overview ? `<h2>TL;DR</h2><div class="summary">${summary.overview}</div>${summary.overview_zh ? `<div class="summary-zh">${summary.overview_zh}</div>` : ''}` : ''}
+
 <h2>Summary</h2>
 <div class="summary">${summary.summary_text}</div>
 ${summary.summary_text_zh ? `<div class="summary-zh">${summary.summary_text_zh}</div>` : ''}
+
+${
+  summary.key_points && summary.key_points.length > 0
+    ? `<h2>Key Points</h2>
+${summary.key_points.map((p) => `<div class="key-point">${p.text}</div>`).join('\n')}`
+    : ''
+}
 
 ${
   summary.action_items.length > 0
@@ -93,13 +105,6 @@ ${summary.action_items
 </div>`
   )
   .join('\n')}`
-    : ''
-}
-
-${
-  summary.key_decisions.length > 0
-    ? `<h2>Key Decisions</h2>
-${summary.key_decisions.map((d) => `<div class="decision">${d.text}</div>`).join('\n')}`
     : ''
 }
 

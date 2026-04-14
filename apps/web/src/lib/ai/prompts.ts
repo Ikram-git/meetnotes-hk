@@ -38,30 +38,41 @@ export const SUMMARY_USER_PROMPT = (
 Language rules for the JSON output:
 - "summary"       = English text
 - "summary_zh"    = Traditional Chinese (繁體中文) text (REQUIRED — this is bilingual mode)
-- Same rule applies to "text" vs "text_zh" inside key_decisions and action_items, and "name" vs "name_zh" in topics.`
+- Same rule applies to "text" vs "text_zh" inside key_points and action_items, and "name" vs "name_zh" in topics.`
     : `Output language: ${languageLabel}
 
 Language rules for the JSON output:
 - "summary" should be written entirely in ${languageLabel}
 - Omit "summary_zh" completely
-- All "text" fields in key_decisions, action_items, key_quotes should be in ${languageLabel}
+- All "text" fields in key_points, action_items, key_quotes should be in ${languageLabel}
 - Omit all "text_zh" fields
 - All "name" fields in topics should be in ${languageLabel}
 - Omit all "name_zh" fields
 - Translate content from the source audio into ${languageLabel} as needed`;
 
   return `
-Analyse this meeting transcript and provide structured output.
+Analyse this meeting transcript and produce a structured "Notes" object.
 
 ${languageRules}
 Style: ${options.style}
 
+Your Notes object has these parts, in order of importance:
+1. overview     — a punchy 1-2 sentence TL;DR capturing what the meeting was about and the most important outcome. This is what someone reads first.
+2. summary      — a richer paragraph (3-6 sentences) expanding on the overview. This is the traditional summary field, kept for backwards compatibility and for users who want a longer read.
+3. key_points   — 4-8 bullet points summarising the MAIN DISCUSSION topics and what was said about them. Each bullet should be a single sentence. These are the notes someone would jot in their notebook.
+4. action_items — specific, actionable follow-ups with assignees and (if mentioned) due dates.
+5. key_quotes   — 1-3 notable verbatim quotes (in the original spoken language is fine).
+6. topics       — short labels (1-3 words each) for the main themes discussed.
+7. sentiment    — the overall tone of the meeting.
+
 Respond in this exact JSON format:
 {
-  "summary": "Primary summary in the requested output language",
-  "summary_zh": "繁體中文摘要 — ONLY include this field when language is 'both', omit entirely otherwise",
-  "key_decisions": [
-    {"text": "Decision in primary language", "text_zh": "中文 (only if 'both')", "speaker": "Speaker 0", "timestamp_ms": 12000}
+  "overview": "1-2 sentence TL;DR in the requested output language",
+  "overview_zh": "繁體中文 TL;DR — ONLY include when language is 'both', omit entirely otherwise",
+  "summary": "Fuller paragraph summary in the requested output language",
+  "summary_zh": "繁體中文摘要 — ONLY include when language is 'both', omit entirely otherwise",
+  "key_points": [
+    {"text": "A single-sentence key point", "text_zh": "中文 (only if 'both')"}
   ],
   "action_items": [
     {"text": "Action item in primary language", "text_zh": "中文 (only if 'both')", "assignee": "Speaker 1", "due_date": "next Friday (if mentioned)", "status": "pending"}
@@ -74,6 +85,8 @@ Respond in this exact JSON format:
   ],
   "sentiment": "positive|neutral|mixed|tense"
 }
+
+Do NOT include a "key_decisions" field. That section has been removed.
 
 TRANSCRIPT:
 ${transcript}

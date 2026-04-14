@@ -86,9 +86,12 @@ CREATE TABLE public.summaries (
   meeting_id UUID NOT NULL REFERENCES public.meetings(id) ON DELETE CASCADE,
 
   -- Summary content (stored as JSON for flexibility)
+  overview TEXT,                                  -- 1-2 sentence TL;DR
+  overview_zh TEXT,                               -- Traditional Chinese TL;DR (bilingual)
   summary_text TEXT NOT NULL,                     -- Main summary paragraph(s)
   summary_text_zh TEXT,                           -- Traditional Chinese version (optional)
-  key_decisions JSONB DEFAULT '[]',               -- [{text, text_zh, speaker, timestamp_ms}]
+  key_points JSONB DEFAULT '[]',                  -- [{text, text_zh?}] — bullet list of main discussion points
+  key_decisions JSONB DEFAULT '[]',               -- @deprecated — replaced by AI Recommendations
   action_items JSONB DEFAULT '[]',                -- [{text, text_zh, assignee, due_date, status}]
   key_quotes JSONB DEFAULT '[]',                  -- [{text, speaker, timestamp_ms}]
   topics JSONB DEFAULT '[]',                      -- [{name, name_zh}]

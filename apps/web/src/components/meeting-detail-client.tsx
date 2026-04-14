@@ -284,8 +284,15 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
   }, [lang, summary, segments.length, isProcessing]);
 
   const canGenerate = segments.length > 0;
-  const primarySummary = summary?.summary_text || '';
-  const chineseSummary = summary?.summary_text_zh || '';
+  const overview: string = summary?.overview || '';
+  const overviewZh: string = summary?.overview_zh || '';
+  const primarySummary: string = summary?.summary_text || '';
+  const chineseSummary: string = summary?.summary_text_zh || '';
+  const keyPoints: Array<{ text: string; text_zh?: string }> = Array.isArray(summary?.key_points)
+    ? (summary.key_points as Array<{ text: string; text_zh?: string }>)
+    : [];
+  // Backwards compat: if a legacy summary doesn't have overview/key_points,
+  // we fall back to showing the old summary_text as the TL;DR body.
 
   return (
     <div>
@@ -419,7 +426,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
       {/* Content grid */}
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="space-y-6">
-          {/* Summary */}
+          {/* Notes */}
           <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-4 sm:p-6">
             {editingSummary && summary ? (
               <SummaryEditor
@@ -430,8 +437,11 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
               />
             ) : (
               <>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                  <h2 className="text-lg font-semibold text-white">Summary</h2>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+                  <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+                    <span className="text-xl leading-none">📓</span>
+                    Notes
+                  </h2>
                   <div className="flex items-center gap-2 flex-wrap">
                     {segments.length > 0 && (
                       <>
@@ -479,29 +489,109 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
                 ) : isProcessing && meeting.status === 'summarising' ? (
                   <SkeletonSummary />
                 ) : summary ? (
-                  <div className="space-y-4">
-                    {primarySummary && <p className="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed">{primarySummary}</p>}
-                    {chineseSummary && (
-                      <p className={`whitespace-pre-wrap text-sm leading-relaxed ${primarySummary ? 'text-gray-500 border-t border-emerald-900/20 pt-3' : 'text-gray-300'}`}>
-                        {chineseSummary}
-                      </p>
+                  <div className="space-y-6">
+                    {/* TL;DR — the overview field (new) or the legacy summary_text */}
+                    {(overview || primarySummary) && (
+                      <section>
+                        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          TL;DR
+                        </h3>
+                        {overview ? (
+                          <>
+                            <p className="text-gray-200 text-sm leading-relaxed">{overview}</p>
+                            {overviewZh && (
+                              <p className="text-gray-500 text-sm leading-relaxed mt-1.5">{overviewZh}</p>
+                            )}
+                          </>
+                        ) : (
+                          // Legacy fallback: render summary_text as the TL;DR
+                          <>
+                            <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">{primarySummary}</p>
+                            {chineseSummary && (
+                              <p className="text-gray-500 text-sm leading-relaxed mt-2 whitespace-pre-wrap">{chineseSummary}</p>
+                            )}
+                          </>
+                        )}
+                      </section>
                     )}
-                    {summary.sentiment && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">Tone:</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          summary.sentiment === 'positive' ? 'bg-emerald-500/15 text-emerald-400'
-                            : summary.sentiment === 'tense' ? 'bg-red-500/15 text-red-400'
-                            : 'bg-gray-800 text-gray-400'
-                        }`}>{summary.sentiment}</span>
-                      </div>
+
+                    {/* Longer summary paragraph — only show if we ALSO have the new overview,
+                        to avoid duplicating content for legacy rows */}
+                    {overview && primarySummary && primarySummary !== overview && (
+                      <section className="pt-5 border-t border-emerald-900/20">
+                        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
+                          </svg>
+                          Summary
+                        </h3>
+                        <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{primarySummary}</p>
+                        {chineseSummary && (
+                          <p className="text-gray-500 text-sm leading-relaxed mt-2 whitespace-pre-wrap">{chineseSummary}</p>
+                        )}
+                      </section>
                     )}
+
+                    {/* Key Points — the new bullet list */}
+                    {keyPoints.length > 0 && (
+                      <section className="pt-5 border-t border-emerald-900/20">
+                        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-3">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                          </svg>
+                          Key Points
+                        </h3>
+                        <ul className="space-y-2.5">
+                          {keyPoints.map((point, i) => (
+                            <li key={i} className="flex gap-2.5 text-sm">
+                              <span className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-gray-300 leading-relaxed">{point.text}</p>
+                                {point.text_zh && (
+                                  <p className="text-gray-500 leading-relaxed mt-0.5">{point.text_zh}</p>
+                                )}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+
+                    {/* Topics */}
                     {Array.isArray(summary.topics) && summary.topics.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {(summary.topics as Array<{ name: string }>).map((topic, i) => (
-                          <span key={i} className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-full border border-emerald-500/20">{topic.name}</span>
-                        ))}
-                      </div>
+                      <section className="pt-5 border-t border-emerald-900/20">
+                        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-3">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                          Topics
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {(summary.topics as Array<{ name: string }>).map((topic, i) => (
+                            <span key={i} className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs rounded-full border border-emerald-500/20">{topic.name}</span>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {/* Tone */}
+                    {summary.sentiment && (
+                      <section className="pt-5 border-t border-emerald-900/20">
+                        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-3">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Tone
+                        </h3>
+                        <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${
+                          summary.sentiment === 'positive' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                            : summary.sentiment === 'tense' ? 'bg-red-500/15 text-red-400 border border-red-500/20'
+                            : 'bg-gray-800 text-gray-400 border border-gray-700'
+                        }`}>{summary.sentiment}</span>
+                      </section>
                     )}
                   </div>
                 ) : (
@@ -526,21 +616,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
             </div>
           ) : null}
 
-          {/* Key Decisions */}
-          {summary && Array.isArray(summary.key_decisions) && summary.key_decisions.length > 0 && (
-            <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">Key Decisions</h2>
-              <ul className="space-y-3">
-                {(summary.key_decisions as Array<{ text: string; text_zh?: string; speaker?: string }>).map((decision, i) => (
-                  <li key={i} className="text-sm text-gray-300 pl-4" style={{ borderLeftWidth: '3px', borderLeftColor: '#10b981' }}>
-                    <p>{decision.text}</p>
-                    {decision.text_zh && <p className="text-gray-500 mt-0.5">{decision.text_zh}</p>}
-                    {decision.speaker && <span className="text-xs text-gray-600 mt-1 block">{speakerMap[decision.speaker] || decision.speaker}</span>}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {/* Key Decisions card removed — to be replaced by AI Recommendations in a future iteration */}
         </div>
 
         {/* Transcript */}

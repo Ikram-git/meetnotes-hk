@@ -78,25 +78,30 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
         }
         case 'clipboard': {
           const { summary } = data;
-          const text = [
-            `# ${data.meeting.title || 'Meeting Notes'}`,
-            '',
-            '## Summary',
-            summary.summary_text,
-            '',
-            '## Action Items',
-            ...((summary.action_items as Array<{ text: string; assignee?: string }>) || []).map(
-              (item: { text: string; assignee?: string }) =>
-                `- [ ] ${item.text}${item.assignee ? ` (@${item.assignee})` : ''}`
-            ),
-            '',
-            '## Key Decisions',
-            ...((summary.key_decisions as Array<{ text: string }>) || []).map(
-              (d: { text: string }) => `- ${d.text}`
-            ),
-          ].join('\n');
+          const lines: string[] = [`# ${data.meeting.title || 'Meeting Notes'}`, ''];
 
-          await navigator.clipboard.writeText(text);
+          if (summary.overview) {
+            lines.push('## TL;DR', summary.overview, '');
+          }
+
+          lines.push('## Summary', summary.summary_text, '');
+
+          const keyPoints = (summary.key_points as Array<{ text: string }> | undefined) || [];
+          if (keyPoints.length > 0) {
+            lines.push('## Key Points');
+            for (const p of keyPoints) lines.push(`- ${p.text}`);
+            lines.push('');
+          }
+
+          const actionItems = (summary.action_items as Array<{ text: string; assignee?: string }> | undefined) || [];
+          if (actionItems.length > 0) {
+            lines.push('## Action Items');
+            for (const item of actionItems) {
+              lines.push(`- [ ] ${item.text}${item.assignee ? ` (@${item.assignee})` : ''}`);
+            }
+          }
+
+          await navigator.clipboard.writeText(lines.join('\n'));
           toast('Meeting notes copied to clipboard!');
           break;
         }

@@ -29,9 +29,11 @@ export async function PATCH(
   const { error } = await supabase
     .from('summaries')
     .update({
+      overview: body.overview ?? null,
+      overview_zh: body.overview_zh ?? null,
       summary_text: body.summary_text,
       summary_text_zh: body.summary_text_zh,
-      key_decisions: body.key_decisions,
+      key_points: body.key_points ?? [],
       action_items: body.action_items,
       is_edited: true,
       edited_at: new Date().toISOString(),

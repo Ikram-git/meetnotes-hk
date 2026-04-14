@@ -6,13 +6,16 @@ const anthropic = new Anthropic({
 });
 
 export interface SummaryResult {
+  /** 1-2 sentence TL;DR */
+  overview?: string;
+  overview_zh?: string;
+  /** Fuller paragraph summary (kept for backwards compatibility) */
   summary: string;
   summary_zh?: string;
-  key_decisions: Array<{
+  /** Bullet list of main discussion points */
+  key_points?: Array<{
     text: string;
     text_zh?: string;
-    speaker: string;
-    timestamp_ms: number;
   }>;
   action_items: Array<{
     text: string;

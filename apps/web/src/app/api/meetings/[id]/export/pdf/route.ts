@@ -66,9 +66,11 @@ export async function GET(
       audio_duration_seconds: meeting.audio_duration_seconds,
     },
     summary: {
+      overview: (summary as any).overview,
+      overview_zh: (summary as any).overview_zh,
       summary_text: summary.summary_text,
       summary_text_zh: summary.summary_text_zh,
-      key_decisions: (summary.key_decisions as any[]) || [],
+      key_points: ((summary as any).key_points as any[]) || [],
       action_items: (summary.action_items as any[]) || [],
       topics: (summary.topics as any[]) || [],
       sentiment: summary.sentiment,
