@@ -75,7 +75,7 @@ importers:
       '@google-cloud/speech':
         specifier: ^6.7.0
         version: 6.7.1
-      '@meetnotes-hk/shared':
+      '@meetnotes/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@react-pdf/renderer':

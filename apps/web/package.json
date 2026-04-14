@@ -1,5 +1,5 @@
 {
-  "name": "@meetnotes-hk/web",
+  "name": "@meetnotes/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -13,7 +13,7 @@
     "@anthropic-ai/sdk": "^0.30.0",
     "@deepgram/sdk": "^3.6.0",
     "@google-cloud/speech": "^6.7.0",
-    "@meetnotes-hk/shared": "workspace:*",
+    "@meetnotes/shared": "workspace:*",
     "@react-pdf/renderer": "^4.0.0",
     "@supabase/ssr": "^0.5.1",
     "@supabase/supabase-js": "^2.45.0",
