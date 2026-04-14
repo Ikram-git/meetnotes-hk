@@ -112,8 +112,15 @@ export interface Topic {
 export interface Summary {
   id: string;
   meeting_id: string;
+  /** 1-2 sentence TL;DR */
+  overview: string | null;
+  overview_zh: string | null;
+  /** Fuller paragraph summary (kept for backwards compatibility) */
   summary_text: string;
   summary_text_zh: string | null;
+  /** Bullet list of discussion points */
+  key_points: Array<{ text: string; text_zh?: string }>;
+  /** @deprecated — kept in DB for old rows, no longer written or displayed */
   key_decisions: KeyDecision[];
   action_items: ActionItem[];
   key_quotes: KeyQuote[];

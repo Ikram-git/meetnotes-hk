@@ -108,15 +108,20 @@ export async function POST(
 
     await supabase.from('summaries').insert({
       meeting_id: meetingId,
+      overview: result.overview,
+      overview_zh: result.overview_zh,
       summary_text: result.summary,
       summary_text_zh: result.summary_zh,
-      key_decisions: result.key_decisions,
+      key_points: result.key_points || [],
+      // key_decisions intentionally left empty — removed from the UI,
+      // will be replaced by AI Recommendations in a future iteration.
+      key_decisions: [],
       action_items: result.action_items,
       key_quotes: result.key_quotes,
       topics: result.topics,
       sentiment: result.sentiment,
       model_used: 'claude-sonnet-4-6',
-      prompt_version: 'v1.0',
+      prompt_version: 'v2.0',
       input_tokens: result.usage.input_tokens,
       output_tokens: result.usage.output_tokens,
       processing_time_ms: result.processing_time_ms,
