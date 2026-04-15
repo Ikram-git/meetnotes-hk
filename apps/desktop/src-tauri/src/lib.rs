@@ -75,6 +75,11 @@ fn is_recording(state: State<RecordingState>) -> bool {
     state.0.lock().map(|g| g.is_some()).unwrap_or(false)
 }
 
+#[tauri::command]
+fn read_recording_bytes(path: String) -> Result<Vec<u8>, String> {
+    std::fs::read(&path).map_err(|e| format!("failed to read {path}: {e}"))
+}
+
 fn run_capture(path: &Path, stop_rx: mpsc::Receiver<()>) -> Result<PathBuf, String> {
     let host = cpal::default_host();
     let device = host
@@ -244,7 +249,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             start_recording,
             stop_recording,
-            is_recording
+            is_recording,
+            read_recording_bytes
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

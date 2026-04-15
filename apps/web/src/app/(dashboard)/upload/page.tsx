@@ -1,10 +1,13 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { UploadDropzone } from '@/components/upload-dropzone';
 import * as tus from 'tus-js-client';
+import { isTauri, readRecordingBytes, startRecording, stopRecording } from '@/lib/tauri';
+
+type DesktopRecordingState = 'idle' | 'recording' | 'finalizing';
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -42,12 +45,58 @@ export default function UploadPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  const [desktopAvailable, setDesktopAvailable] = useState(false);
+  const [recState, setRecState] = useState<DesktopRecordingState>('idle');
+  const [elapsed, setElapsed] = useState(0);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDesktopAvailable(isTauri());
+  }, []);
+
+  useEffect(() => {
+    if (recState !== 'recording') return;
+    const start = Date.now();
+    setElapsed(0);
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 250);
+    return () => clearInterval(id);
+  }, [recState]);
+
   // Throughput sampling — we keep a short rolling window so the MB/s reading
   // is responsive but not jumpy.
   const samplesRef = useRef<Array<{ t: number; bytes: number }>>([]);
 
-  const handleUpload = async () => {
-    if (!file) return;
+  const handleStartDesktopRecording = async () => {
+    setRecordingError(null);
+    try {
+      await startRecording();
+      setRecState('recording');
+    } catch (err) {
+      setRecordingError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleStopDesktopRecording = async () => {
+    setRecState('finalizing');
+    try {
+      const path = await stopRecording();
+      const bytes = await readRecordingBytes(path);
+      const name = path.split(/[\\/]/).pop() || `meeting-${Date.now()}.wav`;
+      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'audio/wav' });
+      const recorded = new File([blob], name, { type: 'audio/wav' });
+      setFile(recorded);
+      setRecState('idle');
+      setElapsed(0);
+      await handleUpload(recorded);
+    } catch (err) {
+      setRecState('idle');
+      setRecordingError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleUpload = async (override?: File) => {
+    const target = override ?? file;
+    if (!target) return;
     setUploading(true); setError(null); setProgress(0); setStats(null);
     samplesRef.current = [];
     try {
@@ -57,10 +106,10 @@ export default function UploadPage() {
 
       const userId = session.user.id;
       const fileId = crypto.randomUUID();
-      const ext = file.name.split('.').pop() || 'webm';
+      const ext = target.name.split('.').pop() || 'webm';
       const storagePath = `${userId}/${fileId}.${ext}`;
 
-      let contentType = file.type;
+      let contentType = target.type;
       if (contentType === 'video/mp4') contentType = 'audio/mp4';
       if (contentType === 'video/webm') contentType = 'audio/webm';
 
@@ -71,7 +120,7 @@ export default function UploadPage() {
       const uploadUrl = `${supabaseUrl}/storage/v1/upload/resumable`;
 
       await new Promise<void>((resolve, reject) => {
-        const upload = new tus.Upload(file, {
+        const upload = new tus.Upload(target, {
           endpoint: uploadUrl,
           retryDelays: [0, 1000, 3000, 5000],
           chunkSize: 6 * 1024 * 1024, // 6MB chunks (Supabase's recommended size)
@@ -128,7 +177,7 @@ export default function UploadPage() {
         body: JSON.stringify({
           audio_storage_path: storagePath,
           audio_format: ext,
-          audio_size_bytes: file.size,
+          audio_size_bytes: target.size,
           source: 'upload',
         }),
       });
@@ -156,6 +205,59 @@ export default function UploadPage() {
         <p className="text-sm text-gray-500 mt-1">Upload an audio recording to transcribe and summarise</p>
       </div>
       <div className="max-w-2xl">
+        {desktopAvailable && (
+          <div className="mb-5 bg-[#111916] border border-emerald-900/30 rounded-xl p-5">
+            <div className="flex items-center justify-between mb-1">
+              <div>
+                <h2 className="text-sm font-semibold text-white">Record system audio</h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Captures both sides of any meeting running on this computer. Desktop only.
+                </p>
+              </div>
+              {recState === 'recording' && (
+                <div className="flex items-center gap-2 text-xs text-emerald-400">
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  <span className="tabular-nums">
+                    {String(Math.floor(elapsed / 60)).padStart(2, '0')}:
+                    {String(elapsed % 60).padStart(2, '0')}
+                  </span>
+                </div>
+              )}
+            </div>
+            {recState === 'idle' && (
+              <button
+                onClick={handleStartDesktopRecording}
+                disabled={uploading}
+                className="mt-3 w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white py-2.5 px-4 rounded-lg font-medium text-sm transition"
+              >
+                Start recording
+              </button>
+            )}
+            {recState === 'recording' && (
+              <button
+                onClick={handleStopDesktopRecording}
+                className="mt-3 w-full bg-red-500 hover:bg-red-400 text-white py-2.5 px-4 rounded-lg font-medium text-sm transition"
+              >
+                Stop and upload
+              </button>
+            )}
+            {recState === 'finalizing' && (
+              <button
+                disabled
+                className="mt-3 w-full bg-white/5 text-gray-400 py-2.5 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2"
+              >
+                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Finalising recording…
+              </button>
+            )}
+            {recordingError && (
+              <p className="mt-2 text-xs text-red-400">{recordingError}</p>
+            )}
+          </div>
+        )}
         <UploadDropzone
           onFileSelected={(f) => { setFile(f); setError(null); }}
           file={file}
@@ -188,7 +290,7 @@ export default function UploadPage() {
                 )}
               </div>
             )}
-            <button onClick={handleUpload} disabled={uploading}
+            <button onClick={() => handleUpload()} disabled={uploading}
               className="mt-4 w-full bg-emerald-500 text-white py-3 px-4 rounded-xl font-medium hover:bg-emerald-400 transition disabled:opacity-50 text-sm">
               {uploading ? (
                 <span className="flex items-center justify-center gap-2">
