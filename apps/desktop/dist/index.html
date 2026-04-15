@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MeetNotes</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0b0d12; color: #e5e7eb; font-family: -apple-system, 'Segoe UI', sans-serif; }
+      .wrap { height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+      .spinner { width: 28px; height: 28px; border: 3px solid #374151; border-top-color: #60a5fa; border-radius: 50%; animation: spin 1s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="spinner"></div>
+      <div>Loading MeetNotes…</div>
+    </div>
+    <script>
+      // Redirect into the production web app. Swap to localhost:3000 for local dev.
+      window.location.replace('https://meetnotes-sattarikram81-7707s-projects.vercel.app');
+    </script>
+  </body>
+</html>
