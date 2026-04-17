@@ -51,7 +51,15 @@ export default function UploadPage() {
   const [recordingError, setRecordingError] = useState<string | null>(null);
 
   useEffect(() => {
-    setDesktopAvailable(isTauri());
+    const tauri = isTauri();
+    setDesktopAvailable(tauri);
+    if (!tauri) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('record') === '1') {
+      handleStartDesktopRecording();
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

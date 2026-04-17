@@ -170,6 +170,31 @@ fn write_u16(writer: &SharedWriter, data: &[u16]) {
     }
 }
 
+fn register_global_shortcut(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+
+    let shortcut: Shortcut = "ctrl+shift+r".parse()?;
+    app.global_shortcut().on_shortcut(shortcut, move |app, _scut, event| {
+        if event.state == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+            let state: State<RecordingState> = app.state();
+            let is_active = state.0.lock().map(|g| g.is_some()).unwrap_or(false);
+            if is_active {
+                match stop_recording(app.clone(), state) {
+                    Ok(p) => log::info!("[hotkey] stopped -> {p}"),
+                    Err(e) => log::error!("[hotkey] stop failed: {e}"),
+                }
+            } else {
+                match start_recording(app.clone(), state) {
+                    Ok(p) => log::info!("[hotkey] started -> {p}"),
+                    Err(e) => log::error!("[hotkey] start failed: {e}"),
+                }
+            }
+        }
+    })?;
+    log::info!("global shortcut registered: Ctrl+Shift+R");
+    Ok(())
+}
+
 fn update_tray_for_state(app: &AppHandle, recording: bool) {
     if let Some(tray) = app.tray_by_id("main") {
         let tooltip = if recording {
@@ -184,6 +209,12 @@ fn update_tray_for_state(app: &AppHandle, recording: bool) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(RecordingState::default())
         .setup(|app| {
             if cfg!(debug_assertions) {
@@ -193,6 +224,8 @@ pub fn run() {
                         .build(),
                 )?;
             }
+
+            register_global_shortcut(app)?;
 
             let handle = app.handle();
             let record_item = MenuItem::with_id(handle, "record", "Start recording", true, None::<&str>)?;
