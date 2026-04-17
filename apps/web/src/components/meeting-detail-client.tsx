@@ -115,7 +115,8 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
 
         if (updated.status === 'summarising') {
           if (!summariseSeenAt.current) summariseSeenAt.current = Date.now();
-          if (Date.now() - summariseSeenAt.current > 90_000) {
+          if (Date.now() - summariseSeenAt.current > 30_000) {
+            console.log('[MeetNotes] Summarisation stuck — showing retry');
             summariseSeenAt.current = null;
             setStuckSummarising(true);
           }
