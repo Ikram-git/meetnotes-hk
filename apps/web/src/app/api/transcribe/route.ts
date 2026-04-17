@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { getSTTProvider } from '@/lib/stt';
+import { summariseMeeting } from '@/lib/ai/summarise';
+import { formatTime } from '@/lib/utils';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Deepgram transcription can take 10-40s depending on audio length.
-// Default Vercel timeout of 10s is too short.
-export const maxDuration = 60;
+// Transcription (5-40s) + summarisation (5-15s) run back-to-back.
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -98,13 +99,66 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Summarisation is triggered from the client after it observes the
-    // transcribed status. We deliberately don't fire-and-forget an HTTP
-    // call from here because on Vercel, once this handler returns, the
-    // serverless container terminates and the in-flight fetch can be
-    // killed along with it — leading to meetings stuck in 'summarising'.
+    // Run summarisation directly in this same function call — no HTTP
+    // fire-and-forget, no client-side trigger. Same process, reliable.
+    console.log(`[Transcribe] Transcription done, starting summarisation for ${meetingId}`);
+    await supabase
+      .from('meetings')
+      .update({ status: 'summarising' })
+      .eq('id', meetingId);
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('preferred_language, preferred_summary_style')
+      .eq('id', user.id)
+      .single();
+
+    const transcriptText = segments
+      .map((s) => `[${formatTime(s.start_time_ms)}] ${s.speaker_label || 'Unknown'}: ${s.text}`)
+      .join('\n');
+
+    const summaryLanguage = profile?.preferred_language || 'en';
+    const summaryStyle = (profile?.preferred_summary_style as 'concise' | 'detailed' | 'bullet') || 'concise';
+    console.log(`[Summarise] Starting for ${meetingId}: ${segments.length} segments, ${transcriptText.length} chars, lang=${summaryLanguage}`);
+
+    const summaryResult = await summariseMeeting(transcriptText, {
+      language: summaryLanguage,
+      style: summaryStyle,
+    });
+    console.log(`[Summarise] Done for ${meetingId}: ${summaryResult.processing_time_ms}ms, ${summaryResult.usage.input_tokens}in/${summaryResult.usage.output_tokens}out`);
+
+    await supabase.from('summaries').delete().eq('meeting_id', meetingId);
+    await supabase.from('summaries').insert({
+      meeting_id: meetingId,
+      overview: summaryResult.overview,
+      overview_zh: summaryResult.overview_zh,
+      summary_text: summaryResult.summary,
+      summary_text_zh: summaryResult.summary_zh,
+      key_points: summaryResult.key_points || [],
+      key_decisions: [],
+      action_items: summaryResult.action_items,
+      key_quotes: summaryResult.key_quotes,
+      topics: summaryResult.topics,
+      sentiment: summaryResult.sentiment,
+      model_used: 'claude-sonnet-4-6',
+      prompt_version: 'v2.0',
+      input_tokens: summaryResult.usage.input_tokens,
+      output_tokens: summaryResult.usage.output_tokens,
+      processing_time_ms: summaryResult.processing_time_ms,
+    });
+
+    const title = summaryResult.topics.length > 0
+      ? summaryResult.topics.map((t) => t.name).slice(0, 3).join(', ')
+      : 'Untitled Meeting';
+
+    await supabase
+      .from('meetings')
+      .update({ status: 'completed', title, error_message: null })
+      .eq('id', meetingId);
+
+    console.log(`[Summarise] Completed for ${meetingId}: "${title}"`);
     return NextResponse.json({
-      status: 'transcribed',
+      status: 'completed',
       segmentCount: segments.length,
     });
   } catch (error) {
