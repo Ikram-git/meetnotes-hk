@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useTheme } from '@/components/theme-provider';
+import { isTauri } from '@/lib/tauri';
 
 const navItems = [
   { href: '/meetings', label: 'Meetings' },
@@ -21,8 +22,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [userEmail, setUserEmail] = useState('');
   const [userName, setUserName] = useState('');
   const [userTier, setUserTier] = useState('free');
+  const [desktop, setDesktop] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    setDesktop(isTauri());
+  }, []);
 
   useEffect(() => {
     async function loadUser() {
@@ -87,6 +93,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
+              {desktop && (
+                <Link href="/upload?record=1"
+                  className="hidden sm:flex items-center gap-1.5 bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-400 transition"
+                  title="Record system audio">
+                  <span className="w-2 h-2 rounded-full bg-white" />
+                  Record
+                </Link>
+              )}
               <Link href="/upload"
                 className="hidden sm:flex items-center gap-1.5 bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-400 transition">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
