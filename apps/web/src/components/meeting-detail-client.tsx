@@ -69,6 +69,8 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
   });
 
   const isProcessingStatus = (PROCESSING_STATUSES as readonly string[]).includes(meeting.status);
+  const [stuckSummarising, setStuckSummarising] = useState(false);
+  const summariseSeenAt = useRef<number | null>(null);
 
   // Auto-trigger summarisation once transcription completes — this replaces
   // the old fire-and-forget server→server fetch from /api/transcribe, which
@@ -110,6 +112,17 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
         const updated = await res.json();
 
         setMeeting(updated);
+
+        if (updated.status === 'summarising') {
+          if (!summariseSeenAt.current) summariseSeenAt.current = Date.now();
+          if (Date.now() - summariseSeenAt.current > 90_000) {
+            summariseSeenAt.current = null;
+            setStuckSummarising(true);
+          }
+        } else {
+          summariseSeenAt.current = null;
+          setStuckSummarising(false);
+        }
 
         // If status changed to completed or error, fetch full data
         if (updated.status === 'completed' || updated.status === 'error') {
@@ -369,12 +382,29 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
       </div>
 
       {/* Processing banner — shown only while the meeting is still being processed */}
-      {isProcessingStatus && meeting.status !== 'error' && (
+      {isProcessingStatus && meeting.status !== 'error' && !stuckSummarising && (
         <ProcessingBanner
           status={meeting.status as ProcessingStatus}
           audioDurationSeconds={meeting.audio_duration_seconds}
           startedAt={meeting.updated_at || meeting.created_at}
         />
+      )}
+
+      {stuckSummarising && (
+        <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-2xl p-5 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-red-400">Summary timed out</p>
+              <p className="text-xs text-gray-400 mt-1">The summarisation request didn&apos;t complete in time. Click below to retry.</p>
+            </div>
+            <button
+              onClick={() => { setStuckSummarising(false); summariseSeenAt.current = null; runSummary(lang); }}
+              className="ml-4 bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex-shrink-0"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Regenerating banner — shown while the summary is being re-translated

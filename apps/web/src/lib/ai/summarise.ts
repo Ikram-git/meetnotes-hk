@@ -48,17 +48,20 @@ export async function summariseMeeting(
 ): Promise<SummaryResult> {
   const startTime = Date.now();
 
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4096,
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: 'user',
-        content: SUMMARY_USER_PROMPT(transcript, options),
-      },
-    ],
-  });
+  const response = await anthropic.messages.create(
+    {
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4096,
+      system: SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: SUMMARY_USER_PROMPT(transcript, options),
+        },
+      ],
+    },
+    { timeout: 50_000 },
+  );
 
   const text =
     response.content[0].type === 'text' ? response.content[0].text : '';
