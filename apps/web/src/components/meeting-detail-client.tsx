@@ -125,21 +125,10 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
           setStuckSummarising(false);
         }
 
-        // If status changed to completed or error, fetch full data
+        // If status changed to a terminal state, do ONE reload to pick up
+        // server-rendered summary/segments. Guard prevents infinite loop.
         if (updated.status === 'completed' || updated.status === 'error') {
-          // Fetch segments + summary
-          const [segRes, sumRes] = await Promise.all([
-            fetch(`/api/meetings/${meeting.id}/transcript`).catch(() => null),
-            fetch(`/api/meetings/${meeting.id}/summarise`).catch(() => null),
-          ]);
-
-          // Use the server page reload to get fresh data cleanly
-          window.location.reload();
-          return;
-        }
-
-        // If transcribed but no segments yet, also reload
-        if (updated.status === 'transcribed' && segments.length === 0) {
+          clearInterval(interval);
           window.location.reload();
           return;
         }
