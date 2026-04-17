@@ -92,16 +92,16 @@ export async function POST(
     .update({ status: 'summarising' })
     .eq('id', meetingId);
 
+  const summaryLanguage = requestedLanguage || profile?.preferred_language || 'en';
+  const summaryStyle = (profile?.preferred_summary_style as 'concise' | 'detailed' | 'bullet') || 'concise';
+  console.log(`[Summarise] Starting for meeting ${meetingId}: ${segments.length} segments, ${transcriptText.length} chars, lang=${summaryLanguage}, style=${summaryStyle}`);
+
   try {
     const result = await summariseMeeting(transcriptText, {
-      language:
-        requestedLanguage ||
-        profile?.preferred_language ||
-        'en',
-      style:
-        (profile?.preferred_summary_style as 'concise' | 'detailed' | 'bullet') ||
-        'concise',
+      language: summaryLanguage,
+      style: summaryStyle,
     });
+    console.log(`[Summarise] Done for ${meetingId}: ${result.processing_time_ms}ms, ${result.usage.input_tokens}in/${result.usage.output_tokens}out tokens`);
 
     // Delete old summary if regenerating, then insert fresh
     await supabase.from('summaries').delete().eq('meeting_id', meetingId);
@@ -144,7 +144,8 @@ export async function POST(
     return NextResponse.json({ status: 'completed' });
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error('Summarisation error:', errorMsg, error);
+    const errorStack = error instanceof Error ? error.stack : '';
+    console.error(`[Summarise] FAILED for meeting ${meetingId}:`, errorMsg, errorStack);
 
     await supabase
       .from('meetings')
