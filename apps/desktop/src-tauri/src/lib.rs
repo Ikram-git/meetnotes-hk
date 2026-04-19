@@ -8,9 +8,11 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
+use base64::engine::general_purpose::STANDARD as B64;
+use base64::Engine as _;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::TrayIconBuilder;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 type SharedWriter = Arc<Mutex<Option<WavWriter<BufWriter<File>>>>>;
 
@@ -21,6 +23,26 @@ struct ActiveRecording {
 
 #[derive(Default)]
 struct RecordingState(Mutex<Option<ActiveRecording>>);
+
+struct ActiveLiveCapture {
+    stop_tx: mpsc::Sender<()>,
+    worker: Option<JoinHandle<()>>,
+}
+
+#[derive(Default)]
+struct LiveCaptureState(Mutex<Option<ActiveLiveCapture>>);
+
+#[derive(Clone, serde::Serialize)]
+struct LiveCaptureFormat {
+    sample_rate: u32,
+    channels: u16,
+    encoding: &'static str,
+}
+
+#[derive(Clone, serde::Serialize)]
+struct AudioChunkPayload {
+    data: String,
+}
 
 #[tauri::command]
 fn start_recording(app: AppHandle, state: State<RecordingState>) -> Result<String, String> {
@@ -78,6 +100,144 @@ fn is_recording(state: State<RecordingState>) -> bool {
 #[tauri::command]
 fn read_recording_bytes(path: String) -> Result<Vec<u8>, String> {
     std::fs::read(&path).map_err(|e| format!("failed to read {path}: {e}"))
+}
+
+#[tauri::command]
+fn start_live_capture(
+    app: AppHandle,
+    state: State<LiveCaptureState>,
+) -> Result<LiveCaptureFormat, String> {
+    let mut guard = state.0.lock().map_err(|_| "state poisoned")?;
+    if guard.is_some() {
+        return Err("already capturing".into());
+    }
+
+    let host = cpal::default_host();
+    let device = host
+        .default_output_device()
+        .ok_or("no default output device")?;
+    let supported = device.default_output_config().map_err(|e| e.to_string())?;
+    let sample_format = supported.sample_format();
+    let channels = supported.channels();
+    let sample_rate = supported.sample_rate().0;
+    let stream_config: cpal::StreamConfig = supported.into();
+
+    // Accumulate ~200ms of audio before emitting. 200ms @ sample_rate * channels samples.
+    let samples_per_chunk = (sample_rate as usize * channels as usize) / 5;
+
+    let (stop_tx, stop_rx) = mpsc::channel::<()>();
+    let app_for_worker = app.clone();
+
+    let worker = std::thread::spawn(move || {
+        let buf: Arc<Mutex<Vec<i16>>> = Arc::new(Mutex::new(Vec::with_capacity(samples_per_chunk * 2)));
+        let err_cb = |err| log::error!("[live] stream error: {err}");
+
+        let stream_result = match sample_format {
+            SampleFormat::F32 => {
+                let b = Arc::clone(&buf);
+                let app = app_for_worker.clone();
+                device.build_input_stream(
+                    &stream_config,
+                    move |data: &[f32], _| {
+                        let mut guard = b.lock().unwrap();
+                        guard.extend(data.iter().map(|&s| {
+                            (s * i16::MAX as f32).clamp(i16::MIN as f32, i16::MAX as f32) as i16
+                        }));
+                        flush_chunks(&mut guard, samples_per_chunk, &app);
+                    },
+                    err_cb,
+                    None,
+                )
+            }
+            SampleFormat::I16 => {
+                let b = Arc::clone(&buf);
+                let app = app_for_worker.clone();
+                device.build_input_stream(
+                    &stream_config,
+                    move |data: &[i16], _| {
+                        let mut guard = b.lock().unwrap();
+                        guard.extend_from_slice(data);
+                        flush_chunks(&mut guard, samples_per_chunk, &app);
+                    },
+                    err_cb,
+                    None,
+                )
+            }
+            SampleFormat::U16 => {
+                let b = Arc::clone(&buf);
+                let app = app_for_worker.clone();
+                device.build_input_stream(
+                    &stream_config,
+                    move |data: &[u16], _| {
+                        let mut guard = b.lock().unwrap();
+                        guard.extend(data.iter().map(|&s| (s as i32 - 32768) as i16));
+                        flush_chunks(&mut guard, samples_per_chunk, &app);
+                    },
+                    err_cb,
+                    None,
+                )
+            }
+            other => {
+                log::error!("[live] unsupported format: {other:?}");
+                return;
+            }
+        };
+
+        let stream = match stream_result {
+            Ok(s) => s,
+            Err(e) => {
+                log::error!("[live] build_input_stream failed: {e}");
+                return;
+            }
+        };
+
+        if let Err(e) = stream.play() {
+            log::error!("[live] stream.play failed: {e}");
+            return;
+        }
+        log::info!("[live] streaming started");
+        let _ = stop_rx.recv();
+        drop(stream);
+        log::info!("[live] streaming stopped");
+    });
+
+    *guard = Some(ActiveLiveCapture {
+        stop_tx,
+        worker: Some(worker),
+    });
+
+    Ok(LiveCaptureFormat {
+        sample_rate,
+        channels,
+        encoding: "linear16",
+    })
+}
+
+#[tauri::command]
+fn stop_live_capture(state: State<LiveCaptureState>) -> Result<(), String> {
+    let mut active = state
+        .0
+        .lock()
+        .map_err(|_| "state poisoned")?
+        .take()
+        .ok_or("not capturing")?;
+    let _ = active.stop_tx.send(());
+    if let Some(w) = active.worker.take() {
+        let _ = w.join();
+    }
+    Ok(())
+}
+
+fn flush_chunks(buf: &mut Vec<i16>, samples_per_chunk: usize, app: &AppHandle) {
+    while buf.len() >= samples_per_chunk {
+        let drained: Vec<i16> = buf.drain(..samples_per_chunk).collect();
+        let mut bytes = Vec::with_capacity(drained.len() * 2);
+        for s in drained {
+            bytes.extend_from_slice(&s.to_le_bytes());
+        }
+        let encoded = B64.encode(&bytes);
+        let _ = app.emit("audio-chunk", AudioChunkPayload { data: encoded });
+    }
 }
 
 fn run_capture(path: &Path, stop_rx: mpsc::Receiver<()>) -> Result<PathBuf, String> {
@@ -216,6 +376,7 @@ pub fn run() {
         ))
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(RecordingState::default())
+        .manage(LiveCaptureState::default())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -283,7 +444,9 @@ pub fn run() {
             start_recording,
             stop_recording,
             is_recording,
-            read_recording_bytes
+            read_recording_bytes,
+            start_live_capture,
+            stop_live_capture
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,0 +1,149 @@
+import { createClient } from '@/lib/supabase/server';
+import { summariseMeeting } from '@/lib/ai/summarise';
+import { formatTime } from '@/lib/utils';
+import { NextRequest, NextResponse } from 'next/server';
+
+export const maxDuration = 300;
+
+interface LiveLine {
+  text: string;
+  startMs: number;
+  endMs: number;
+  speaker?: string | null;
+}
+
+/**
+ * Finalise a live-captured meeting: create meeting row, insert transcript
+ * segments from the frontend-captured Deepgram stream (no re-transcription),
+ * run summarisation inline, return the meeting id.
+ */
+export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+  let { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    const token = req.headers.get('authorization')?.replace('Bearer ', '');
+    if (token) {
+      const { data } = await supabase.auth.getUser(token);
+      user = data.user;
+    }
+  }
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const body = await req.json().catch(() => ({}));
+  const lines: LiveLine[] = Array.isArray(body.lines) ? body.lines : [];
+  const durationSeconds: number = typeof body.durationSeconds === 'number' ? body.durationSeconds : 0;
+  const detectedLanguages: string[] = Array.isArray(body.detectedLanguages)
+    ? body.detectedLanguages
+    : ['en'];
+
+  if (lines.length === 0) {
+    return NextResponse.json({ error: 'No transcript lines to save' }, { status: 400 });
+  }
+
+  const { data: meeting, error: meetingError } = await supabase
+    .from('meetings')
+    .insert({
+      user_id: user.id,
+      source: 'upload',
+      status: 'summarising',
+      audio_storage_path: `live/${crypto.randomUUID()}.none`,
+      audio_format: 'none',
+      audio_size_bytes: 0,
+      audio_duration_seconds: Math.round(durationSeconds),
+      stt_provider: 'deepgram-stream',
+      detected_languages: detectedLanguages,
+    })
+    .select()
+    .single();
+
+  if (meetingError || !meeting) {
+    console.error('[FinaliseLive] failed to create meeting', meetingError);
+    return NextResponse.json(
+      { error: meetingError?.message || 'Failed to create meeting' },
+      { status: 500 },
+    );
+  }
+
+  const segments = lines.map((l, i) => ({
+    meeting_id: meeting.id,
+    segment_index: i,
+    speaker_label: l.speaker || 'Speaker 0',
+    start_time_ms: Math.round(l.startMs),
+    end_time_ms: Math.round(l.endMs),
+    text: l.text,
+    language: detectedLanguages[0] || 'en',
+    confidence: 0.9,
+  }));
+
+  const { error: segError } = await supabase.from('transcript_segments').insert(segments);
+  if (segError) {
+    console.error('[FinaliseLive] failed to insert segments', segError);
+    await supabase
+      .from('meetings')
+      .update({ status: 'error', error_message: `Failed to save transcript: ${segError.message}` })
+      .eq('id', meeting.id);
+    return NextResponse.json({ error: segError.message }, { status: 500 });
+  }
+
+  console.log(`[FinaliseLive] saved ${segments.length} segments for meeting ${meeting.id}`);
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('preferred_language, preferred_summary_style')
+    .eq('id', user.id)
+    .single();
+
+  const transcriptText = segments
+    .map((s) => `[${formatTime(s.start_time_ms)}] ${s.speaker_label}: ${s.text}`)
+    .join('\n');
+
+  const summaryLanguage = profile?.preferred_language || 'en';
+  const summaryStyle =
+    (profile?.preferred_summary_style as 'concise' | 'detailed' | 'bullet') || 'concise';
+
+  try {
+    const result = await summariseMeeting(transcriptText, {
+      language: summaryLanguage,
+      style: summaryStyle,
+    });
+
+    await supabase.from('summaries').insert({
+      meeting_id: meeting.id,
+      overview: result.overview,
+      overview_zh: result.overview_zh,
+      summary_text: result.summary,
+      summary_text_zh: result.summary_zh,
+      key_points: result.key_points || [],
+      key_decisions: [],
+      action_items: result.action_items,
+      key_quotes: result.key_quotes,
+      topics: result.topics,
+      sentiment: result.sentiment,
+      model_used: 'claude-sonnet-4-6',
+      prompt_version: 'v2.0',
+      input_tokens: result.usage.input_tokens,
+      output_tokens: result.usage.output_tokens,
+      processing_time_ms: result.processing_time_ms,
+    });
+
+    const title = result.topics.length > 0
+      ? result.topics.map((t) => t.name).slice(0, 3).join(', ')
+      : 'Live Meeting';
+
+    await supabase
+      .from('meetings')
+      .update({ status: 'completed', title, error_message: null })
+      .eq('id', meeting.id);
+
+    console.log(`[FinaliseLive] completed ${meeting.id}: "${title}"`);
+    return NextResponse.json({ meetingId: meeting.id, status: 'completed', title });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[FinaliseLive] summarise failed', msg);
+    await supabase
+      .from('meetings')
+      .update({ status: 'error', error_message: `Summary failed: ${msg}` })
+      .eq('id', meeting.id);
+    return NextResponse.json({ meetingId: meeting.id, status: 'error', error: msg });
+  }
+}
