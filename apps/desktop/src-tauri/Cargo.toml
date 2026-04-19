@@ -1,6 +1,6 @@
 [package]
 name = "briva-desktop"
-version = "0.1.0"
+version = "0.2.0"
 description = "Briva desktop app"
 authors = ["Briva"]
 edition = "2021"
