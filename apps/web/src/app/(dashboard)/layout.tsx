@@ -94,12 +94,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <div className="flex items-center gap-2 sm:gap-3">
               {desktop && (
-                <Link href="/upload?record=1"
-                  className="hidden sm:flex items-center gap-1.5 bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-400 transition"
-                  title="Record system audio">
-                  <span className="w-2 h-2 rounded-full bg-white" />
-                  Record
-                </Link>
+                <>
+                  <Link href="/record-live"
+                    className="hidden sm:flex items-center gap-1.5 bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-400 transition"
+                    title="Live transcription (beta)">
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                    Live
+                  </Link>
+                  <Link href="/upload?record=1"
+                    className="hidden sm:flex items-center gap-1.5 bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-400 transition"
+                    title="Record system audio">
+                    <span className="w-2 h-2 rounded-full bg-white" />
+                    Record
+                  </Link>
+                </>
               )}
               <Link href="/upload"
                 className="hidden sm:flex items-center gap-1.5 bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-400 transition">

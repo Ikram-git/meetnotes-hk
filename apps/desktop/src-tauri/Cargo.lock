@@ -273,6 +273,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "briva-desktop"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "chrono",
+ "cpal",
+ "dirs 5.0.1",
+ "hound",
+ "log",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-autostart",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-log",
+ "tauri-plugin-updater",
+]
+
+[[package]]
 name = "brotli"
 version = "8.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2243,25 +2263,6 @@ name = "matches"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2532096657941c2fea9c289d370a250971c689d4f143798ff67113ec042024a5"
-
-[[package]]
-name = "meetnotes-desktop"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "cpal",
- "dirs 5.0.1",
- "hound",
- "log",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-autostart",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-log",
- "tauri-plugin-updater",
-]
 
 [[package]]
 name = "memchr"
