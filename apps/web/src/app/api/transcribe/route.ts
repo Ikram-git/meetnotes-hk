@@ -75,9 +75,25 @@ export async function POST(req: NextRequest) {
       confidence: seg.confidence,
     }));
 
-    if (segments.length > 0) {
-      await supabase.from('transcript_segments').insert(segments);
+    if (segments.length === 0) {
+      await supabase
+        .from('meetings')
+        .update({
+          status: 'error',
+          stt_provider: provider.name,
+          audio_duration_seconds: Math.round(result.durationMs / 1000),
+          error_message:
+            'No speech detected in audio. The recording may be silent, music-only, or below Deepgram\u2019s transcription threshold. Try recording again with clearer speech.',
+        })
+        .eq('id', meetingId);
+      console.log(`[Transcribe] No speech detected for meeting ${meetingId}, marking as error`);
+      return NextResponse.json({
+        status: 'error',
+        error: 'No speech detected in audio',
+      });
     }
+
+    await supabase.from('transcript_segments').insert(segments);
 
     // Update meeting
     await supabase
