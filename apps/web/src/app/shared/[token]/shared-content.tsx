@@ -76,10 +76,10 @@ export function SharedContent({ token, requiresPassword, meetingTitle, meeting: 
             <Link href="/" className="inline-flex items-center gap-2 mb-6">
               <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.6 15.94 Q5.6 4.69 11.25 4.69 L12.75 4.69 Q18.38 4.69 18.38 15.94" /><rect x="8.44" y="11.25" width="1.5" height="5.63" rx="0.75" fill="currentColor" stroke="none" /><rect x="11.25" y="9" width="1.5" height="7.88" rx="0.75" fill="currentColor" stroke="none" /><rect x="14.06" y="12.38" width="1.5" height="4.5" rx="0.75" fill="currentColor" stroke="none" />
                 </svg>
               </div>
-              <span className="text-xl font-bold text-white">MeetNotes</span>
+              <span className="text-xl font-bold text-white">Briva</span>
             </Link>
             <h1 className="text-lg font-semibold text-white">Protected Meeting Notes</h1>
             {meetingTitle && <p className="text-sm text-gray-500 mt-1">{meetingTitle}</p>}
@@ -126,13 +126,13 @@ export function SharedContent({ token, requiresPassword, meetingTitle, meeting: 
           <Link href="/" className="flex items-center gap-2">
             <div className="w-7 h-7 bg-emerald-500 rounded-lg flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5.6 15.94 Q5.6 4.69 11.25 4.69 L12.75 4.69 Q18.38 4.69 18.38 15.94" /><rect x="8.44" y="11.25" width="1.5" height="5.63" rx="0.75" fill="currentColor" stroke="none" /><rect x="11.25" y="9" width="1.5" height="7.88" rx="0.75" fill="currentColor" stroke="none" /><rect x="14.06" y="12.38" width="1.5" height="4.5" rx="0.75" fill="currentColor" stroke="none" />
               </svg>
             </div>
-            <span className="text-base font-bold text-white">MeetNotes</span>
+            <span className="text-base font-bold text-white">Briva</span>
           </Link>
           <Link href="/signup" className="text-xs sm:text-sm font-medium bg-emerald-500 text-white px-3 sm:px-4 py-1.5 rounded-lg hover:bg-emerald-400 transition">
-            Try MeetNotes Free
+            Try Briva Free
           </Link>
         </div>
       </header>
@@ -288,7 +288,7 @@ export function SharedContent({ token, requiresPassword, meetingTitle, meeting: 
         <div className="mt-12 text-center animate-fade-in">
           <p className="text-sm text-gray-500 mb-4">Want AI meeting notes for your meetings?</p>
           <Link href="/signup" className="inline-block bg-emerald-500 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-400 transition">
-            Try MeetNotes Free
+            Try Briva Free
           </Link>
         </div>
       </main>

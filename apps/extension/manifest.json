@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "MeetNotes",
+  "name": "Briva",
   "version": "0.1.0",
   "description": "AI meeting notes for professionals. Record, transcribe, and summarise meetings with AI.",
   "permissions": [
@@ -11,7 +11,7 @@
   ],
   "host_permissions": [
     "http://localhost:3000/*",
-    "https://meetnotes-ochre.vercel.app/*",
+    "https://briva-app.vercel.app/*",
     "https://*.vercel.app/*",
     "https://meet.google.com/*",
     "https://zoom.us/*",

@@ -31,7 +31,7 @@ chrome.runtime.sendMessage({ type: 'RECORDER_READY' }, async (config) => {
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       });
     } catch (e) {
-      console.warn('[MeetNotes] Mic denied, tab audio only:', e);
+      console.warn('[Briva] Mic denied, tab audio only:', e);
     }
 
     // 3. Mix both streams via AudioContext
@@ -49,9 +49,9 @@ chrome.runtime.sendMessage({ type: 'RECORDER_READY' }, async (config) => {
     // 4. Record mixed stream
     await recorder.startRecording(dest.stream);
     info.textContent = micStream ? 'Tab + Mic' : 'Tab only (no mic)';
-    console.log('[MeetNotes] Recording started:', info.textContent);
+    console.log('[Briva] Recording started:', info.textContent);
   } catch (error) {
-    console.error('[MeetNotes] Capture failed:', error);
+    console.error('[Briva] Capture failed:', error);
     info.textContent = 'Capture failed';
     chrome.runtime.sendMessage({
       type: 'UPLOAD_ERROR',
@@ -66,7 +66,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
 
   try {
     const audioBlob = await recorder.stopRecording();
-    console.log('[MeetNotes] Stopped, blob:', audioBlob.size, 'bytes');
+    console.log('[Briva] Stopped, blob:', audioBlob.size, 'bytes');
 
     // Clean up streams
     if (audioContext) { audioContext.close().catch(() => {}); audioContext = null; }
@@ -89,7 +89,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
     chrome.runtime.sendMessage({ type: 'UPLOAD_COMPLETE', meetingId: result.meetingId });
     window.close();
   } catch (error) {
-    console.error('[MeetNotes] Upload failed:', error);
+    console.error('[Briva] Upload failed:', error);
     chrome.runtime.sendMessage({
       type: 'UPLOAD_ERROR',
       error: error instanceof Error ? error.message : 'Upload failed',

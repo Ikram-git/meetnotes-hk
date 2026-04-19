@@ -19,16 +19,16 @@ chrome.runtime.sendMessage({ type: 'OFFSCREEN_READY' }, async (config) => {
         },
       } as any,
     });
-    console.log('[MeetNotes] Tab audio captured');
+    console.log('[Briva] Tab audio captured');
 
     // 2. Try to capture microphone (your voice)
     try {
       micStream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
       });
-      console.log('[MeetNotes] Mic captured');
+      console.log('[Briva] Mic captured');
     } catch (e) {
-      console.warn('[MeetNotes] Mic unavailable, tab audio only. Run setup to grant mic access.');
+      console.warn('[Briva] Mic unavailable, tab audio only. Run setup to grant mic access.');
     }
 
     // 3. Mix streams via AudioContext
@@ -45,9 +45,9 @@ chrome.runtime.sendMessage({ type: 'OFFSCREEN_READY' }, async (config) => {
 
     // 4. Record mixed stream
     await recorder.startRecording(dest.stream);
-    console.log('[MeetNotes] Recording started (' + (micStream ? 'tab + mic' : 'tab only') + ')');
+    console.log('[Briva] Recording started (' + (micStream ? 'tab + mic' : 'tab only') + ')');
   } catch (error) {
-    console.error('[MeetNotes] Capture failed:', error);
+    console.error('[Briva] Capture failed:', error);
     chrome.runtime.sendMessage({
       type: 'UPLOAD_ERROR',
       error: error instanceof Error ? error.message : 'Failed to capture audio',
@@ -64,7 +64,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
     if (audioContext) { audioContext.close().catch(() => {}); audioContext = null; }
     if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
     if (tabStream) { tabStream.getTracks().forEach(t => t.stop()); tabStream = null; }
-    console.log('[MeetNotes] Recording discarded');
+    console.log('[Briva] Recording discarded');
     return;
   }
 
@@ -72,7 +72,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
 
   try {
     const audioBlob = await recorder.stopRecording();
-    console.log('[MeetNotes] Stopped, blob size:', audioBlob.size);
+    console.log('[Briva] Stopped, blob size:', audioBlob.size);
 
     if (audioContext) { audioContext.close().catch(() => {}); audioContext = null; }
     if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
@@ -90,7 +90,7 @@ chrome.runtime.onMessage.addListener(async (message) => {
     const result = await uploadAudio(audioBlob, filename, message.token);
     chrome.runtime.sendMessage({ type: 'UPLOAD_COMPLETE', meetingId: result.meetingId });
   } catch (error) {
-    console.error('[MeetNotes] Upload failed:', error);
+    console.error('[Briva] Upload failed:', error);
     chrome.runtime.sendMessage({
       type: 'UPLOAD_ERROR',
       error: error instanceof Error ? error.message : 'Upload failed',

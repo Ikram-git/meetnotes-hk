@@ -57,7 +57,7 @@ export default async function MeetingsPage() {
             </div>
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-white">Record meetings from your browser</h3>
-              <p className="text-xs text-gray-400 mt-0.5 hidden sm:block">Install the MeetNotes Chrome extension to capture Google Meet, Zoom, and Teams meetings with one click.</p>
+              <p className="text-xs text-gray-400 mt-0.5 hidden sm:block">Install the Briva Chrome extension to capture Google Meet, Zoom, and Teams meetings with one click.</p>
             </div>
           </div>
           <a href="https://chrome.google.com/webstore" target="_blank" rel="noopener noreferrer"

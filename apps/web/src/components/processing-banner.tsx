@@ -18,7 +18,7 @@ const STAGES = [
 ] as const;
 
 const TIPS = [
-  '💡 Tip: MeetNotes auto-detects 30+ languages — including code-switched HK-style meetings.',
+  '💡 Tip: Briva auto-detects 30+ languages — including code-switched HK-style meetings.',
   '💡 Tip: Click any speaker name on the transcript to rename them — it sticks.',
   '💡 Tip: You can regenerate the summary in English, 繁中, or both at any time.',
   '💡 Tip: Action items can be checked off from the meeting detail page.',

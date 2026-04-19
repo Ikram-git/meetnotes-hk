@@ -4,19 +4,19 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen bg-[#080c0a] text-gray-300">
       <div className="max-w-3xl mx-auto px-6 py-16">
-        <Link href="/" className="text-emerald-400 text-sm hover:text-emerald-300 mb-8 inline-block">&larr; Back to MeetNotes</Link>
+        <Link href="/" className="text-emerald-400 text-sm hover:text-emerald-300 mb-8 inline-block">&larr; Back to Briva</Link>
         <h1 className="text-3xl font-bold text-white mb-2">Terms of Service</h1>
         <p className="text-sm text-gray-500 mb-10">Last updated: 29 March 2026</p>
 
         <div className="space-y-8 text-sm leading-relaxed">
           <section>
             <h2 className="text-lg font-semibold text-white mb-3">1. Acceptance of Terms</h2>
-            <p>By creating an account or using MeetNotes ("the Service"), you agree to these Terms of Service. If you do not agree, do not use the Service.</p>
+            <p>By creating an account or using Briva ("the Service"), you agree to these Terms of Service. If you do not agree, do not use the Service.</p>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold text-white mb-3">2. Description of Service</h2>
-            <p>MeetNotes provides AI-powered meeting transcription and summarisation for professionals. The Service includes a web application, Chrome browser extension, and related APIs. The Service supports audio in 30+ languages with automatic language detection.</p>
+            <p>Briva provides AI-powered meeting transcription and summarisation for professionals. The Service includes a web application, Chrome browser extension, and related APIs. The Service supports audio in 30+ languages with automatic language detection.</p>
           </section>
 
           <section>
@@ -44,7 +44,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-white mb-3">5. Recording Consent</h2>
-            <p>You are solely responsible for obtaining appropriate consent from all meeting participants before recording. Laws regarding recording consent vary by jurisdiction. We recommend informing all participants before recording. MeetNotes is not liable for any unauthorised recordings.</p>
+            <p>You are solely responsible for obtaining appropriate consent from all meeting participants before recording. Laws regarding recording consent vary by jurisdiction. We recommend informing all participants before recording. Briva is not liable for any unauthorised recordings.</p>
           </section>
 
           <section>
@@ -70,7 +70,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-white mb-3">9. Limitation of Liability</h2>
-            <p>To the maximum extent permitted by applicable law, MeetNotes and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service. Our total liability shall not exceed the amount you paid us in the 12 months preceding the claim.</p>
+            <p>To the maximum extent permitted by applicable law, Briva and its operators shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service. Our total liability shall not exceed the amount you paid us in the 12 months preceding the claim.</p>
           </section>
 
           <section>
@@ -85,7 +85,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-white mb-3">12. Contact</h2>
-            <p>For questions about these Terms, contact us at <a href="mailto:support@meetnotes.hk" className="text-emerald-400 hover:underline">support@meetnotes.hk</a>.</p>
+            <p>For questions about these Terms, contact us at <a href="mailto:support@briva.hk" className="text-emerald-400 hover:underline">support@briva.hk</a>.</p>
           </section>
         </div>
       </div>

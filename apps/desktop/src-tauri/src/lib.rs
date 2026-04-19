@@ -31,7 +31,7 @@ fn start_recording(app: AppHandle, state: State<RecordingState>) -> Result<Strin
 
     let dir = dirs::data_local_dir()
         .unwrap_or_else(std::env::temp_dir)
-        .join("MeetNotes")
+        .join("Briva")
         .join("recordings");
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let ts = chrono::Local::now().format("%Y%m%d-%H%M%S");
@@ -198,9 +198,9 @@ fn register_global_shortcut(app: &tauri::App) -> Result<(), Box<dyn std::error::
 fn update_tray_for_state(app: &AppHandle, recording: bool) {
     if let Some(tray) = app.tray_by_id("main") {
         let tooltip = if recording {
-            "MeetNotes — recording"
+            "Briva — recording"
         } else {
-            "MeetNotes"
+            "Briva"
         };
         let _ = tray.set_tooltip(Some(tooltip));
     }
@@ -231,7 +231,7 @@ pub fn run() {
             let record_item = MenuItem::with_id(handle, "record", "Start recording", true, None::<&str>)?;
             let stop_item = MenuItem::with_id(handle, "stop", "Stop recording", true, None::<&str>)?;
             let show_item = MenuItem::with_id(handle, "show", "Open dashboard", true, None::<&str>)?;
-            let quit_item = MenuItem::with_id(handle, "quit", "Quit MeetNotes", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(handle, "quit", "Quit Briva", true, None::<&str>)?;
             let sep1 = PredefinedMenuItem::separator(handle)?;
             let sep2 = PredefinedMenuItem::separator(handle)?;
             let menu = Menu::with_items(
@@ -246,7 +246,7 @@ pub fn run() {
 
             let _tray = TrayIconBuilder::with_id("main")
                 .icon(icon)
-                .tooltip("MeetNotes")
+                .tooltip("Briva")
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "record" => {

@@ -69,15 +69,15 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.30.0
         version: 0.30.1
+      '@briva/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@deepgram/sdk':
         specifier: ^3.6.0
         version: 3.13.0
       '@google-cloud/speech':
         specifier: ^6.7.0
         version: 6.7.1
-      '@meetnotes/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@react-pdf/renderer':
         specifier: ^4.0.0
         version: 4.3.2(react@19.2.4)

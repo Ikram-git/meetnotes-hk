@@ -7,7 +7,7 @@ import './globals.css';
 const font = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 
 export const metadata: Metadata = {
-  title: 'MeetNotes - AI Meeting Notes for Professionals',
+  title: 'Briva - AI Meeting Notes for Professionals',
   description:
     'AI-powered meeting notes with multilingual transcription and smart summaries',
   icons: {

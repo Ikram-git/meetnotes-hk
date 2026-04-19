@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#10b981"/>
-  <path d="M16 8a5 5 0 0 0-5 5v3a5 5 0 0 0 10 0v-3a5 5 0 0 0-5-5z" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
-  <path d="M11 18a5 5 0 0 0 10 0" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
-  <line x1="16" y1="23" x2="16" y2="26" stroke="white" stroke-width="2" stroke-linecap="round"/>
-  <line x1="13" y1="26" x2="19" y2="26" stroke="white" stroke-width="2" stroke-linecap="round"/>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Briva App Icon - Bridge Waveform - Green Background -->
+  <rect width="512" height="512" rx="112" fill="#10b981"/>
+  <path d="M120,340 Q120,100 240,100 L272,100 Q392,100 392,340" fill="none" stroke="#ffffff" stroke-width="32" stroke-linecap="round"/>
+  <rect x="180" y="240" width="32" height="120" rx="16" fill="#ffffff"/>
+  <rect x="240" y="192" width="32" height="168" rx="16" fill="#ffffff"/>
+  <rect x="300" y="264" width="32" height="96" rx="16" fill="#ffffff"/>
 </svg>
