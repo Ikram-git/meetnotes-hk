@@ -12,6 +12,12 @@ interface LiveLine {
   speaker?: string | null;
 }
 
+interface LiveChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  transcriptLengthAtAsk?: number;
+}
+
 /**
  * Finalise a live-captured meeting: create meeting row, insert transcript
  * segments from the frontend-captured Deepgram stream (no re-transcription),
@@ -31,6 +37,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   const lines: LiveLine[] = Array.isArray(body.lines) ? body.lines : [];
+  const chatMessages: LiveChatMessage[] = Array.isArray(body.chat) ? body.chat : [];
   const durationSeconds: number = typeof body.durationSeconds === 'number' ? body.durationSeconds : 0;
   const detectedLanguages: string[] = Array.isArray(body.detectedLanguages)
     ? body.detectedLanguages
@@ -86,6 +93,22 @@ export async function POST(req: NextRequest) {
   }
 
   console.log(`[FinaliseLive] saved ${segments.length} segments for meeting ${meeting.id}`);
+
+  if (chatMessages.length > 0) {
+    const chatRows = chatMessages.map((m, i) => ({
+      meeting_id: meeting.id,
+      role: m.role,
+      content: m.content,
+      turn_index: i,
+      transcript_length_at_ask: m.transcriptLengthAtAsk ?? null,
+    }));
+    const { error: chatError } = await supabase.from('meeting_chats').insert(chatRows);
+    if (chatError) {
+      console.warn(`[FinaliseLive] chat persist failed: ${chatError.message}`);
+    } else {
+      console.log(`[FinaliseLive] saved ${chatRows.length} chat messages`);
+    }
+  }
 
   // Charge live minutes against the user's monthly allowance, same as the
   // batch transcribe flow. Rounds up — any partial minute counts.

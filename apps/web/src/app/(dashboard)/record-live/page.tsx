@@ -226,6 +226,9 @@ export default function RecordLivePage() {
             endMs: l.endMs,
             speaker: l.speaker,
           })),
+          chat: chat
+            .filter((m) => m.content.trim() && !m.streaming)
+            .map((m) => ({ role: m.role, content: m.content })),
           durationSeconds,
         }),
       });
