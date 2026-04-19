@@ -87,6 +87,19 @@ export async function POST(req: NextRequest) {
 
   console.log(`[FinaliseLive] saved ${segments.length} segments for meeting ${meeting.id}`);
 
+  // Charge live minutes against the user's monthly allowance, same as the
+  // batch transcribe flow. Rounds up — any partial minute counts.
+  const minutesUsed = Math.ceil(durationSeconds / 60);
+  if (minutesUsed > 0) {
+    const { error: meterError } = await supabase.rpc('increment_minutes_used', {
+      user_id: user.id,
+      minutes: minutesUsed,
+    });
+    if (meterError) {
+      console.warn(`[FinaliseLive] meter increment failed: ${meterError.message}`);
+    }
+  }
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('preferred_language, preferred_summary_style')
