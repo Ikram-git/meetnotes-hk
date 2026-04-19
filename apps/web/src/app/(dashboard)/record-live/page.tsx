@@ -19,6 +19,7 @@ interface TranscriptLine {
   final: boolean;
   startMs: number;
   endMs: number;
+  speaker: string;
 }
 
 interface ChatMessage {
@@ -80,9 +81,12 @@ export default function RecordLivePage() {
     setInterim('');
     setStatus('connecting');
     try {
-      const keyRes = await fetch('/api/debug/deepgram-key');
-      if (!keyRes.ok) throw new Error('Could not fetch Deepgram key');
-      const { key } = await keyRes.json();
+      const tokenRes = await fetch('/api/deepgram/token');
+      if (!tokenRes.ok) {
+        const err = await tokenRes.json().catch(() => ({}));
+        throw new Error(err.error || 'Could not mint Deepgram token');
+      }
+      const { token } = await tokenRes.json();
 
       const fmt = await startLiveCapture();
       setFormat(fmt);
@@ -95,9 +99,10 @@ export default function RecordLivePage() {
       url.searchParams.set('interim_results', 'true');
       url.searchParams.set('smart_format', 'true');
       url.searchParams.set('punctuate', 'true');
+      url.searchParams.set('diarize', 'true');
       url.searchParams.set('language', 'multi');
 
-      const ws = new WebSocket(url.toString(), ['token', key]);
+      const ws = new WebSocket(url.toString(), ['token', token]);
       ws.binaryType = 'arraybuffer';
       wsRef.current = ws;
 
@@ -112,21 +117,23 @@ export default function RecordLivePage() {
       ws.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data);
-          if (msg.type === 'Results') {
-            const alt = msg.channel?.alternatives?.[0];
-            const text = (alt?.transcript || '').trim();
-            if (!text) return;
-            const startMs = Math.round((msg.start ?? 0) * 1000);
-            const endMs = Math.round(((msg.start ?? 0) + (msg.duration ?? 0)) * 1000);
-            if (msg.is_final) {
-              setLines((prev) => [
-                ...prev,
-                { id: crypto.randomUUID(), text, final: true, startMs, endMs },
-              ]);
-              setInterim('');
-            } else {
-              setInterim(text);
-            }
+          if (msg.type !== 'Results') return;
+          const alt = msg.channel?.alternatives?.[0];
+          const text = (alt?.transcript || '').trim();
+          if (!text) return;
+          const startMs = Math.round((msg.start ?? 0) * 1000);
+          const endMs = Math.round(((msg.start ?? 0) + (msg.duration ?? 0)) * 1000);
+          const words: Array<{ speaker?: number }> = alt?.words || [];
+          const speakerNum = words[0]?.speaker ?? 0;
+          const speaker = `Speaker ${speakerNum}`;
+          if (msg.is_final) {
+            setLines((prev) => [
+              ...prev,
+              { id: crypto.randomUUID(), text, final: true, startMs, endMs, speaker },
+            ]);
+            setInterim('');
+          } else {
+            setInterim(text);
           }
         } catch {}
       };
@@ -217,7 +224,7 @@ export default function RecordLivePage() {
             text: l.text,
             startMs: l.startMs,
             endMs: l.endMs,
-            speaker: 'Speaker 0',
+            speaker: l.speaker,
           })),
           durationSeconds,
         }),
@@ -412,11 +419,20 @@ export default function RecordLivePage() {
             {lines.length === 0 && !interim && status === 'live' && (
               <p className="text-gray-500 text-sm italic">Listening…</p>
             )}
-            {lines.map((l) => (
-              <p key={l.id} className="text-white text-sm mb-2 leading-relaxed">
-                {l.text}
-              </p>
-            ))}
+            {lines.map((l, idx) => {
+              const prev = idx > 0 ? lines[idx - 1] : null;
+              const showSpeaker = !prev || prev.speaker !== l.speaker;
+              return (
+                <div key={l.id} className="mb-2">
+                  {showSpeaker && (
+                    <div className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wide mb-0.5">
+                      {l.speaker}
+                    </div>
+                  )}
+                  <p className="text-white text-sm leading-relaxed">{l.text}</p>
+                </div>
+              );
+            })}
             {interim && <p className="text-gray-500 text-sm italic leading-relaxed">{interim}</p>}
           </div>
         </div>
