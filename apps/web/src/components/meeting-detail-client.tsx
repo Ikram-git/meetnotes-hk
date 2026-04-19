@@ -38,9 +38,10 @@ interface MeetingDetailClientProps {
   summary: any | null;
   speakerMappings: Array<{ speaker_label: string; speaker_name: string }>;
   audioUrl: string | null;
+  chats?: Array<{ role: 'user' | 'assistant'; content: string; turn_index: number }>;
 }
 
-export function MeetingDetailClient({ meeting: initialMeeting, segments: initialSegments, summary: initialSummary, speakerMappings, audioUrl }: MeetingDetailClientProps) {
+export function MeetingDetailClient({ meeting: initialMeeting, segments: initialSegments, summary: initialSummary, speakerMappings, audioUrl, chats = [] }: MeetingDetailClientProps) {
   const { toast } = useToast();
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [seekTimeMs, setSeekTimeMs] = useState<number | undefined>(undefined);
@@ -635,6 +636,35 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
               <SkeletonActionItems />
             </div>
           ) : null}
+
+          {/* Live Q&A — only shows on meetings that had an in-meeting AI chat */}
+          {chats.length > 0 && (
+            <div className="bg-[#111916] rounded-xl border border-purple-900/30 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-2 h-2 rounded-full bg-purple-500" />
+                <h2 className="text-lg font-semibold text-white">Questions asked during the meeting</h2>
+              </div>
+              <div className="space-y-4">
+                {chats.map((c, i) => (
+                  <div
+                    key={i}
+                    className={
+                      c.role === 'user'
+                        ? 'bg-purple-500/10 border border-purple-500/20 rounded-lg p-3 text-sm text-white'
+                        : 'text-sm text-gray-200 leading-relaxed pl-3 border-l-2 border-purple-500/40'
+                    }
+                  >
+                    {c.role === 'assistant' && (
+                      <div className="text-[10px] font-semibold text-purple-400 mb-1 uppercase tracking-wide">
+                        Briva AI
+                      </div>
+                    )}
+                    <div className="whitespace-pre-wrap">{c.content}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Key Decisions card removed — to be replaced by AI Recommendations in a future iteration */}
         </div>

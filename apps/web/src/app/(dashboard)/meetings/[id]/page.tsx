@@ -16,7 +16,7 @@ export default async function MeetingDetailPage({
   if (!user) redirect('/login');
 
   // Fetch all data in parallel
-  const [meetingResult, segmentsResult, summaryResult, mappingsResult] =
+  const [meetingResult, segmentsResult, summaryResult, mappingsResult, chatsResult] =
     await Promise.all([
       supabase
         .from('meetings')
@@ -40,6 +40,11 @@ export default async function MeetingDetailPage({
         .from('speaker_mappings')
         .select('speaker_label, speaker_name')
         .eq('meeting_id', id),
+      supabase
+        .from('meeting_chats')
+        .select('role, content, turn_index')
+        .eq('meeting_id', id)
+        .order('turn_index', { ascending: true }),
     ]);
 
   if (!meetingResult.data) notFound();
@@ -60,6 +65,7 @@ export default async function MeetingDetailPage({
       summary={summaryResult.data}
       speakerMappings={mappingsResult.data || []}
       audioUrl={audioUrl}
+      chats={chatsResult.data || []}
     />
   );
 }
