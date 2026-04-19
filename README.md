@@ -1,4 +1,4 @@
-# MeetNotes
+# Briva
 
 AI-powered meeting notes tool optimised for Hong Kong professionals. Handles English + Cantonese code-mixed meetings.
 
@@ -54,7 +54,7 @@ The web app will be available at http://localhost:3000
 ## Project Structure
 
 ```
-meetnotes/
+briva/
 ├── apps/
 │   ├── web/          # Next.js dashboard
 │   └── extension/    # Chrome extension

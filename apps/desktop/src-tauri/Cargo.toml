@@ -1,8 +1,8 @@
 [package]
-name = "meetnotes-desktop"
+name = "briva-desktop"
 version = "0.1.0"
-description = "MeetNotes desktop app"
-authors = ["MeetNotes"]
+description = "Briva desktop app"
+authors = ["Briva"]
 edition = "2021"
 rust-version = "1.77.2"
 

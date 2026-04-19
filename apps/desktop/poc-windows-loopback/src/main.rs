@@ -14,7 +14,7 @@ const OUTPUT_PATH: &str = "out.wav";
 type SharedWriter = Arc<Mutex<Option<WavWriter<BufWriter<File>>>>>;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    println!("=== MeetNotes WASAPI Loopback POC ===");
+    println!("=== Briva WASAPI Loopback POC ===");
 
     let host = cpal::default_host();
     let device = host

@@ -87,7 +87,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
     // so we don't race with the language-loading effect.
     let language: Language = 'en';
     try {
-      const saved = localStorage.getItem(`meetnotes-lang-${initialMeeting.id}`) as Language | null;
+      const saved = localStorage.getItem(`briva-lang-${initialMeeting.id}`) as Language | null;
       if (saved && ['en', 'zh-Hant', 'both'].includes(saved)) language = saved;
     } catch {}
 
@@ -116,7 +116,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
         if (updated.status === 'summarising') {
           if (!summariseSeenAt.current) summariseSeenAt.current = Date.now();
           if (Date.now() - summariseSeenAt.current > 30_000) {
-            console.log('[MeetNotes] Summarisation stuck — showing retry');
+            console.log('[Briva] Summarisation stuck — showing retry');
             summariseSeenAt.current = null;
             setStuckSummarising(true);
           }
@@ -139,7 +139,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
   }, [isProcessingStatus, meeting.id, segments.length]);
 
   // Persist language selection per meeting in localStorage
-  const storageKey = `meetnotes-lang-${initialMeeting.id}`;
+  const storageKey = `briva-lang-${initialMeeting.id}`;
   const [lang, setLangState] = useState<Language>('en');
 
   useEffect(() => {

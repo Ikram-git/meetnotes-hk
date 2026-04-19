@@ -4,14 +4,14 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-[#080c0a] text-gray-300">
       <div className="max-w-3xl mx-auto px-6 py-16">
-        <Link href="/" className="text-emerald-400 text-sm hover:text-emerald-300 mb-8 inline-block">&larr; Back to MeetNotes</Link>
+        <Link href="/" className="text-emerald-400 text-sm hover:text-emerald-300 mb-8 inline-block">&larr; Back to Briva</Link>
         <h1 className="text-3xl font-bold text-white mb-2">Privacy Policy</h1>
         <p className="text-sm text-gray-500 mb-10">Last updated: 29 March 2026</p>
 
         <div className="space-y-8 text-sm leading-relaxed">
           <section>
             <h2 className="text-lg font-semibold text-white mb-3">1. Introduction</h2>
-            <p>MeetNotes ("we", "our", "us") is an AI-powered meeting notes tool designed for professionals worldwide. This Privacy Policy explains how we collect, use, and protect your personal data.</p>
+            <p>Briva ("we", "our", "us") is an AI-powered meeting notes tool designed for professionals worldwide. This Privacy Policy explains how we collect, use, and protect your personal data.</p>
           </section>
 
           <section>
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-white mb-3">9. Contact</h2>
-            <p>For privacy-related inquiries, contact us at <a href="mailto:privacy@meetnotes.hk" className="text-emerald-400 hover:underline">privacy@meetnotes.hk</a>.</p>
+            <p>For privacy-related inquiries, contact us at <a href="mailto:privacy@briva.hk" className="text-emerald-400 hover:underline">privacy@briva.hk</a>.</p>
           </section>
         </div>
       </div>

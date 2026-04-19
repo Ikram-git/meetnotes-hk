@@ -1,5 +1,5 @@
 const API_URL = process.env.NODE_ENV === 'production'
-  ? 'https://meetnotes-ochre.vercel.app'
+  ? 'https://briva-app.vercel.app'
   : 'http://localhost:3000';
 
 export async function uploadAudio(blob: Blob, filename: string, token: string | null) {

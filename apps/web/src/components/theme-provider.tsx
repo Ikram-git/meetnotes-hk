@@ -18,7 +18,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('meetnotes-theme') as Theme | null;
+    const saved = localStorage.getItem('briva-theme') as Theme | null;
     if (saved) setTheme(saved);
     setMounted(true);
   }, []);
@@ -27,7 +27,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (!mounted) return;
     document.documentElement.classList.toggle('light', theme === 'light');
     document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('meetnotes-theme', theme);
+    localStorage.setItem('briva-theme', theme);
   }, [theme, mounted]);
 
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');

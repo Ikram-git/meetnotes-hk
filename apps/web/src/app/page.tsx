@@ -19,10 +19,13 @@ export default async function LandingPage() {
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5.6 15.94 Q5.6 4.69 11.25 4.69 L12.75 4.69 Q18.38 4.69 18.38 15.94" />
+                <rect x="8.44" y="11.25" width="1.5" height="5.63" rx="0.75" fill="currentColor" stroke="none" />
+                <rect x="11.25" y="9" width="1.5" height="7.88" rx="0.75" fill="currentColor" stroke="none" />
+                <rect x="14.06" y="12.38" width="1.5" height="4.5" rx="0.75" fill="currentColor" stroke="none" />
               </svg>
             </div>
-            <span className="text-xl font-bold text-white">MeetNotes</span>
+            <span className="text-xl font-bold text-white">Briva</span>
           </div>
           <div className="flex items-center gap-1 sm:gap-3">
             <Link href="/demo" className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition px-2 sm:px-4 py-2 hidden sm:block">
@@ -115,7 +118,7 @@ export default async function LandingPage() {
               Everything you need after every meeting
             </h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              From recording to action items, MeetNotes handles the entire workflow.
+              From recording to action items, Briva handles the entire workflow.
             </p>
           </div>
 
@@ -209,10 +212,13 @@ export default async function LandingPage() {
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-emerald-500 rounded flex items-center justify-center">
               <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5.6 15.94 Q5.6 4.69 11.25 4.69 L12.75 4.69 Q18.38 4.69 18.38 15.94" />
+                <rect x="8.44" y="11.25" width="1.5" height="5.63" rx="0.75" fill="currentColor" stroke="none" />
+                <rect x="11.25" y="9" width="1.5" height="7.88" rx="0.75" fill="currentColor" stroke="none" />
+                <rect x="14.06" y="12.38" width="1.5" height="4.5" rx="0.75" fill="currentColor" stroke="none" />
               </svg>
             </div>
-            <span>MeetNotes</span>
+            <span>Briva</span>
           </div>
           <div className="flex gap-4">
             <Link href="/privacy" className="hover:text-gray-400 transition">Privacy Policy</Link>
