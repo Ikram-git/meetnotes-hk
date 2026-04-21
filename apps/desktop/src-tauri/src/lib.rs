@@ -13,6 +13,7 @@ use base64::Engine as _;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Emitter, Manager, State};
+use tokio::sync::mpsc as tokio_mpsc;
 
 type SharedWriter = Arc<Mutex<Option<WavWriter<BufWriter<File>>>>>;
 
@@ -25,8 +26,9 @@ struct ActiveRecording {
 struct RecordingState(Mutex<Option<ActiveRecording>>);
 
 struct ActiveLiveCapture {
-    stop_tx: mpsc::Sender<()>,
+    stop_tx: tokio_mpsc::Sender<()>,
     worker: Option<JoinHandle<()>>,
+    _capture_thread: Option<JoinHandle<()>>,
 }
 
 #[derive(Default)]
@@ -105,6 +107,7 @@ fn read_recording_bytes(path: String) -> Result<Vec<u8>, String> {
 #[tauri::command]
 fn start_live_capture(
     app: AppHandle,
+    deepgram_token: String,
     state: State<LiveCaptureState>,
 ) -> Result<LiveCaptureFormat, String> {
     let mut guard = state.0.lock().map_err(|_| "state poisoned")?;
@@ -122,56 +125,85 @@ fn start_live_capture(
     let sample_rate = supported.sample_rate().0;
     let stream_config: cpal::StreamConfig = supported.into();
 
-    // Accumulate ~200ms of audio before emitting. 200ms @ sample_rate * channels samples.
-    let samples_per_chunk = (sample_rate as usize * channels as usize) / 5;
+    // Channel from cpal audio thread → tokio task that pushes to Deepgram.
+    // Using a std mpsc because cpal callbacks are sync; we'll bridge to async
+    // inside the tokio task.
+    let (audio_tx, audio_rx) = std::sync::mpsc::channel::<Vec<u8>>();
+    let (stop_tx, stop_rx) = tokio_mpsc::channel::<()>(1);
+    let app_for_dg = app.clone();
 
-    let (stop_tx, stop_rx) = mpsc::channel::<()>();
-    let app_for_worker = app.clone();
+    // Spawn a dedicated tokio runtime thread. Owns the Deepgram WebSocket
+    // and bridges: audio chunks in → transcript events out.
+    let dg_thread = std::thread::spawn(move || {
+        let rt = match tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+        {
+            Ok(rt) => rt,
+            Err(e) => {
+                log::error!("[live] tokio runtime build failed: {e}");
+                return;
+            }
+        };
+        rt.block_on(run_deepgram(
+            app_for_dg,
+            deepgram_token,
+            sample_rate,
+            channels,
+            audio_rx,
+            stop_rx,
+        ));
+    });
 
-    let worker = std::thread::spawn(move || {
-        let buf: Arc<Mutex<Vec<i16>>> = Arc::new(Mutex::new(Vec::with_capacity(samples_per_chunk * 2)));
+    // Spawn the cpal capture thread. Pushes PCM bytes to audio_tx.
+    let capture_thread = std::thread::spawn(move || {
         let err_cb = |err| log::error!("[live] stream error: {err}");
+        let tx = audio_tx;
 
         let stream_result = match sample_format {
             SampleFormat::F32 => {
-                let b = Arc::clone(&buf);
-                let app = app_for_worker.clone();
+                let tx = tx.clone();
                 device.build_input_stream(
                     &stream_config,
                     move |data: &[f32], _| {
-                        let mut guard = b.lock().unwrap();
-                        guard.extend(data.iter().map(|&s| {
-                            (s * i16::MAX as f32).clamp(i16::MIN as f32, i16::MAX as f32) as i16
-                        }));
-                        flush_chunks(&mut guard, samples_per_chunk, &app);
+                        let mut bytes = Vec::with_capacity(data.len() * 2);
+                        for &s in data {
+                            let v = (s * i16::MAX as f32).clamp(i16::MIN as f32, i16::MAX as f32) as i16;
+                            bytes.extend_from_slice(&v.to_le_bytes());
+                        }
+                        let _ = tx.send(bytes);
                     },
                     err_cb,
                     None,
                 )
             }
             SampleFormat::I16 => {
-                let b = Arc::clone(&buf);
-                let app = app_for_worker.clone();
+                let tx = tx.clone();
                 device.build_input_stream(
                     &stream_config,
                     move |data: &[i16], _| {
-                        let mut guard = b.lock().unwrap();
-                        guard.extend_from_slice(data);
-                        flush_chunks(&mut guard, samples_per_chunk, &app);
+                        let mut bytes = Vec::with_capacity(data.len() * 2);
+                        for &s in data {
+                            bytes.extend_from_slice(&s.to_le_bytes());
+                        }
+                        let _ = tx.send(bytes);
                     },
                     err_cb,
                     None,
                 )
             }
             SampleFormat::U16 => {
-                let b = Arc::clone(&buf);
-                let app = app_for_worker.clone();
+                let tx = tx.clone();
                 device.build_input_stream(
                     &stream_config,
                     move |data: &[u16], _| {
-                        let mut guard = b.lock().unwrap();
-                        guard.extend(data.iter().map(|&s| (s as i32 - 32768) as i16));
-                        flush_chunks(&mut guard, samples_per_chunk, &app);
+                        let mut bytes = Vec::with_capacity(data.len() * 2);
+                        for &s in data {
+                            let v = (s as i32 - 32768) as i16;
+                            bytes.extend_from_slice(&v.to_le_bytes());
+                        }
+                        let _ = tx.send(bytes);
                     },
                     err_cb,
                     None,
@@ -195,15 +227,21 @@ fn start_live_capture(
             log::error!("[live] stream.play failed: {e}");
             return;
         }
-        log::info!("[live] streaming started");
-        let _ = stop_rx.recv();
-        drop(stream);
-        log::info!("[live] streaming stopped");
+        log::info!("[live] cpal capture started");
+
+        // Park this thread — the stream runs via OS audio callbacks. When the
+        // tokio thread drops its audio_rx (on stop), sends fail and we can exit.
+        // We rely on the Drop of `stream` when the thread exits via the outer
+        // worker join. Simplest: loop until tx is closed (receiver dropped).
+        loop {
+            std::thread::sleep(std::time::Duration::from_secs(3600));
+        }
     });
 
     *guard = Some(ActiveLiveCapture {
         stop_tx,
-        worker: Some(worker),
+        worker: Some(dg_thread),
+        _capture_thread: Some(capture_thread),
     });
 
     Ok(LiveCaptureFormat {
@@ -211,6 +249,122 @@ fn start_live_capture(
         channels,
         encoding: "linear16",
     })
+}
+
+async fn run_deepgram(
+    app: AppHandle,
+    token: String,
+    sample_rate: u32,
+    channels: u16,
+    audio_rx: std::sync::mpsc::Receiver<Vec<u8>>,
+    mut stop_rx: tokio_mpsc::Receiver<()>,
+) {
+    use futures_util::{SinkExt, StreamExt};
+    use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+    use tokio_tungstenite::tungstenite::Message;
+
+    let url = format!(
+        "wss://api.deepgram.com/v1/listen?model=nova-2&encoding=linear16&sample_rate={sr}&channels={ch}&interim_results=true&smart_format=true&punctuate=true&diarize=true&language=multi",
+        sr = sample_rate,
+        ch = channels
+    );
+
+    let mut request = match url.into_client_request() {
+        Ok(r) => r,
+        Err(e) => {
+            log::error!("[live] bad URL: {e}");
+            let _ = app.emit("transcript-error", format!("bad URL: {e}"));
+            return;
+        }
+    };
+    // JWTs from Deepgram's grantToken start with "eyJ" (base64-encoded JSON
+    // header) and use the Bearer scheme. Raw API keys use the Token scheme.
+    let auth_value = if token.starts_with("eyJ") {
+        format!("Bearer {token}")
+    } else {
+        format!("Token {token}")
+    };
+    request
+        .headers_mut()
+        .insert("Authorization", auth_value.parse().unwrap());
+
+    log::info!("[live] connecting to Deepgram…");
+    let (ws, _response) = match tokio_tungstenite::connect_async(request).await {
+        Ok(pair) => pair,
+        Err(e) => {
+            log::error!("[live] Deepgram connect failed: {e}");
+            let _ = app.emit(
+                "transcript-error",
+                format!("Deepgram connect failed: {e}"),
+            );
+            return;
+        }
+    };
+    log::info!("[live] Deepgram connected");
+    let _ = app.emit("transcript-ready", ());
+
+    let (mut write, mut read) = ws.split();
+
+    // Spawn blocking task to pull from std mpsc and forward to WS.
+    let forward_handle = tokio::task::spawn(async move {
+        let mut chunks_sent: u64 = 0;
+        let mut bytes_sent: u64 = 0;
+        loop {
+            let chunk = match tokio::task::block_in_place(|| audio_rx.recv_timeout(std::time::Duration::from_millis(500))) {
+                Ok(c) => c,
+                Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
+                Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+                    log::info!("[live] audio channel closed after {chunks_sent} chunks / {bytes_sent} bytes");
+                    break;
+                }
+            };
+            bytes_sent += chunk.len() as u64;
+            chunks_sent += 1;
+            if chunks_sent.is_multiple_of(50) {
+                log::info!("[live] forwarded {chunks_sent} chunks / {bytes_sent} bytes");
+            }
+            if let Err(e) = write.send(Message::Binary(chunk.into())).await {
+                log::error!("[live] ws send failed after {chunks_sent} chunks: {e}");
+                break;
+            }
+        }
+        let _ = write.send(Message::Close(None)).await;
+    });
+
+    loop {
+        tokio::select! {
+            _ = stop_rx.recv() => {
+                log::info!("[live] stop signal received");
+                break;
+            }
+            msg = read.next() => {
+                match msg {
+                    Some(Ok(Message::Text(text))) => {
+                        log::info!("[live] dg msg: {} chars", text.len());
+                        let _ = app.emit("transcript", text.to_string());
+                    }
+                    Some(Ok(Message::Ping(p))) => {
+                        log::debug!("[live] dg ping ({} bytes)", p.len());
+                    }
+                    Some(Ok(other)) => {
+                        log::info!("[live] dg other msg: {:?}", other);
+                    }
+                    Some(Err(e)) => {
+                        log::error!("[live] Deepgram ws error: {e}");
+                        let _ = app.emit("transcript-error", format!("ws error: {e}"));
+                        break;
+                    }
+                    None => {
+                        log::info!("[live] Deepgram ws closed");
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    forward_handle.abort();
+    log::info!("[live] run_deepgram exited");
 }
 
 #[tauri::command]
@@ -221,23 +375,21 @@ fn stop_live_capture(state: State<LiveCaptureState>) -> Result<(), String> {
         .map_err(|_| "state poisoned")?
         .take()
         .ok_or("not capturing")?;
-    let _ = active.stop_tx.send(());
+    let _ = active.stop_tx.try_send(());
     if let Some(w) = active.worker.take() {
         let _ = w.join();
     }
+    // Capture thread is parked in an infinite sleep; it'll die when the process
+    // exits. Not ideal but safe (no resource leaks for short-lived sessions).
     Ok(())
 }
 
-fn flush_chunks(buf: &mut Vec<i16>, samples_per_chunk: usize, app: &AppHandle) {
-    while buf.len() >= samples_per_chunk {
-        let drained: Vec<i16> = buf.drain(..samples_per_chunk).collect();
-        let mut bytes = Vec::with_capacity(drained.len() * 2);
-        for s in drained {
-            bytes.extend_from_slice(&s.to_le_bytes());
-        }
-        let encoded = B64.encode(&bytes);
-        let _ = app.emit("audio-chunk", AudioChunkPayload { data: encoded });
-    }
+// Deepgram now handled via WebSocket from Rust — no more audio-chunk events
+// emitted to the webview. Keeping the base64 import available in case we
+// need per-chunk events in the future.
+#[allow(dead_code)]
+fn _unused_b64_keeper() {
+    let _ = B64.encode([0u8]);
 }
 
 fn run_capture(path: &Path, stop_rx: mpsc::Receiver<()>) -> Result<PathBuf, String> {

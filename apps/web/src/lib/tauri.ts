@@ -29,8 +29,8 @@ export interface LiveCaptureFormat {
   encoding: string;
 }
 
-export async function startLiveCapture(): Promise<LiveCaptureFormat> {
-  return invokeTauri<LiveCaptureFormat>('start_live_capture');
+export async function startLiveCapture(deepgramToken: string): Promise<LiveCaptureFormat> {
+  return invokeTauri<LiveCaptureFormat>('start_live_capture', { deepgramToken });
 }
 
 export async function stopLiveCapture(): Promise<void> {
@@ -38,19 +38,32 @@ export async function stopLiveCapture(): Promise<void> {
 }
 
 /**
- * Subscribe to audio chunk events from the native capture loop.
- * Each event carries a base64-encoded little-endian 16-bit PCM buffer.
- * Returns an unsubscribe function.
+ * Subscribe to transcript events emitted by the Rust-side Deepgram
+ * WebSocket. Payload is the raw Deepgram "Results" JSON as a string;
+ * the caller is responsible for parsing.
  */
-export async function onAudioChunk(
-  handler: (bytes: Uint8Array) => void,
+export async function onTranscript(
+  handler: (raw: string) => void,
 ): Promise<() => void> {
   const { listen } = await import('@tauri-apps/api/event');
-  const unlisten = await listen<{ data: string }>('audio-chunk', (event) => {
-    const b = atob(event.payload.data);
-    const u8 = new Uint8Array(b.length);
-    for (let i = 0; i < b.length; i++) u8[i] = b.charCodeAt(i);
-    handler(u8);
+  const unlisten = await listen<string>('transcript', (event) => {
+    handler(event.payload);
   });
+  return unlisten;
+}
+
+export async function onTranscriptError(
+  handler: (message: string) => void,
+): Promise<() => void> {
+  const { listen } = await import('@tauri-apps/api/event');
+  const unlisten = await listen<string>('transcript-error', (event) => {
+    handler(event.payload);
+  });
+  return unlisten;
+}
+
+export async function onTranscriptReady(handler: () => void): Promise<() => void> {
+  const { listen } = await import('@tauri-apps/api/event');
+  const unlisten = await listen('transcript-ready', () => handler());
   return unlisten;
 }

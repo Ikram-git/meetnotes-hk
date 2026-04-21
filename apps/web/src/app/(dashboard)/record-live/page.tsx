@@ -5,7 +5,9 @@ import {
   isTauri,
   startLiveCapture,
   stopLiveCapture,
-  onAudioChunk,
+  onTranscript,
+  onTranscriptError,
+  onTranscriptReady,
   type LiveCaptureFormat,
 } from '@/lib/tauri';
 import { createClient } from '@/lib/supabase/client';
@@ -45,8 +47,9 @@ export default function RecordLivePage() {
 
   const router = useRouter();
 
-  const wsRef = useRef<WebSocket | null>(null);
-  const unlistenRef = useRef<(() => void) | null>(null);
+  const unlistenTranscriptRef = useRef<(() => void) | null>(null);
+  const unlistenErrorRef = useRef<(() => void) | null>(null);
+  const unlistenReadyRef = useRef<(() => void) | null>(null);
   const startedAtRef = useRef<number>(0);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const transcriptScrollRef = useRef<HTMLDivElement>(null);
@@ -88,35 +91,9 @@ export default function RecordLivePage() {
       }
       const { token } = await tokenRes.json();
 
-      const fmt = await startLiveCapture();
-      setFormat(fmt);
-
-      const url = new URL('wss://api.deepgram.com/v1/listen');
-      url.searchParams.set('model', 'nova-2');
-      url.searchParams.set('encoding', fmt.encoding);
-      url.searchParams.set('sample_rate', String(fmt.sample_rate));
-      url.searchParams.set('channels', String(fmt.channels));
-      url.searchParams.set('interim_results', 'true');
-      url.searchParams.set('smart_format', 'true');
-      url.searchParams.set('punctuate', 'true');
-      url.searchParams.set('diarize', 'true');
-      url.searchParams.set('language', 'multi');
-
-      const ws = new WebSocket(url.toString(), ['token', token]);
-      ws.binaryType = 'arraybuffer';
-      wsRef.current = ws;
-
-      ws.onopen = async () => {
-        startedAtRef.current = Date.now();
-        setStatus('live');
-        unlistenRef.current = await onAudioChunk((bytes) => {
-          if (ws.readyState === WebSocket.OPEN) ws.send(bytes);
-        });
-      };
-
-      ws.onmessage = (ev) => {
+      unlistenTranscriptRef.current = await onTranscript((raw) => {
         try {
-          const msg = JSON.parse(ev.data);
+          const msg = JSON.parse(raw);
           if (msg.type !== 'Results') return;
           const alt = msg.channel?.alternatives?.[0];
           const text = (alt?.transcript || '').trim();
@@ -136,33 +113,20 @@ export default function RecordLivePage() {
             setInterim(text);
           }
         } catch {}
-      };
+      });
 
-      ws.onerror = (ev) => {
-        console.error('[live] ws error event', ev);
-      };
+      unlistenErrorRef.current = await onTranscriptError((message) => {
+        setError(message);
+        setStatus('error');
+      });
 
-      ws.onclose = (ev) => {
-        console.log('[live] ws closed code=' + ev.code + ' reason="' + ev.reason + '" wasClean=' + ev.wasClean);
-        if (unlistenRef.current) {
-          unlistenRef.current();
-          unlistenRef.current = null;
-        }
-        stopLiveCapture().catch(() => {});
-        if (ev.code !== 1000 && ev.code !== 1005) {
-          const codeHint =
-            ev.code === 1006 ? 'Connection failed (likely auth or URL)' :
-            ev.code === 4008 ? 'Bad request parameters' :
-            ev.code === 4009 ? 'Insufficient credits' :
-            ev.code === 4010 ? 'Auth failed (invalid API key)' :
-            ev.code === 4011 ? 'Deepgram internal error' :
-            `Close code ${ev.code}`;
-          setError(`${codeHint}${ev.reason ? ` — ${ev.reason}` : ''}`);
-          setStatus('error');
-        } else if (status === 'live' || status === 'stopping') {
-          setStatus('idle');
-        }
-      };
+      unlistenReadyRef.current = await onTranscriptReady(() => {
+        startedAtRef.current = Date.now();
+        setStatus('live');
+      });
+
+      const fmt = await startLiveCapture(token);
+      setFormat(fmt);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       setStatus('error');
@@ -178,17 +142,12 @@ export default function RecordLivePage() {
     } catch (err) {
       console.error('[live] stop capture failed', err);
     }
-    if (unlistenRef.current) {
-      unlistenRef.current();
-      unlistenRef.current = null;
-    }
-    if (wsRef.current) {
-      try {
-        wsRef.current.send(JSON.stringify({ type: 'CloseStream' }));
-      } catch {}
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+    unlistenTranscriptRef.current?.();
+    unlistenTranscriptRef.current = null;
+    unlistenErrorRef.current?.();
+    unlistenErrorRef.current = null;
+    unlistenReadyRef.current?.();
+    unlistenReadyRef.current = null;
   };
 
   const stop = async () => {
@@ -309,8 +268,9 @@ export default function RecordLivePage() {
 
   useEffect(() => {
     return () => {
-      if (unlistenRef.current) unlistenRef.current();
-      if (wsRef.current) wsRef.current.close();
+      unlistenTranscriptRef.current?.();
+      unlistenErrorRef.current?.();
+      unlistenReadyRef.current?.();
       if (abortRef.current) abortRef.current.abort();
       stopLiveCapture().catch(() => {});
     };

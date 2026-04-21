@@ -23,9 +23,13 @@ export async function GET() {
   try {
     const dg = createDeepgram(apiKey);
     const { result, error } = await dg.auth.grantToken();
-    if (error) {
-      console.error('[DeepgramToken] grantToken error:', error);
-      return NextResponse.json({ error: error.message || 'Failed to mint token' }, { status: 500 });
+    if (error || !result?.access_token) {
+      const errMsg = error?.message || 'No access_token returned';
+      console.warn(
+        `[DeepgramToken] grantToken failed (${errMsg}) — falling back to raw key. ` +
+          'Upgrade your Deepgram key to "Member" scope or higher to mint short-lived tokens.',
+      );
+      return NextResponse.json({ token: apiKey, expires_in: 0, fallback: true });
     }
     return NextResponse.json({
       token: result.access_token,
@@ -33,7 +37,7 @@ export async function GET() {
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error('[DeepgramToken] failed:', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    console.warn(`[DeepgramToken] exception (${msg}) — falling back to raw key.`);
+    return NextResponse.json({ token: apiKey, expires_in: 0, fallback: true });
   }
 }
