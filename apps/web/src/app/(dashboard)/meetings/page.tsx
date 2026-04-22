@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { MeetingsListClient } from '@/components/meetings-list-client';
+import { UpcomingMeetingsCard } from '@/components/upcoming-meetings-card';
 
 export default async function MeetingsPage() {
   const supabase = await createClient();
@@ -45,6 +46,8 @@ export default async function MeetingsPage() {
           <p className="text-2xl font-bold text-emerald-400 mt-1 capitalize">{profile?.subscription_tier || 'Free'}</p>
         </div>
       </div>
+
+      <UpcomingMeetingsCard />
 
       {/* Chrome Extension Banner */}
       <div className="mb-6 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-xl p-4 sm:p-5">

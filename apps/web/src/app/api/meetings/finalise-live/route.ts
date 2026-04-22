@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
+import { findNearbyCalendarEvent } from '@/lib/google/events';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const maxDuration = 300;
@@ -47,6 +48,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No transcript lines to save' }, { status: 400 });
   }
 
+  // Try to auto-link to a calendar event happening around now (±15 min).
+  // Non-fatal if the user hasn't connected Google or nothing matches.
+  const origin = new URL(req.url).origin;
+  const explicitEventId: string | null =
+    typeof body.googleEventId === 'string' ? body.googleEventId : null;
+  const nearbyEvent = explicitEventId
+    ? null
+    : await findNearbyCalendarEvent(supabase, user.id, origin);
+  const googleEventId = explicitEventId || nearbyEvent?.id || null;
+  const googleEventSummary = nearbyEvent?.summary || null;
+  const googleEventStart = nearbyEvent?.start || null;
+
   const { data: meeting, error: meetingError } = await supabase
     .from('meetings')
     .insert({
@@ -59,6 +72,9 @@ export async function POST(req: NextRequest) {
       audio_duration_seconds: Math.round(durationSeconds),
       stt_provider: 'deepgram-stream',
       detected_languages: detectedLanguages,
+      google_event_id: googleEventId,
+      google_event_summary: googleEventSummary,
+      google_event_start: googleEventStart,
     })
     .select()
     .single();
@@ -162,9 +178,10 @@ export async function POST(req: NextRequest) {
       processing_time_ms: result.processing_time_ms,
     });
 
-    const title = result.topics.length > 0
-      ? result.topics.map((t) => t.name).slice(0, 3).join(', ')
-      : 'Live Meeting';
+    const title = googleEventSummary
+      || (result.topics.length > 0
+        ? result.topics.map((t) => t.name).slice(0, 3).join(', ')
+        : 'Live Meeting');
 
     await supabase
       .from('meetings')
