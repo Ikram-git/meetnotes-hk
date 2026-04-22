@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { SettingsNav } from '@/components/settings-nav';
 import { LanguageSelector } from '@/components/language-selector';
+import { GoogleIntegrationCard } from '@/components/google-integration-card';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -124,6 +125,8 @@ export default function SettingsPage() {
           className="w-full bg-emerald-500 text-white py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-400 transition disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
+
+        <GoogleIntegrationCard />
       </div>
     </div>
   );
