@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
 import { findNearbyCalendarEvent } from '@/lib/google/events';
+import { fanOutMeetingCompleted } from '@/lib/webhooks';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const maxDuration = 300;
@@ -189,6 +190,10 @@ export async function POST(req: NextRequest) {
       .eq('id', meeting.id);
 
     console.log(`[FinaliseLive] completed ${meeting.id}: "${title}"`);
+    // Fire Zapier webhook fan-out. Best-effort, non-blocking.
+    fanOutMeetingCompleted(user.id, meeting.id).catch((e) =>
+      console.warn('[FinaliseLive] webhook fan-out failed:', e instanceof Error ? e.message : e),
+    );
     return NextResponse.json({ meetingId: meeting.id, status: 'completed', title });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

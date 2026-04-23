@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSTTProvider } from '@/lib/stt';
 import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
+import { fanOutMeetingCompleted } from '@/lib/webhooks';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Transcription (5-40s) + summarisation (5-15s) run back-to-back.
@@ -173,6 +174,9 @@ export async function POST(req: NextRequest) {
       .eq('id', meetingId);
 
     console.log(`[Summarise] Completed for ${meetingId}: "${title}"`);
+    fanOutMeetingCompleted(user.id, meetingId).catch((e) =>
+      console.warn('[Transcribe] webhook fan-out failed:', e instanceof Error ? e.message : e),
+    );
     return NextResponse.json({
       status: 'completed',
       segmentCount: segments.length,
