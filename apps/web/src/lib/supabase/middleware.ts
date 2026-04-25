@@ -34,8 +34,9 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Public routes — accessible without login
-  const publicPaths = ['/', '/login', '/signup', '/auth', '/privacy', '/terms', '/pricing', '/demo', '/shared', '/api/shared'];
+  // Public routes — accessible without login (these handle auth themselves
+  // when needed — e.g. /api/zapier/* uses Bearer API-key auth, not cookies).
+  const publicPaths = ['/', '/login', '/signup', '/auth', '/privacy', '/terms', '/pricing', '/demo', '/shared', '/api/shared', '/api/zapier'];
   const isPublic = publicPaths.some(p =>
     p === '/' ? request.nextUrl.pathname === '/' : request.nextUrl.pathname.startsWith(p)
   );
