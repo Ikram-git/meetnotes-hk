@@ -1,5 +1,5 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { buildZapierPayload } from '@/app/api/zapier/meetings/route';
+import { buildZapierPayload } from '@/lib/zapier-payload';
 
 /**
  * Fan out a "meeting.completed" event to every webhook subscription for
