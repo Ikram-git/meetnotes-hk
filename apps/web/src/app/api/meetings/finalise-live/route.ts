@@ -190,10 +190,13 @@ export async function POST(req: NextRequest) {
       .eq('id', meeting.id);
 
     console.log(`[FinaliseLive] completed ${meeting.id}: "${title}"`);
-    // Fire Zapier webhook fan-out. Best-effort, non-blocking.
-    fanOutMeetingCompleted(user.id, meeting.id).catch((e) =>
-      console.warn('[FinaliseLive] webhook fan-out failed:', e instanceof Error ? e.message : e),
-    );
+    // Await fan-out — Vercel kills the function on return, so fire-and-forget
+    // would let the POST to Zapier die mid-flight.
+    try {
+      await fanOutMeetingCompleted(user.id, meeting.id);
+    } catch (e) {
+      console.warn('[FinaliseLive] webhook fan-out failed:', e instanceof Error ? e.message : e);
+    }
     return NextResponse.json({ meetingId: meeting.id, status: 'completed', title });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

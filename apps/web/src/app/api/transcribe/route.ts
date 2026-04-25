@@ -174,9 +174,13 @@ export async function POST(req: NextRequest) {
       .eq('id', meetingId);
 
     console.log(`[Summarise] Completed for ${meetingId}: "${title}"`);
-    fanOutMeetingCompleted(user.id, meetingId).catch((e) =>
-      console.warn('[Transcribe] webhook fan-out failed:', e instanceof Error ? e.message : e),
-    );
+    // Await the fan-out so Vercel doesn't kill the function mid-POST.
+    // Errors are swallowed inside fanOutMeetingCompleted so this is safe.
+    try {
+      await fanOutMeetingCompleted(user.id, meetingId);
+    } catch (e) {
+      console.warn('[Transcribe] webhook fan-out failed:', e instanceof Error ? e.message : e);
+    }
     return NextResponse.json({
       status: 'completed',
       segmentCount: segments.length,
