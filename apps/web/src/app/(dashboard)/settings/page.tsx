@@ -5,7 +5,9 @@ import { createClient } from '@/lib/supabase/client';
 import { SettingsNav } from '@/components/settings-nav';
 import { LanguageSelector } from '@/components/language-selector';
 import { GoogleIntegrationCard } from '@/components/google-integration-card';
-import { ApiKeysCard } from '@/components/api-keys-card';
+// API Keys / Zapier hidden from UI until public Zapier review is complete.
+// See docs/zapier-status.md for current state and resume instructions.
+// import { ApiKeysCard } from '@/components/api-keys-card';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -128,7 +130,7 @@ export default function SettingsPage() {
         </button>
 
         <GoogleIntegrationCard />
-        <ApiKeysCard />
+        {/* <ApiKeysCard /> hidden — see docs/zapier-status.md */}
       </div>
     </div>
   );
