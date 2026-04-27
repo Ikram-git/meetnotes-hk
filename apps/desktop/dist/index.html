@@ -3,24 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MeetNotes</title>
+    <title>Briva</title>
     <style>
-      html, body { margin: 0; height: 100%; background: #0b0d12; color: #e5e7eb; font-family: -apple-system, 'Segoe UI', sans-serif; }
+      html, body { margin: 0; height: 100%; background: #080c0a; color: #e5e7eb; font-family: -apple-system, 'Segoe UI', sans-serif; }
       .wrap { height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
-      .spinner { width: 28px; height: 28px; border: 3px solid #374151; border-top-color: #60a5fa; border-radius: 50%; animation: spin 1s linear infinite; }
+      .spinner { width: 28px; height: 28px; border: 3px solid #1f2937; border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; }
       @keyframes spin { to { transform: rotate(360deg); } }
     </style>
   </head>
   <body>
     <div class="wrap">
       <div class="spinner"></div>
-      <div>Loading MeetNotes…</div>
+      <div>Loading Briva…</div>
     </div>
     <script>
       // Production build loads the live Vercel deployment. For local dev,
       // run `cargo tauri dev` from apps/desktop — Tauri honors the devUrl
       // in tauri.conf.json and points at http://localhost:3000 automatically.
-      window.location.replace('https://meetnotes-sattarikram81-7707s-projects.vercel.app');
+      window.location.replace('https://meetnotes-ochre.vercel.app');
     </script>
   </body>
 </html>
