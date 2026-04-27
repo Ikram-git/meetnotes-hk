@@ -58,3 +58,7 @@ Thumbs.db
 vercel-env.env
 vercel-env-live.env
 .claude/
+
+# Release artifacts
+Briva_x64_en-US.msi
+.release-notes.md
