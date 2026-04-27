@@ -3,7 +3,7 @@ import { getSTTProvider } from '@/lib/stt';
 import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
 import { fanOutMeetingCompleted } from '@/lib/webhooks';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 
 // Transcription (5-40s) + summarisation (5-15s) run back-to-back.
 export const maxDuration = 300;
@@ -174,13 +174,16 @@ export async function POST(req: NextRequest) {
       .eq('id', meetingId);
 
     console.log(`[Summarise] Completed for ${meetingId}: "${title}"`);
-    // Await the fan-out so Vercel doesn't kill the function mid-POST.
-    // Errors are swallowed inside fanOutMeetingCompleted so this is safe.
-    try {
-      await fanOutMeetingCompleted(user.id, meetingId);
-    } catch (e) {
-      console.warn('[Transcribe] webhook fan-out failed:', e instanceof Error ? e.message : e);
-    }
+    // after() defers the fan-out until after the response is sent. Vercel
+    // keeps the function alive for the callback, so the POST to Zapier
+    // actually completes — but the client doesn't wait on it.
+    after(async () => {
+      try {
+        await fanOutMeetingCompleted(user.id, meetingId);
+      } catch (e) {
+        console.warn('[Transcribe] webhook fan-out failed:', e instanceof Error ? e.message : e);
+      }
+    });
     return NextResponse.json({
       status: 'completed',
       segmentCount: segments.length,

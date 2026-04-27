@@ -3,7 +3,7 @@ import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
 import { findNearbyCalendarEvent } from '@/lib/google/events';
 import { fanOutMeetingCompleted } from '@/lib/webhooks';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 
 export const maxDuration = 300;
 
@@ -190,13 +190,15 @@ export async function POST(req: NextRequest) {
       .eq('id', meeting.id);
 
     console.log(`[FinaliseLive] completed ${meeting.id}: "${title}"`);
-    // Await fan-out — Vercel kills the function on return, so fire-and-forget
-    // would let the POST to Zapier die mid-flight.
-    try {
-      await fanOutMeetingCompleted(user.id, meeting.id);
-    } catch (e) {
-      console.warn('[FinaliseLive] webhook fan-out failed:', e instanceof Error ? e.message : e);
-    }
+    // Fan-out runs after the response is sent — keeps the function alive long
+    // enough to deliver the webhook without blocking the user-facing request.
+    after(async () => {
+      try {
+        await fanOutMeetingCompleted(user.id, meeting.id);
+      } catch (e) {
+        console.warn('[FinaliseLive] webhook fan-out failed:', e instanceof Error ? e.message : e);
+      }
+    });
     return NextResponse.json({ meetingId: meeting.id, status: 'completed', title });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
