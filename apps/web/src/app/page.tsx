@@ -73,42 +73,29 @@ export default async function LandingPage() {
             The smart meeting notes tool built for multilingual conversations. Record, transcribe, and get AI summaries in seconds.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            {isLoggedIn ? (
-              <>
-                <Link href="/meetings" className="w-full sm:w-auto text-center bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
-                  Go to Dashboard
-                </Link>
-                <Link href="/upload" className="w-full sm:w-auto text-center text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
-                  Upload Meeting
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/signup" className="w-full sm:w-auto text-center bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
-                  Start Free
-                </Link>
-                <Link href="/demo" className="w-full sm:w-auto text-center text-gray-400 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800">
-                  Watch Demo
-                </Link>
-              </>
-            )}
-          </div>
-
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 text-sm">
             <a
               href="https://github.com/Ikram-git/meetnotes-hk/releases/latest/download/Briva_x64_en-US.msi"
-              className="inline-flex items-center gap-2 text-gray-300 hover:text-white transition px-4 py-2 rounded-lg border border-gray-800 hover:border-emerald-500/40 hover:bg-white/5"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801" />
               </svg>
               Download for Windows
-              <span className="text-xs text-gray-500">(beta)</span>
             </a>
-            <span className="text-xs text-gray-600">macOS coming soon</span>
+            {isLoggedIn ? (
+              <Link href="/meetings" className="w-full sm:w-auto text-center text-gray-300 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800 hover:border-gray-700">
+                Open Dashboard
+              </Link>
+            ) : (
+              <Link href="/signup" className="w-full sm:w-auto text-center text-gray-300 px-6 py-3.5 rounded-xl text-base font-medium hover:bg-white/5 transition border border-gray-800 hover:border-gray-700">
+                Use the web app
+              </Link>
+            )}
           </div>
-          <p className="mt-3 text-xs text-gray-600 max-w-md mx-auto">
-            Beta build. On first launch, Windows SmartScreen may show a warning &mdash; click <span className="text-gray-400">More info</span> &rarr; <span className="text-gray-400">Run anyway</span>. Code signing in progress.
+
+          <p className="mt-5 text-xs text-gray-600 max-w-md mx-auto">
+            Free · Windows 10/11 · macOS coming soon. <br className="sm:hidden" />
+            On first launch, click <span className="text-gray-400">More info</span> &rarr; <span className="text-gray-400">Run anyway</span> if SmartScreen warns &mdash; build is unsigned during beta.
           </p>
         </div>
       </section>
