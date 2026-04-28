@@ -6,7 +6,7 @@ on Zapier.
 
 ## What's working (don't touch — production code)
 
-- All API endpoints live at `https://meetnotes-ochre.vercel.app`:
+- All API endpoints live at `https://meetbriva.com`:
   - `GET /api/zapier/auth` — verifies Bearer API key, returns user id + email
   - `POST /api/zapier/subscribe` — registers a webhook for `meeting.completed`
   - `DELETE /api/zapier/unsubscribe/[id]` — removes a subscription
@@ -53,7 +53,7 @@ API key, paste it in the Zapier Notes field of the Publishing form.
 ### Submission form values (drafted, ready to paste)
 
 See chat history. Key answers: country = Hong Kong; primary color = `#10B981`;
-homepage = `https://meetnotes-ochre.vercel.app`; privacy/terms URLs already on
+homepage = `https://meetbriva.com`; privacy/terms URLs already on
 the live site; primary contact = `sattarikram81@gmail.com`.
 
 ## How to resume
