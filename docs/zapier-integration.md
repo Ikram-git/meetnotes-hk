@@ -8,7 +8,7 @@ applying migration `013_api_keys_and_zapier.sql` and deploying to Vercel.
 - Apply the migration:
   - Supabase Dashboard → SQL Editor → paste `supabase/migrations/013_api_keys_and_zapier.sql` → Run.
 - Push the latest code to `main`. Vercel will redeploy automatically.
-- Verify the production URL responds at `https://meetnotes-ochre.vercel.app`.
+- Verify the production URL responds at `https://meetbriva.com`.
 
 ## 2. Create the Zapier integration
 
@@ -29,7 +29,7 @@ Integration**.
 - **Key field name:** `apiKey`
 
 In **Auth settings → Test**:
-- **URL:** `https://meetnotes-ochre.vercel.app/api/zapier/auth`
+- **URL:** `https://meetbriva.com/api/zapier/auth`
 - **Method:** GET
 - **Headers:** `Authorization: Bearer {{bundle.authData.apiKey}}`
 - **Connection Label:** `{{bundle.inputData.email}}` (pulled from the auth response)
@@ -41,18 +41,18 @@ In **Auth settings → Test**:
 - **Description:** Fires when a Briva meeting finishes transcribing and summarising.
 
 ### Perform Subscribe
-- **URL:** `https://meetnotes-ochre.vercel.app/api/zapier/subscribe`
+- **URL:** `https://meetbriva.com/api/zapier/subscribe`
 - **Method:** POST
 - **Headers:** `Authorization: Bearer {{bundle.authData.apiKey}}`
 - **Body:** `{"target_url": "{{bundle.targetUrl}}"}`
 
 ### Perform Unsubscribe
-- **URL:** `https://meetnotes-ochre.vercel.app/api/zapier/unsubscribe/{{bundle.subscribeData.id}}`
+- **URL:** `https://meetbriva.com/api/zapier/unsubscribe/{{bundle.subscribeData.id}}`
 - **Method:** DELETE
 - **Headers:** `Authorization: Bearer {{bundle.authData.apiKey}}`
 
 ### Perform List (sample data for the Zap editor)
-- **URL:** `https://meetnotes-ochre.vercel.app/api/zapier/meetings`
+- **URL:** `https://meetbriva.com/api/zapier/meetings`
 - **Method:** GET
 - **Headers:** `Authorization: Bearer {{bundle.authData.apiKey}}`
 

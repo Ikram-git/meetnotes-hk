@@ -15,7 +15,7 @@ export function buildZapierPayload(
     source: m.source as string,
     google_event_id: (m.google_event_id as string) || null,
     google_event_summary: (m.google_event_summary as string) || null,
-    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://meetnotes-ochre.vercel.app'}/meetings/${m.id}`,
+    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://meetbriva.com'}/meetings/${m.id}`,
     summary: s
       ? {
           overview: (s.overview as string) || null,
