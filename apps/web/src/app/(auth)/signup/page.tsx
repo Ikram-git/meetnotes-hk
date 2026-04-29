@@ -98,12 +98,12 @@ export default function SignupPage() {
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div>
                   <label htmlFor="otpCode" className="block text-sm font-medium text-gray-400 mb-1.5">Verification code</label>
-                  <input id="otpCode" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} required value={otpCode}
+                  <input id="otpCode" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={10} required value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                    className="w-full px-3.5 py-2.5 bg-white/5 border border-gray-800 rounded-lg text-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition tracking-[0.5em] text-center font-mono"
-                    placeholder="000000" />
+                    className="w-full px-3.5 py-2.5 bg-white/5 border border-gray-800 rounded-lg text-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition tracking-[0.4em] text-center font-mono"
+                    placeholder="Enter code from email" />
                 </div>
-                <button type="submit" disabled={loading || otpCode.length !== 6}
+                <button type="submit" disabled={loading || otpCode.length < 6}
                   className="w-full bg-emerald-500 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-emerald-400 transition disabled:opacity-50">
                   {loading ? 'Verifying...' : 'Verify and continue'}
                 </button>
