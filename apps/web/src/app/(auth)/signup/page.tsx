@@ -12,6 +12,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
+  const [otpStage, setOtpStage] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
   const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -23,10 +25,23 @@ export default function SignupPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signUp({
       email, password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { data: { full_name: fullName } },
+    });
+
+    if (error) { setError(error.message); setLoading(false); }
+    else { setOtpStage(true); setLoading(false); }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otpCode,
+      type: 'signup',
     });
 
     if (error) { setError(error.message); setLoading(false); }
@@ -71,6 +86,36 @@ export default function SignupPage() {
             <span className="text-lg font-bold text-white">Briva</span>
           </Link>
 
+          {otpStage ? (
+            <>
+              <h1 className="text-2xl font-bold text-white mb-1">Check your email</h1>
+              <p className="text-sm text-gray-500 mb-8">
+                We sent a 6-digit code to <span className="text-gray-300">{email}</span>. Enter it below to confirm your account.
+              </p>
+
+              {error && <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm">{error}</div>}
+
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
+                <div>
+                  <label htmlFor="otpCode" className="block text-sm font-medium text-gray-400 mb-1.5">Verification code</label>
+                  <input id="otpCode" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} required value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                    className="w-full px-3.5 py-2.5 bg-white/5 border border-gray-800 rounded-lg text-lg text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition tracking-[0.5em] text-center font-mono"
+                    placeholder="000000" />
+                </div>
+                <button type="submit" disabled={loading || otpCode.length !== 6}
+                  className="w-full bg-emerald-500 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-emerald-400 transition disabled:opacity-50">
+                  {loading ? 'Verifying...' : 'Verify and continue'}
+                </button>
+              </form>
+
+              <button type="button" onClick={() => { setOtpStage(false); setOtpCode(''); setError(null); }}
+                className="mt-6 text-sm text-gray-500 hover:text-gray-400">
+                ← Use a different email
+              </button>
+            </>
+          ) : (
+            <>
           <h1 className="text-2xl font-bold text-white mb-1">Create your account</h1>
           <p className="text-sm text-gray-500 mb-8">
             Already have an account?{' '}
@@ -125,6 +170,8 @@ export default function SignupPage() {
               {loading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
+            </>
+          )}
         </div>
       </div>
     </div>
