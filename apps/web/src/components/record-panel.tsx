@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { isTauri } from '@/lib/tauri';
+import { useUpload } from './upload-provider';
 
 export function RecordPanel() {
   const [desktop, setDesktop] = useState(false);
+  const upload = useUpload();
 
   useEffect(() => setDesktop(isTauri()), []);
 
@@ -45,15 +47,15 @@ export function RecordPanel() {
               <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
               Start live transcription
             </Link>
-            <Link
-              href="/upload"
+            <button
+              onClick={upload.open}
               className="flex items-center justify-center gap-2 w-full bg-emerald-500 hover:bg-emerald-400 text-white py-2.5 rounded-lg text-sm font-medium transition"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
               Upload audio file
-            </Link>
+            </button>
             <p className="text-[11px] text-gray-600 text-center pt-1">
               Want to capture system audio?{' '}
               <Link
