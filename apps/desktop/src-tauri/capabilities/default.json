@@ -5,6 +5,13 @@
   "windows": [
     "main"
   ],
+  "remote": {
+    "urls": [
+      "https://meetbriva.com",
+      "https://*.meetbriva.com",
+      "https://meetnotes-ochre.vercel.app"
+    ]
+  },
   "permissions": [
     "core:default",
     "core:event:default",
