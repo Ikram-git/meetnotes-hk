@@ -4,6 +4,7 @@ import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
 import { findNearbyCalendarEvent } from '@/lib/google/events';
 import { fanOutMeetingCompleted } from '@/lib/webhooks';
+import { getGates } from '@/lib/billing/gates';
 import { NextRequest, NextResponse, after } from 'next/server';
 
 export const maxDuration = 300;
@@ -48,6 +49,22 @@ export async function POST(req: NextRequest) {
 
   if (lines.length === 0) {
     return NextResponse.json({ error: 'No transcript lines to save' }, { status: 400 });
+  }
+
+  // Per-meeting duration cap.
+  const { data: tierProfile } = await supabase
+    .from('profiles')
+    .select('subscription_tier')
+    .eq('id', user.id)
+    .single();
+  const gates = getGates(tierProfile?.subscription_tier);
+  if (gates.perMeetingMinutes !== null && durationSeconds > gates.perMeetingMinutes * 60) {
+    return NextResponse.json(
+      {
+        error: `Your plan caps meetings at ${gates.perMeetingMinutes} minutes. Upgrade in Settings → Billing to record longer meetings.`,
+      },
+      { status: 402 },
+    );
   }
 
   // Try to auto-link to a calendar event happening around now (±15 min).

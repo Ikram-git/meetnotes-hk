@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getGates, tierUpgradeMessage } from '@/lib/billing/gates';
 import { NextRequest, NextResponse } from 'next/server';
 
 // GET speaker mappings for a meeting
@@ -37,6 +38,18 @@ export async function PUT(
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('subscription_tier')
+    .eq('id', user.id)
+    .single();
+  if (!getGates(profile?.subscription_tier).speakerNaming) {
+    return NextResponse.json(
+      { error: tierUpgradeMessage('Speaker naming', 'pro') },
+      { status: 402 },
+    );
   }
 
   const { speakerLabel, speakerName } = await req.json();

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { buildEmailHtml, buildEmailText } from '@/lib/export/email';
+import { getGates, tierUpgradeMessage } from '@/lib/billing/gates';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(
@@ -10,6 +11,18 @@ export async function POST(
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('subscription_tier')
+    .eq('id', user.id)
+    .single();
+  if (!getGates(profile?.subscription_tier).emailRecap) {
+    return NextResponse.json(
+      { error: tierUpgradeMessage('Email recap to attendees', 'pro') },
+      { status: 402 },
+    );
+  }
 
   const { to, senderName } = await req.json();
   if (!to || !Array.isArray(to) || to.length === 0) {
