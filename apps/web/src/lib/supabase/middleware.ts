@@ -59,7 +59,7 @@ export async function updateSession(request: NextRequest) {
     // Check if there's a returnTo URL
     const returnTo = request.nextUrl.searchParams.get('returnTo');
     const url = request.nextUrl.clone();
-    url.pathname = returnTo || '/';
+    url.pathname = returnTo || '/meetings';
     url.search = '';
     return NextResponse.redirect(url);
   }
