@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from './toast';
+import { ShareDialog } from './share-dialog';
 
 interface ExportDropdownProps {
   meetingId: string;
@@ -11,6 +12,7 @@ interface ExportDropdownProps {
 export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -25,29 +27,9 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
   }, []);
 
   const handleExport = async (type: string) => {
-    if (type === 'share' || type === 'share-password') {
-      const password = type === 'share-password'
-        ? prompt('Set a password for this share link:')
-        : null;
-      if (type === 'share-password' && !password) return;
-
-      setExporting('share');
+    if (type === 'share') {
       setOpen(false);
-      try {
-        const res = await fetch(`/api/meetings/${meetingId}/share`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to create link');
-        await navigator.clipboard.writeText(data.shareUrl);
-        toast(password ? 'Password-protected link copied!' : 'Share link copied to clipboard!');
-      } catch (err) {
-        toast(err instanceof Error ? err.message : 'Failed to create share link', 'error');
-      } finally {
-        setExporting(null);
-      }
+      setShareOpen(true);
       return;
     }
 
@@ -114,14 +96,9 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
   };
 
   const exportOptions = [
-    { type: 'share', label: 'Copy Share Link', icon: (
+    { type: 'share', label: 'Share link…', icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-      </svg>
-    )},
-    { type: 'share-password', label: 'Share with Password', icon: (
-      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
       </svg>
     )},
     { type: 'clipboard', label: 'Copy as Text', icon: (
@@ -176,6 +153,8 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
           ))}
         </div>
       )}
+
+      <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} meetingId={meetingId} />
     </div>
   );
 }
