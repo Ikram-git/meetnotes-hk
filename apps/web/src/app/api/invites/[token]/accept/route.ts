@@ -1,5 +1,6 @@
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { setActiveWorkspaceCookie } from '@/lib/workspace';
+import { syncWorkspaceSeats } from '@/lib/billing/seats';
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -68,6 +69,9 @@ export async function POST(
     .from('workspace_invites')
     .update({ accepted_at: new Date().toISOString() })
     .eq('id', invite.id);
+
+  // Bump the owner's Stripe seat count if they're on Team plan.
+  await syncWorkspaceSeats(admin, invite.workspace_id);
 
   await setActiveWorkspaceCookie(invite.workspace_id);
 

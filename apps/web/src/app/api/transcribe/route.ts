@@ -137,9 +137,17 @@ export async function POST(req: NextRequest) {
       })
       .eq('id', meetingId);
 
-    // Update user's minutes used
+    // Workspace-level minute pool: increment the workspace's counter so
+    // members share the same monthly bucket.
     const minutesUsed = Math.ceil(result.durationMs / 60000);
     if (minutesUsed > 0) {
+      if (meeting.workspace_id) {
+        await supabase.rpc('increment_workspace_minutes', {
+          ws_id: meeting.workspace_id,
+          minutes: minutesUsed,
+        });
+      }
+      // Mirror on profile too — keep per-user counter for UI/admin views.
       await supabase.rpc('increment_minutes_used', {
         user_id: user.id,
         minutes: minutesUsed,

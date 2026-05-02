@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       const minutesLimit =
         tier === 'team' ? 6000 * quantity : tier === 'pro' ? 3000 : 100;
 
-      await supabase
+      const { data: ownerProfile } = await supabase
         .from('profiles')
         .update({
           subscription_tier: tier,
@@ -87,8 +87,20 @@ export async function POST(req: NextRequest) {
             : subscription.status === 'past_due' ? 'past_due'
             : 'active',
           minutes_limit: minutesLimit,
+          stripe_subscription_id: subscription.id,
         })
-        .eq('stripe_customer_id', customerId);
+        .eq('stripe_customer_id', customerId)
+        .select('id')
+        .maybeSingle();
+
+      // Push the new minute limit to all workspaces owned by this customer
+      // so members of paid workspaces draw from the bigger pool.
+      if (ownerProfile?.id) {
+        await supabase
+          .from('workspaces')
+          .update({ minutes_limit: minutesLimit })
+          .eq('owner_id', ownerProfile.id);
+      }
 
       break;
     }
@@ -97,14 +109,24 @@ export async function POST(req: NextRequest) {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId = subscription.customer as string;
 
-      await supabase
+      const { data: ownerProfile } = await supabase
         .from('profiles')
         .update({
           subscription_tier: 'free',
           subscription_status: 'cancelled',
           minutes_limit: 100,
+          stripe_subscription_id: null,
         })
-        .eq('stripe_customer_id', customerId);
+        .eq('stripe_customer_id', customerId)
+        .select('id')
+        .maybeSingle();
+
+      if (ownerProfile?.id) {
+        await supabase
+          .from('workspaces')
+          .update({ minutes_limit: 100 })
+          .eq('owner_id', ownerProfile.id);
+      }
 
       // Log billing event
       const { data: profile } = await supabase
@@ -140,6 +162,9 @@ export async function POST(req: NextRequest) {
             .from('profiles')
             .update({ minutes_used_this_month: 0 })
             .eq('id', profile.id);
+          await supabase.rpc('reset_owner_workspace_usage', {
+            owner_id_in: profile.id,
+          });
         }
 
         await supabase.from('billing_events').insert({

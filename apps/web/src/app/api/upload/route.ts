@@ -38,18 +38,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No audio file' }, { status: 400 });
   }
 
-  // Check minutes limit
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('minutes_used_this_month, minutes_limit, subscription_tier')
-    .eq('id', user.id)
-    .single();
-
-  if (profile && profile.minutes_used_this_month >= profile.minutes_limit) {
-    return NextResponse.json(
-      { error: 'Monthly limit reached. Upgrade to Pro.' },
-      { status: 429 }
-    );
+  // Workspace-level minute pool: members of a paid workspace share the
+  // owner's allowance, so the limit check is on the active workspace.
+  const wsId = await getActiveWorkspaceId(supabase, user.id);
+  if (wsId) {
+    const { data: ws } = await supabase
+      .from('workspaces')
+      .select('minutes_used_this_month, minutes_limit')
+      .eq('id', wsId)
+      .maybeSingle();
+    if (ws && ws.minutes_used_this_month >= ws.minutes_limit) {
+      return NextResponse.json(
+        { error: 'This workspace has reached its monthly limit. Ask the owner to upgrade.' },
+        { status: 429 }
+      );
+    }
   }
 
   // Upload to Supabase Storage
