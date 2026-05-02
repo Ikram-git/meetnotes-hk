@@ -57,6 +57,9 @@ export function UploadDialog({
   const [meetingId, setMeetingId] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const samplesRef = useRef<Array<{ t: number; bytes: number }>>([]);
+  const uploadRef = useRef<tus.Upload | null>(null);
+  const abortedRef = useRef(false);
+  const meetingIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -70,7 +73,9 @@ export function UploadDialog({
       setEta(Infinity);
       setError(null);
       setMeetingId(null);
+      meetingIdRef.current = null;
       samplesRef.current = [];
+      abortedRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -107,6 +112,8 @@ export function UploadDialog({
     setStage('uploading');
     setError(null);
     samplesRef.current = [];
+    abortedRef.current = false;
+    meetingIdRef.current = null;
 
     try {
       const supabase = createClient();
@@ -144,8 +151,12 @@ export function UploadDialog({
             contentType,
             cacheControl: '3600',
           },
-          onError: (err) => reject(err),
+          onError: (err) => {
+            if (abortedRef.current) resolve();
+            else reject(err);
+          },
           onProgress: (uploaded, total) => {
+            if (abortedRef.current) return;
             const pct = Math.round((uploaded / total) * 100);
             setProgress(pct);
             setBytesUploaded(uploaded);
@@ -168,8 +179,12 @@ export function UploadDialog({
           },
           onSuccess: () => resolve(),
         });
+        uploadRef.current = upload;
         upload.start();
       });
+
+      uploadRef.current = null;
+      if (abortedRef.current) return;
 
       setStage('processing');
 
@@ -193,6 +208,15 @@ export function UploadDialog({
         return;
       }
 
+      meetingIdRef.current = data.id;
+      if (abortedRef.current) {
+        await fetch(`/api/meetings/${data.id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        }).catch(() => {});
+        return;
+      }
+
       fetch('/api/transcribe', {
         method: 'POST',
         headers: {
@@ -205,13 +229,33 @@ export function UploadDialog({
       setMeetingId(data.id);
       setStage('done');
     } catch (err) {
+      if (abortedRef.current) return;
       setError(err instanceof Error ? err.message : 'Upload failed.');
       setStage('error');
     }
   };
 
-  const handleClose = () => {
-    if (stage === 'uploading') return;
+  const handleClose = async () => {
+    if (stage === 'uploading' || stage === 'processing') {
+      abortedRef.current = true;
+      try {
+        await uploadRef.current?.abort(true);
+      } catch {
+        // ignore — best-effort cancel
+      }
+      uploadRef.current = null;
+
+      if (meetingIdRef.current) {
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        const headers: Record<string, string> = {};
+        if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+        await fetch(`/api/meetings/${meetingIdRef.current}`, {
+          method: 'DELETE',
+          headers,
+        }).catch(() => {});
+      }
+    }
     onClose();
   };
 
