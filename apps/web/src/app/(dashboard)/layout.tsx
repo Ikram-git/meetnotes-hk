@@ -9,6 +9,8 @@ import { isTauri } from '@/lib/tauri';
 import { WorkspaceSwitcher } from '@/components/workspace-switcher';
 import { UploadProvider, useUpload } from '@/components/upload-provider';
 import { ConfirmHost } from '@/components/confirm-dialog';
+import { RouteProgress } from '@/components/route-progress';
+import { Suspense } from 'react';
 
 const navItems: { href: string; label: string; icon: React.ReactNode }[] = [
   {
@@ -54,6 +56,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <UploadProvider>
       <ConfirmHost />
+      <Suspense fallback={null}>
+        <RouteProgress />
+      </Suspense>
       <DashboardLayoutInner>{children}</DashboardLayoutInner>
     </UploadProvider>
   );
