@@ -1,12 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignupPage() {
-  const [email, setEmail] = useState('');
+  const searchParams = useSearchParams();
+  const inviteToken = searchParams.get('invite');
+  const inviteEmail = searchParams.get('email');
+
+  const [email, setEmail] = useState(inviteEmail ?? '');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,6 +19,10 @@ export default function SignupPage() {
   const [otpStage, setOtpStage] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    if (inviteEmail) setEmail(inviteEmail);
+  }, [inviteEmail]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,15 +52,26 @@ export default function SignupPage() {
       type: 'signup',
     });
 
-    if (error) { setError(error.message); setLoading(false); }
-    else { router.push('/'); }
+    if (error) { setError(error.message); setLoading(false); return; }
+
+    if (inviteToken) {
+      try {
+        await fetch(`/api/invites/${inviteToken}/accept`, { method: 'POST' });
+      } catch {
+        // Non-fatal: user can accept the invite manually after signup.
+      }
+    }
+    router.push(inviteToken ? '/meetings' : '/');
   };
 
   const handleGoogleSignup = async () => {
     const supabase = createClient();
+    const redirectPath = inviteToken
+      ? `/auth/callback?returnTo=${encodeURIComponent(`/invite/${inviteToken}`)}`
+      : '/auth/callback';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}${redirectPath}` },
     });
     if (error) setError(error.message);
   };
