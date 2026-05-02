@@ -1,30 +1,36 @@
 export interface Plan {
   id: string;
   name: string;
+  tagline: string;
   price: number;
   priceYearly: number;
   currency: string;
   minutesLimit: number;
+  perMeetingMinutesLimit?: number;
   features: string[];
   stripePriceId?: string;
   stripePriceIdYearly?: string;
   highlighted?: boolean;
+  perSeat?: boolean;
+  contactOnly?: boolean;
 }
 
 export const PLANS: Plan[] = [
   {
     id: 'free',
-    name: 'Free',
+    name: 'Basic',
+    tagline: 'Try Briva on your own meetings.',
     price: 0,
     priceYearly: 0,
     currency: 'USD',
     minutesLimit: 100,
+    perMeetingMinutesLimit: 60,
     features: [
-      '100 minutes/month',
+      '100 minutes / month',
+      'Up to 60 minutes per meeting',
       'Live transcription with AI Q&A',
       '30+ languages with code-switching',
       'Structured summaries & action items',
-      'Team workspaces & invites',
       'Windows desktop app',
       'PDF, share-link & clipboard export',
     ],
@@ -32,16 +38,19 @@ export const PLANS: Plan[] = [
   {
     id: 'pro',
     name: 'Pro',
+    tagline: 'For individuals running meetings every week.',
     price: 19,
     priceYearly: 190,
     currency: 'USD',
     minutesLimit: 3000,
+    perMeetingMinutesLimit: 180,
     stripePriceId: process.env.STRIPE_PRO_MONTHLY_PRICE_ID,
     stripePriceIdYearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID,
     highlighted: true,
     features: [
-      '3,000 minutes/month',
-      'Everything in Free',
+      '3,000 minutes / month',
+      'Up to 3 hours per meeting',
+      'Everything in Basic',
       'Email recap to attendees',
       'Priority transcription queue',
       'Speaker identification',
@@ -51,18 +60,43 @@ export const PLANS: Plan[] = [
   {
     id: 'team',
     name: 'Team',
-    price: 49,
-    priceYearly: 490,
+    tagline: 'For growing teams that need a shared library.',
+    price: 15,
+    priceYearly: 150,
     currency: 'USD',
-    minutesLimit: 10000,
+    minutesLimit: 6000,
+    perMeetingMinutesLimit: 240,
     stripePriceId: process.env.STRIPE_TEAM_MONTHLY_PRICE_ID,
     stripePriceIdYearly: process.env.STRIPE_TEAM_YEARLY_PRICE_ID,
+    perSeat: true,
     features: [
-      '10,000 minutes/month',
+      '6,000 minutes per seat / month',
+      'Up to 4 hours per meeting',
       'Everything in Pro',
+      'Shared workspace library',
+      'Owner / admin / member roles',
       'Workspace admin controls',
       'Shared custom vocabulary',
       'Priority support',
+    ],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    tagline: 'For organisations with custom needs.',
+    price: 0,
+    priceYearly: 0,
+    currency: 'USD',
+    minutesLimit: 0,
+    contactOnly: true,
+    features: [
+      'Custom usage limits',
+      'Everything in Team',
+      'SSO (SAML / OIDC)',
+      'Dedicated success manager',
+      'Custom data retention',
+      'Audit logs',
+      'Annual contracts with invoicing',
     ],
   },
 ];

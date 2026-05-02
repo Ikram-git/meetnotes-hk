@@ -97,8 +97,10 @@ export default function PricingPage() {
   return (
     <div>
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-white">Simple, transparent pricing</h1>
-        <p className="text-sm text-gray-500 mt-2">Start free, upgrade when you need more</p>
+        <h1 className="text-3xl font-bold text-white">Pricing that scales with your team</h1>
+        <p className="text-sm text-gray-500 mt-2 max-w-xl mx-auto">
+          Start free with 100 minutes a month. Upgrade to Pro for individual heavy use, or Team for shared workspaces priced per seat.
+        </p>
       </div>
       <PricingTable currentTier={tier} onSelectPlan={handleSelectPlan} loading={loading} />
     </div>

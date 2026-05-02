@@ -73,8 +73,11 @@ export async function POST(req: NextRequest) {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId = subscription.customer as string;
       const priceId = subscription.items.data[0]?.price?.id;
+      const quantity = subscription.items.data[0]?.quantity ?? 1;
       const tier = mapPriceToTier(priceId);
-      const minutesLimit = tier === 'team' ? 10000 : tier === 'pro' ? 3000 : 100;
+      // Team plan is per-seat; total monthly minute pool scales with seats.
+      const minutesLimit =
+        tier === 'team' ? 6000 * quantity : tier === 'pro' ? 3000 : 100;
 
       await supabase
         .from('profiles')
