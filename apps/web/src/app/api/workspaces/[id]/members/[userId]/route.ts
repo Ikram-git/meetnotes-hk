@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { getUserRole, isAdminOrOwner, type WorkspaceRole } from '@/lib/workspace';
+import { syncWorkspaceSeats } from '@/lib/billing/seats';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function PATCH(
@@ -92,5 +94,12 @@ export async function DELETE(
     .eq('workspace_id', id)
     .eq('user_id', targetUserId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  await syncWorkspaceSeats(admin, id);
+
   return NextResponse.json({ success: true });
 }

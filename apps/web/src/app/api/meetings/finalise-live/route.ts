@@ -151,16 +151,23 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Charge live minutes against the user's monthly allowance, same as the
-  // batch transcribe flow. Rounds up — any partial minute counts.
+  // Workspace pool first (shared across team), profile counter mirrored
+  // for UI / admin visibility. Rounds up — any partial minute counts.
   const minutesUsed = Math.ceil(durationSeconds / 60);
   if (minutesUsed > 0) {
+    const { error: wsMeterError } = await supabase.rpc('increment_workspace_minutes', {
+      ws_id: workspaceId,
+      minutes: minutesUsed,
+    });
+    if (wsMeterError) {
+      console.warn(`[FinaliseLive] workspace meter increment failed: ${wsMeterError.message}`);
+    }
     const { error: meterError } = await supabase.rpc('increment_minutes_used', {
       user_id: user.id,
       minutes: minutesUsed,
     });
     if (meterError) {
-      console.warn(`[FinaliseLive] meter increment failed: ${meterError.message}`);
+      console.warn(`[FinaliseLive] profile meter increment failed: ${meterError.message}`);
     }
   }
 
