@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getActiveWorkspaceId } from '@/lib/workspace';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
@@ -11,11 +12,11 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: meetings, error } = await supabase
-    .from('meetings')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+  const query = supabase.from('meetings').select('*').order('created_at', { ascending: false });
+  const { data: meetings, error } = workspaceId
+    ? await query.eq('workspace_id', workspaceId)
+    : await query.eq('user_id', user.id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -43,10 +44,16 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
 
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+  if (!workspaceId) {
+    return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
+  }
+
   const { data: meeting, error } = await supabase
     .from('meetings')
     .insert({
       user_id: user.id,
+      workspace_id: workspaceId,
       audio_storage_path: body.audio_storage_path,
       audio_format: body.audio_format,
       audio_size_bytes: body.audio_size_bytes,

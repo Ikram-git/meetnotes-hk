@@ -17,12 +17,11 @@ export async function POST(
 
   const { exportType, language } = await req.json();
 
-  // Get meeting with summary
+  // Get meeting with summary (RLS scopes to user's workspaces)
   const { data: meeting } = await supabase
     .from('meetings')
     .select('*')
     .eq('id', meetingId)
-    .eq('user_id', user.id)
     .single();
 
   if (!meeting) {

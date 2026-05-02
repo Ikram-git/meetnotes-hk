@@ -25,7 +25,7 @@ export async function POST(
 
   // Verify ownership
   const { data: meeting } = await supabase
-    .from('meetings').select('id, share_token, user_id').eq('id', meetingId).eq('user_id', user.id).single();
+    .from('meetings').select('id, share_token, user_id').eq('id', meetingId).single();
   if (!meeting) return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
 
   // Reuse existing token or create new

@@ -27,12 +27,11 @@ export async function POST(req: NextRequest) {
 
   const { meetingId } = await req.json();
 
-  // Get meeting
+  // Get meeting (RLS scopes to user's workspaces)
   const { data: meeting } = await supabase
     .from('meetings')
     .select('*')
     .eq('id', meetingId)
-    .eq('user_id', user.id)
     .single();
 
   if (!meeting) {
