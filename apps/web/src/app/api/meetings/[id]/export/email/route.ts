@@ -17,7 +17,7 @@ export async function POST(
   }
 
   const { data: meeting } = await supabase
-    .from('meetings').select('*').eq('id', meetingId).eq('user_id', user.id).single();
+    .from('meetings').select('*').eq('id', meetingId).single();
   if (!meeting) return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
 
   const { data: summary } = await supabase

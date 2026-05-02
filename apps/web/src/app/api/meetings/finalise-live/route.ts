@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getActiveWorkspaceId } from '@/lib/workspace';
 import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
 import { findNearbyCalendarEvent } from '@/lib/google/events';
@@ -61,10 +62,16 @@ export async function POST(req: NextRequest) {
   const googleEventSummary = nearbyEvent?.summary || null;
   const googleEventStart = nearbyEvent?.start || null;
 
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+  if (!workspaceId) {
+    return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
+  }
+
   const { data: meeting, error: meetingError } = await supabase
     .from('meetings')
     .insert({
       user_id: user.id,
+      workspace_id: workspaceId,
       source: 'upload',
       status: 'summarising',
       audio_storage_path: `live/${crypto.randomUUID()}.none`,

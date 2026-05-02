@@ -12,7 +12,7 @@ export async function PATCH(
 
   // Verify ownership
   const { data: meeting } = await supabase
-    .from('meetings').select('id').eq('id', meetingId).eq('user_id', user.id).single();
+    .from('meetings').select('id').eq('id', meetingId).single();
   if (!meeting) return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
 
   const { updates } = await req.json();

@@ -48,12 +48,11 @@ export async function PUT(
     );
   }
 
-  // Verify user owns the meeting
+  // RLS verifies the user is a member of this meeting's workspace
   const { data: meeting } = await supabase
     .from('meetings')
     .select('id')
     .eq('id', meetingId)
-    .eq('user_id', user.id)
     .single();
 
   if (!meeting) {

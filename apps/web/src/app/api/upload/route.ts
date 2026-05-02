@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { getActiveWorkspaceId } from '@/lib/workspace';
 import { NextRequest, NextResponse } from 'next/server';
 import { nanoid } from 'nanoid';
 
@@ -76,11 +77,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Upload failed: ${uploadError.message}` }, { status: 500 });
   }
 
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+  if (!workspaceId) {
+    return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
+  }
+
   // Create meeting record
   const { data: meeting, error: meetingError } = await supabase
     .from('meetings')
     .insert({
       user_id: user.id,
+      workspace_id: workspaceId,
       audio_storage_path: storagePath,
       audio_format: ext,
       audio_size_bytes: audioFile.size,
