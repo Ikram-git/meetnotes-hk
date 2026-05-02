@@ -69,7 +69,7 @@ function SignupForm() {
         // Non-fatal: user can accept the invite manually after signup.
       }
     }
-    router.push(inviteToken ? '/meetings' : '/');
+    router.push('/meetings');
   };
 
   const handleGoogleSignup = async () => {

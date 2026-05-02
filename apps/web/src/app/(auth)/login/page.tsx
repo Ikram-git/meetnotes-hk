@@ -34,7 +34,7 @@ function LoginContent() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push(returnTo || '/');
+      router.push(returnTo || '/meetings');
     }
   };
 
