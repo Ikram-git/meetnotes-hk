@@ -36,7 +36,7 @@ export async function updateSession(request: NextRequest) {
 
   // Public routes — accessible without login (these handle auth themselves
   // when needed — e.g. /api/zapier/* uses Bearer API-key auth, not cookies).
-  const publicPaths = ['/', '/login', '/signup', '/auth', '/privacy', '/terms', '/pricing', '/demo', '/shared', '/api/shared', '/api/zapier'];
+  const publicPaths = ['/', '/login', '/signup', '/auth', '/privacy', '/terms', '/pricing', '/demo', '/shared', '/api/shared', '/api/zapier', '/invite', '/api/invites'];
   const isPublic = publicPaths.some(p =>
     p === '/' ? request.nextUrl.pathname === '/' : request.nextUrl.pathname.startsWith(p)
   );
