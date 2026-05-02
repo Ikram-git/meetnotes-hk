@@ -61,10 +61,10 @@ function LoginContent() {
         </Link>
         <div>
           <h2 className="text-3xl font-bold text-white mb-4">
-            AI meeting notes that understand code-switching.
+            Live transcription. AI Q&amp;A. A library your whole team can search.
           </h2>
           <p className="text-gray-400 text-lg leading-relaxed">
-            Built for professionals who work across languages.
+            Built for professionals who work across languages and across teams.
           </p>
         </div>
         <p className="text-gray-600 text-sm">AI-powered meeting notes</p>
