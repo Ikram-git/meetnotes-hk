@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { buildOAuthClient, getRedirectUri, GOOGLE_SCOPES } from '@/lib/google/client';
+import { getGates, tierUpgradeMessage } from '@/lib/billing/gates';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**
@@ -12,6 +13,18 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('subscription_tier')
+    .eq('id', user.id)
+    .single();
+  if (!getGates(profile?.subscription_tier).calendarSync) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    return NextResponse.redirect(
+      `${appUrl}/settings?upgrade=calendar&message=${encodeURIComponent(tierUpgradeMessage('Google Calendar integration', 'pro'))}`,
+    );
+  }
 
   try {
     const redirectUri = getRedirectUri(req);

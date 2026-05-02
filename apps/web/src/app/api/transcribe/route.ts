@@ -3,6 +3,7 @@ import { getSTTProvider } from '@/lib/stt';
 import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
 import { fanOutMeetingCompleted } from '@/lib/webhooks';
+import { getGates } from '@/lib/billing/gates';
 import { NextRequest, NextResponse, after } from 'next/server';
 
 // Transcription (5-40s) + summarisation (5-15s) run back-to-back.
@@ -91,6 +92,36 @@ export async function POST(req: NextRequest) {
         status: 'error',
         error: 'No speech detected in audio',
       });
+    }
+
+    // Per-meeting duration cap (Basic: 60 min, Pro: 180, Team: 240).
+    const durationSeconds = Math.round(result.durationMs / 1000);
+    const { data: tierProfile } = await supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single();
+    const gates = getGates(tierProfile?.subscription_tier);
+    if (gates.perMeetingMinutes !== null && durationSeconds > gates.perMeetingMinutes * 60) {
+      const capMins = gates.perMeetingMinutes;
+      const fileMins = Math.round(durationSeconds / 60);
+      await supabase
+        .from('meetings')
+        .update({
+          status: 'error',
+          stt_provider: provider.name,
+          audio_duration_seconds: durationSeconds,
+          error_message: `This recording is ${fileMins} min \u2014 your plan caps meetings at ${capMins} min. Upgrade in Settings \u2192 Billing to process longer meetings.`,
+        })
+        .eq('id', meetingId);
+      console.log(`[Transcribe] Meeting ${meetingId} (${fileMins} min) over ${capMins}-min cap, rejecting`);
+      return NextResponse.json(
+        {
+          status: 'error',
+          error: `Plan caps meetings at ${capMins} minutes`,
+        },
+        { status: 402 },
+      );
     }
 
     await supabase.from('transcript_segments').insert(segments);
