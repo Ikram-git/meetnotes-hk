@@ -21,10 +21,12 @@ export const PLANS: Plan[] = [
     minutesLimit: 100,
     features: [
       '100 minutes/month',
-      '30+ languages auto-detected',
-      'AI summaries & action items',
-      'PDF & clipboard export',
-      'Chrome extension',
+      'Live transcription with AI Q&A',
+      '30+ languages with code-switching',
+      'Structured summaries & action items',
+      'Team workspaces & invites',
+      'Windows desktop app',
+      'PDF, share-link & clipboard export',
     ],
   },
   {
@@ -40,9 +42,10 @@ export const PLANS: Plan[] = [
     features: [
       '3,000 minutes/month',
       'Everything in Free',
-      'Email export',
-      'Priority transcription',
+      'Email recap to attendees',
+      'Priority transcription queue',
       'Speaker identification',
+      'Google Calendar auto-link',
     ],
   },
   {
@@ -57,9 +60,8 @@ export const PLANS: Plan[] = [
     features: [
       '10,000 minutes/month',
       'Everything in Pro',
-      'Team workspace',
-      'Shared meeting library',
-      'Admin controls',
+      'Workspace admin controls',
+      'Shared custom vocabulary',
       'Priority support',
     ],
   },

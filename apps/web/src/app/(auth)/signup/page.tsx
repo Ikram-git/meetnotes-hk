@@ -96,8 +96,8 @@ function SignupForm() {
           <span className="text-xl font-bold text-white">Briva</span>
         </Link>
         <div>
-          <h2 className="text-3xl font-bold text-white mb-4">Start with 100 free minutes every month.</h2>
-          <p className="text-gray-400 text-lg leading-relaxed">No credit card required. Record, transcribe, and summarise your meetings with AI.</p>
+          <h2 className="text-3xl font-bold text-white mb-4">100 free minutes every month — and your team's invited.</h2>
+          <p className="text-gray-400 text-lg leading-relaxed">Live transcription with AI Q&amp;A, structured summaries in 18 languages, and a shared workspace for your team. No credit card.</p>
         </div>
         <p className="text-gray-600 text-sm">AI-powered meeting notes</p>
       </div>
