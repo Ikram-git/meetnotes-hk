@@ -1,16 +1,26 @@
 import { createClient } from '@/lib/supabase/server';
+import { getActiveWorkspaceId } from '@/lib/workspace';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { MeetingsListClient } from '@/components/meetings-list-client';
 import { UpcomingMeetingsCard } from '@/components/upcoming-meetings-card';
+
+export const dynamic = 'force-dynamic';
 
 export default async function MeetingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const { data: meetings } = await supabase
-    .from('meetings').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+  const workspaceId = await getActiveWorkspaceId(supabase, user.id);
+
+  const meetingsQuery = supabase
+    .from('meetings')
+    .select('*')
+    .order('created_at', { ascending: false });
+  const { data: meetings } = workspaceId
+    ? await meetingsQuery.eq('workspace_id', workspaceId)
+    : await meetingsQuery.eq('user_id', user.id);
 
   const { data: profile } = await supabase
     .from('profiles').select('minutes_used_this_month, minutes_limit, subscription_tier').eq('id', user.id).single();

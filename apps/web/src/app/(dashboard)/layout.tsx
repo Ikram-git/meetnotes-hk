@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useTheme } from '@/components/theme-provider';
 import { isTauri } from '@/lib/tauri';
+import { WorkspaceSwitcher } from '@/components/workspace-switcher';
 
 const navItems = [
   { href: '/meetings', label: 'Meetings' },
@@ -77,6 +78,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
                 <span className="text-lg font-bold text-white hidden sm:block">Briva</span>
               </Link>
+              <div className="hidden md:block">
+                <WorkspaceSwitcher />
+              </div>
               <nav className="hidden md:flex items-center gap-1">
                 {navItems.map((item) => {
                   const isActive = pathname.startsWith(item.href);
