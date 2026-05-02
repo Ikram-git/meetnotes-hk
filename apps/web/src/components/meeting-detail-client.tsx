@@ -13,6 +13,7 @@ import { ProcessingBanner } from './processing-banner';
 import { SkeletonTranscript } from './skeleton-transcript';
 import { SkeletonSummary, SkeletonActionItems } from './skeleton-summary';
 import { useToast } from './toast';
+import { confirmDialog } from './confirm-dialog';
 import { formatDate, formatDuration } from '@/lib/utils';
 import { isValidLanguageCode, getLanguageByCode } from '@/lib/i18n/languages';
 import { LanguageSelector } from './language-selector';
@@ -217,7 +218,13 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
   };
 
   const handleDelete = async () => {
-    if (!confirm('Delete this meeting? This will remove the audio, transcript, and summary permanently.')) return;
+    const ok = await confirmDialog({
+      title: 'Delete meeting',
+      message: 'Delete this meeting? The audio, transcript, and summary will be removed permanently.',
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     try {
       const res = await fetch(`/api/meetings/${meeting.id}`, { method: 'DELETE' });
       if (res.ok) router.push('/meetings');

@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client';
 import { useTheme } from '@/components/theme-provider';
 import { isTauri } from '@/lib/tauri';
 import { WorkspaceSwitcher } from '@/components/workspace-switcher';
+import { UploadProvider, useUpload } from '@/components/upload-provider';
+import { ConfirmHost } from '@/components/confirm-dialog';
 
 const navItems: { href: string; label: string; icon: React.ReactNode }[] = [
   {
@@ -49,8 +51,18 @@ const navItems: { href: string; label: string; icon: React.ReactNode }[] = [
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <UploadProvider>
+      <ConfirmHost />
+      <DashboardLayoutInner>{children}</DashboardLayoutInner>
+    </UploadProvider>
+  );
+}
+
+function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const upload = useUpload();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [userEmail, setUserEmail] = useState('');
@@ -245,15 +257,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Link>
               </>
             )}
-            <Link
-              href="/upload"
+            <button
+              onClick={upload.open}
               className="hidden sm:flex items-center gap-1.5 bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-emerald-400 transition"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
               New Meeting
-            </Link>
+            </button>
 
             <button
               onClick={toggleTheme}

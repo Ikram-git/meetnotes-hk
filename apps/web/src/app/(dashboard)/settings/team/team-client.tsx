@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { confirmDialog } from '@/components/confirm-dialog';
 
 type Member = {
   role: 'owner' | 'admin' | 'member';
@@ -98,7 +99,13 @@ export function TeamSettingsClient({
   };
 
   const handleRevokeInvite = async (id: string) => {
-    if (!confirm('Revoke this invite?')) return;
+    const ok = await confirmDialog({
+      title: 'Revoke invite',
+      message: 'Revoke this invite? The link will stop working immediately.',
+      confirmLabel: 'Revoke',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     const res = await fetch(`/api/workspaces/${workspace.id}/invites/${id}`, {
       method: 'DELETE',
     });
@@ -123,7 +130,13 @@ export function TeamSettingsClient({
     const msg = isSelf
       ? 'Leave this workspace? You will lose access to all its meetings.'
       : 'Remove this member from the workspace?';
-    if (!confirm(msg)) return;
+    const ok = await confirmDialog({
+      title: isSelf ? 'Leave workspace' : 'Remove member',
+      message: msg,
+      confirmLabel: isSelf ? 'Leave' : 'Remove',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     const res = await fetch(`/api/workspaces/${workspace.id}/members/${userId}`, {
       method: 'DELETE',
     });

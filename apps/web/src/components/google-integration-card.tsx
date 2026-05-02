@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useToast } from './toast';
+import { confirmDialog } from './confirm-dialog';
 
 interface Status {
   connected: boolean;
@@ -57,7 +58,13 @@ export function GoogleIntegrationCard() {
   };
 
   const disconnect = async () => {
-    if (!confirm('Disconnect Google Calendar? Briva will stop seeing your meetings.')) return;
+    const ok = await confirmDialog({
+      title: 'Disconnect Google Calendar',
+      message: 'Briva will stop seeing your upcoming meetings until you reconnect.',
+      confirmLabel: 'Disconnect',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     setBusy(true);
     const res = await fetch('/api/google/disconnect', { method: 'POST' });
     setBusy(false);
