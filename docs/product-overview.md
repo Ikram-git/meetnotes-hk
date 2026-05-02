@@ -2,114 +2,155 @@
 
 *Last updated: 2026-05-03*
 
-AI meeting notes for individuals and teams. Records or uploads any meeting, transcribes in 30+ languages, generates structured summaries, and lets you ask questions about the content — both live and after the fact. Web app + Windows desktop, with team workspaces baked in.
+AI meeting notes for individuals and teams. Records or uploads any meeting, transcribes in 30+ languages with code-switching, generates structured summaries, and lets users ask questions about the content — both live and after the fact. Web app + Windows desktop, with team workspaces baked in.
 
 Live at **https://meetbriva.com**.
 
 ---
 
-## Market
+## 1. Market research
 
 ### The space
 
-The "AI meeting notes" market is led by **Otter.ai** (consumer + SMB, ~$100M ARR, US-centric), with adjacent products from **Fireflies.ai**, **tldv**, **Fathom**, **Granola**, and meeting features inside **Notion AI** and **Microsoft Copilot**. Underlying STT is mostly Deepgram, AssemblyAI, or in-house. Underlying LLM is mostly OpenAI or Anthropic.
+The "AI meeting notes" market is in a land grab phase. Total addressable market is roughly any knowledge worker on Zoom / Meet / Teams — Gartner pegs it at ~150M paid seats globally, with sub-10% penetration of dedicated note-takers today. The category leader is **Otter.ai** (~$100M ARR, US-centric, freemium). Other notable players:
+
+| Competitor | Positioning | Pricing | Notable strengths | Weaknesses we exploit |
+|---|---|---|---|---|
+| **Otter.ai** | SMB / individual default | Free / $20 / $30+ seat | OtterPilot auto-joins calls, cross-meeting chat, mature mobile | English-first, weak on Cantonese / code-switching |
+| **Fireflies.ai** | Sales-team focused | $18 / $29 / $39 seat | CRM push (Salesforce, HubSpot), conversation intelligence | Same English bias, opaque transcription quality |
+| **tldv** | "Free meeting recorder" angle | Free / $20 seat | Free unlimited, native Zoom recorder | Thin summaries, no language depth |
+| **Fathom** | "Notion for sales calls" | Free / $24 seat | Free tier is generous, US sales niche | Not multilingual, no team library |
+| **Granola** | Mac-only, in-meeting notepad | Free / $14 seat | Beautiful UX, Mac-native, no bot | Mac-only, no team workspaces, paid early |
+| **Microsoft Copilot** | Bundled into Teams | Bundled with M365 | Distribution | Locked to Teams meetings only |
+| **Notion AI** | Bundled with Notion | $10/seat add-on | Distribution to existing customers | Not real-time, summary-only |
 
 ### Where Briva differentiates
 
-| | Otter / Fireflies / etc. | Briva |
+| | Most competitors | Briva |
 |---|---|---|
-| Bilingual transcription with code-switching | Weak (English-first, mid-sentence switches drop) | First-class. Deepgram Nova-2 + multilingual prompt routing |
-| Hong Kong / APAC focus | Underserved | Original target market |
-| Live AI Q&A during the meeting | Otter has it (Otter AI Chat) | We have it (per-meeting Q&A panel) |
-| Cross-meeting AI search | Otter Business+ tier | Not yet — biggest gap and biggest moat opportunity |
-| Auto-join Zoom / Meet / Teams bot | Otter, Fireflies, tldv | Not yet — second-biggest gap |
-| Native desktop system audio capture | tldv has it; most don't | Yes (Tauri 2 + WASAPI loopback on Windows) |
-| Team workspaces with roles + invites | Yes | Yes (shipped 2026-05) |
-| Per-seat billing | Yes (Otter Business $30/seat) | Yes (Team $15/seat) |
-| Code signing / enterprise distribution | Yes | Not yet — currently SmartScreen-warned |
+| Bilingual transcription with code-switching | Weak | First-class via Deepgram Nova-2 + multilingual LLM routing |
+| Hong Kong / APAC focus | Underserved (US-first) | Original target market |
+| Live AI Q&A during the meeting | Otter only | Yes, per-meeting Q&A panel |
+| Native desktop system audio capture | tldv has it | Yes (Tauri 2 + WASAPI loopback on Windows) |
+| Team workspaces with roles + invites | Yes (Otter, Fireflies) | Yes (shipped 2026-05) |
+| Per-seat billing with auto-quantity | Yes | Yes ($15/seat — half Otter's price) |
 
-### Honest weaknesses
+### Honest gaps vs. competitors
 
-- **No auto-join bot.** Anyone selling to a sales team will buy the competitor that joins their calls automatically. Highest-priority gap.
-- **No CRM integrations.** Otter Business pushes to Salesforce / HubSpot. We have Zapier (private) but no native CRM.
-- **No mobile app.** Field sales / 1:1 walks demand a phone capture mode.
-- **No cross-meeting search or chat.** Once a user has 50+ meetings on Otter, they're sticky.
-- **MSI is unsigned during beta.** SmartScreen warns first-time installers; ~$10/mo Azure Trusted Signing fixes this.
+- **No auto-join bot.** Highest-priority gap. Anyone selling to a sales team buys whichever product joins their calls automatically.
+- **No CRM integrations.** Otter and Fireflies push to Salesforce / HubSpot. We have Zapier (private).
+- **No mobile app.** Field sales / 1:1 walks demand a phone capture mode. Otter has both iOS and Android.
+- **No cross-meeting search or chat.** Once a user has 50+ meetings on Otter, they're sticky. We're single-meeting-only.
+- **MSI is unsigned during beta.** SmartScreen warns first-time installers; Azure Trusted Signing (~$10/mo) fixes it.
 
 ---
 
-## What's actually built
+## 2. Business model
+
+### Revenue
+
+Three SaaS tiers with monthly / annual billing, plus a contact-sales tier:
+
+| Plan | Monthly | Annual (effective/mo) | Minutes pool | Per-meeting cap |
+|---|---|---|---|---|
+| **Basic** (free) | $0 | — | 100/mo per workspace | 60 min |
+| **Pro** (individual) | $19 | $190 ($16) | 3,000/mo | 3 hr |
+| **Team** (per-seat) | $15/seat | $150/seat ($12.50) | 6,000/seat/mo | 4 hr |
+| **Enterprise** | Custom | Custom | Custom | Unlimited |
+
+**Per-seat mechanics on Team:** Stripe checkout passes `quantity = workspace member count`. When a workspace owner invites or removes a member, the app calls `stripe.subscriptions.update()` to adjust quantity with proration — so adding a 5th seat to a 4-seat plan generates a prorated charge automatically; removing one credits back.
+
+### Pricing positioning
+
+Roughly **half Otter's per-seat price** ($15 vs $30 Business) and similar to Fireflies / Fathom. The trade-off is conscious: we want to win the Asian SMB segment where price sensitivity is higher, while feature gap with Otter narrows. We also bundle workspaces into Pro at no extra cost (Otter only allows team libraries on Business+).
+
+### Unit economics (rough)
+
+Per minute of audio processed end-to-end:
+
+| Cost | Per-minute |
+|---|---|
+| Deepgram Nova-2 transcription | ~$0.0044 |
+| Claude Sonnet 4.6 summarisation (1-time, ~10–30K tokens) | ~$0.005 |
+| Supabase storage + bandwidth | ~$0.001 |
+| Vercel function-time | ~$0.0005 |
+| **Estimated total** | **~$0.011 per minute** |
+
+At Pro pricing ($19 for 3,000 minutes), our COGS is ~$33 — meaning **a heavy Pro user is unprofitable on usage alone**. The economics work because most Pro users use 200–600 min/month (industry average for Otter), giving us 70–80% gross margin on typical use. Heavy users effectively cap the loss at ~$14/month.
+
+Team plan at $15/seat/$6,000 has the same dynamic. Enterprise is contract-based and priced to absorb worst case.
+
+### Go-to-market
+
+**Phase 1 (now): Hong Kong & APAC bilingual professionals.** PLG via free tier + share-link viral loop (every public share link is an ad). Wedge: bilingual EN+Cantonese is genuinely better than Otter for HK users.
+
+**Phase 2: APAC SMB sales teams.** Once auto-join bot ships, position to APAC sales teams at half Otter's price. Product Hunt + LinkedIn organic.
+
+**Phase 3: Global English markets.** Once feature parity is closer, paid acquisition (Google Ads on "otter.ai alternative" / "fireflies alternative") and content marketing (SEO on "AI meeting notes for X").
+
+### Key metrics to track
+
+- **Activation** — % of signups that complete one meeting (Otter benchmark: ~40%).
+- **Free → Paid conversion** — % of activated free users that upgrade in 90 days (Otter: ~3–5%).
+- **Per-seat expansion** — average seats per Team workspace 30 days after first paid invite.
+- **Churn** — monthly logo churn on Pro and Team.
+- **Minutes per active user** — drives COGS and signals stickiness.
+
+---
+
+## 3. Features (what's actually built)
 
 ### Capture
-- **File upload** — MP3, WAV, M4A, MP4, WebM up to 450 MB. Resumable (TUS) so big files don't restart on flaky network.
-- **Live recording** in browser — streaming Deepgram, AI chat panel as the meeting unfolds.
-- **Live recording on desktop (Windows)** — captures system audio via WASAPI loopback; works for any Zoom / Meet / Teams call without a browser plugin.
-- **Chrome extension** — record from Meet / Zoom / Teams tabs.
+- File upload — MP3 / WAV / M4A / MP4 / WebM up to 450 MB, resumable (TUS) so big files survive flaky network.
+- Live recording in browser — streaming Deepgram, AI chat panel mid-meeting.
+- Live recording on Windows desktop — Tauri 2 app captures system audio via WASAPI loopback, no browser plugin needed.
+- Chrome extension — record from Meet / Zoom / Teams tabs.
 
 ### Transcription
-- **Deepgram Nova-2** with auto-detection across 30+ languages including English, Cantonese, Mandarin, Japanese, Korean, Spanish, French.
-- **Code-switching** — mid-sentence language switches stay coherent.
-- **Speaker diarisation** — labels detected automatically; renaming gated to Pro+.
+- Deepgram Nova-2 with auto-detection across 30+ languages.
+- Code-switching — mid-sentence language switches stay coherent.
+- Speaker diarisation; renaming gated to Pro+.
 
 ### AI summary (Claude Sonnet 4.6)
 - Overview + structured summary in 18 languages.
 - Action items with assignee detection.
 - Topics, key decisions, sentiment.
-- Editable inline.
-- Per-meeting Q&A chat against the full transcript.
+- Inline editing.
+- Per-meeting Q&A chat over the full transcript.
 
-### Sharing & export
-- Public share-link with optional password.
-- PDF (in-browser via React-PDF).
-- Email recap to attendees (Pro+).
-- Copy as Markdown.
-
-### Team workspaces (shipped 2026-05)
+### Team workspaces
 - Personal workspace auto-created on signup.
 - Invite members by email; roles: owner / admin / member.
 - Shared meeting library — every member sees every meeting.
-- Workspace switcher in the navbar.
-- Per-seat Team plan; Stripe quantity auto-syncs on invite/remove.
+- Per-seat Team plan with Stripe quantity auto-sync.
+
+### Sharing & export
+- Public share link with optional password.
+- PDF export (React-PDF).
+- Email recap to attendees (Pro+).
+- Copy as Markdown.
 
 ### Integrations
-- **Google Calendar** — auto-link recordings to the matching event ±15 min (Pro+).
-- **Stripe** — subscriptions with monthly/annual toggle, billing portal, webhook-driven tier sync.
-- **Resend** — confirmation emails, recap emails, invite emails.
-- **Zapier** — webhook fan-out on `meeting.completed`, REST Hook trigger registered (in private mode pending review).
+- Google Calendar auto-link recordings to events ±15 min (Pro+).
+- Stripe subscriptions, billing portal, webhook-driven tier sync.
+- Resend for confirmation, recap, and invite emails.
+- Zapier webhook fan-out on `meeting.completed` (private app pending public review).
 
 ### Auth & infrastructure
 - Supabase auth with email-OTP confirmation (corporate-scanner-proof).
 - Google OAuth login.
-- Tauri 2 desktop with auto-updater wired to public `briva-releases` GitHub repo.
-- Vercel deployment from `main`.
+- Tauri 2 desktop with auto-updater pinned to public `briva-releases` GitHub repo.
+- Vercel deployment from `main`, custom domain `meetbriva.com` with Resend SMTP.
 
 ---
 
-## Pricing
+## 4. Roadmap (priority order)
 
-| | Basic | Pro | Team | Enterprise |
-|---|---|---|---|---|
-| Price | Free | $19/mo or $190/yr | $15/seat/mo or $150/seat/yr | Custom |
-| Minutes | 100/mo | 3,000/mo | 6,000/seat/mo | Custom |
-| Per-meeting cap | 60 min | 3 hr | 4 hr | Unlimited |
-| Email recap | — | ✓ | ✓ | ✓ |
-| Calendar auto-link | — | ✓ | ✓ | ✓ |
-| Speaker rename | — | ✓ | ✓ | ✓ |
-| Shared workspace library | ✓ | ✓ | ✓ | ✓ |
-| Workspace admin controls | ✓ | ✓ | ✓ | ✓ |
-| SSO | — | — | — | ✓ |
-
----
-
-## What's next
-
-In priority order:
-
-1. **Cross-meeting AI chat** — RAG over a workspace's full meeting history with transcript citations. ~1–2 weeks. Biggest moat.
+1. **Cross-meeting AI chat** — RAG over a workspace's full meeting history with transcript citations. ~1–2 weeks. Biggest moat opportunity once users accumulate >50 meetings.
 2. **Auto-join bot for Zoom / Meet / Teams** — calendar-driven OtterPilot equivalent. ~2–3 weeks. Unlocks B2B sales.
-3. **Auto-email recap** to attendees, with a per-meeting toggle. Half-day feature, big perceived value.
-4. **Mobile capture** (iOS first) — record-and-upload, no live for v1.
-5. **Persistent speaker voiceprints** across meetings.
-6. **Code signing** (Azure Trusted Signing) so the MSI installer doesn't trigger SmartScreen.
-7. **CRM integrations** — Salesforce + HubSpot push for action items / call notes.
-8. **Public Zapier app** — currently private; needs 3+ users with live Zaps for review submission.
+3. **Auto-email recap** to all attendees with a per-meeting toggle. Half-day feature, big perceived value.
+4. **Mobile capture** (iOS first) — record-and-upload for v1, no live.
+5. **Persistent speaker voiceprints** across meetings — improves diarisation over time.
+6. **Code signing** (Azure Trusted Signing) so the MSI installer doesn't trigger SmartScreen on first launch.
+7. **CRM integrations** — Salesforce + HubSpot native push for action items and call notes.
+8. **Public Zapier app** — currently in private mode; needs 3+ users with live Zaps for review submission.
