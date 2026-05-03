@@ -4,6 +4,7 @@ import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
 import { findNearbyCalendarEvent } from '@/lib/google/events';
 import { fanOutMeetingCompleted } from '@/lib/webhooks';
+import { indexMeetingForChat } from '@/lib/ai/index-meeting';
 import { getGates } from '@/lib/billing/gates';
 import { NextRequest, NextResponse, after } from 'next/server';
 
@@ -229,6 +230,7 @@ export async function POST(req: NextRequest) {
       } catch (e) {
         console.warn('[FinaliseLive] webhook fan-out failed:', e instanceof Error ? e.message : e);
       }
+      await indexMeetingForChat(supabase, meeting.id);
     });
     return NextResponse.json({ meetingId: meeting.id, status: 'completed', title });
   } catch (err) {
