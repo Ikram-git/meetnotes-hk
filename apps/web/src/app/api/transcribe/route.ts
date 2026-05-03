@@ -3,6 +3,7 @@ import { getSTTProvider } from '@/lib/stt';
 import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
 import { fanOutMeetingCompleted } from '@/lib/webhooks';
+import { indexMeetingForChat } from '@/lib/ai/index-meeting';
 import { getGates } from '@/lib/billing/gates';
 import { NextRequest, NextResponse, after } from 'next/server';
 
@@ -221,6 +222,8 @@ export async function POST(req: NextRequest) {
       } catch (e) {
         console.warn('[Transcribe] webhook fan-out failed:', e instanceof Error ? e.message : e);
       }
+      // Embed for cross-meeting chat. Best-effort; logs but doesn't block.
+      await indexMeetingForChat(supabase, meetingId);
     });
     return NextResponse.json({
       status: 'completed',
