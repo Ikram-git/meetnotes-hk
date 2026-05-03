@@ -235,9 +235,9 @@ export function ChatClient({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <h2 className="text-base font-semibold text-white">Ask anything about your meetings</h2>
+            <h2 className="text-base font-semibold text-white">Briva AI</h2>
             <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
-              Briva searches every transcript in your active workspace, then answers with links back to the source.
+              Ask anything about your meetings. Briva searches every transcript in this workspace and answers with citations.
             </p>
             <div className="mt-6 flex flex-wrap gap-2 justify-center">
               {SUGGESTIONS.map((s) => (
