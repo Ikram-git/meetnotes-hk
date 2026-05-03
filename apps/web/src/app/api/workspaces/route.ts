@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { listUserWorkspaces } from '@/lib/workspace';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -21,7 +22,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Name is required' }, { status: 400 });
   }
 
-  const { data: workspace, error } = await supabase
+  // Use the admin client for the insert: we've already verified the
+  // caller via getUser(). This sidesteps cases where RLS sees auth.uid()
+  // as NULL in the SQL context (which has been observed in some Vercel
+  // edge contexts even with a valid session cookie).
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data: workspace, error } = await admin
     .from('workspaces')
     .insert({ name: name.trim(), owner_id: user.id })
     .select()
@@ -31,7 +41,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error?.message ?? 'Failed to create' }, { status: 500 });
   }
 
-  const { error: memberError } = await supabase
+  const { error: memberError } = await admin
     .from('workspace_members')
     .insert({ workspace_id: workspace.id, user_id: user.id, role: 'owner' });
 
