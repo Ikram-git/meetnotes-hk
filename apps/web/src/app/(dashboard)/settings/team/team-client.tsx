@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { confirmDialog } from '@/components/confirm-dialog';
 
@@ -123,6 +123,29 @@ export function TeamSettingsClient({
     } else {
       const { error: msg } = await res.json();
       setError(msg ?? 'Failed to change role');
+    }
+  };
+
+  const handleDeleteWorkspace = async () => {
+    const ok = await confirmDialog({
+      title: `Delete ${workspace.name}?`,
+      message: (
+        <>
+          This permanently deletes the workspace, all its meetings, transcripts, summaries, and member list.
+          {' '}
+          <span className="text-red-400 font-medium">There is no undo.</span>
+        </>
+      ),
+      confirmLabel: 'Delete workspace',
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/workspaces/${workspace.id}`, { method: 'DELETE' });
+    if (res.ok) {
+      window.location.href = '/meetings';
+    } else {
+      const { error: msg } = await res.json();
+      setError(msg ?? 'Failed to delete workspace');
     }
   };
 
@@ -266,14 +289,10 @@ export function TeamSettingsClient({
                 </div>
                 <div className="flex items-center gap-2">
                   {isOwner && !isSelf && m.role !== 'owner' ? (
-                    <select
-                      value={m.role}
-                      onChange={(e) => handleChangeRole(m.user.id, e.target.value as 'admin' | 'member')}
-                      className="bg-white/5 border border-gray-800 rounded-md px-2 py-1 text-xs text-gray-300"
-                    >
-                      <option value="member">Member</option>
-                      <option value="admin">Admin</option>
-                    </select>
+                    <RoleSelect
+                      value={m.role as 'admin' | 'member'}
+                      onChange={(v) => handleChangeRole(m.user.id, v)}
+                    />
                   ) : (
                     <span className="text-xs text-gray-500 capitalize px-2">{m.role}</span>
                   )}
@@ -316,6 +335,95 @@ export function TeamSettingsClient({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Danger zone — owner only */}
+      {isOwner && (
+        <div className="bg-[#111916] rounded-xl border border-red-900/30 overflow-hidden">
+          <div className="px-6 py-4 border-b border-red-900/20">
+            <h2 className="text-sm font-semibold text-red-400">Danger zone</h2>
+          </div>
+          <div className="p-6 flex items-start gap-4 flex-wrap">
+            <div className="flex-1 min-w-[200px]">
+              <p className="text-sm text-white">Delete this workspace</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Permanently removes the workspace, its meetings, transcripts, summaries, and member list.
+                Owners only.
+              </p>
+            </div>
+            <button
+              onClick={handleDeleteWorkspace}
+              className="px-3 py-2 bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 rounded-lg text-xs font-medium transition"
+            >
+              Delete workspace
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RoleSelect({
+  value,
+  onChange,
+}: {
+  value: 'admin' | 'member';
+  onChange: (v: 'admin' | 'member') => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
+
+  const options: Array<{ value: 'member' | 'admin'; label: string }> = [
+    { value: 'member', label: 'Member' },
+    { value: 'admin', label: 'Admin' },
+  ];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-emerald-900/30 rounded-md px-2.5 py-1 text-xs text-gray-300 transition"
+      >
+        <span className="capitalize">{value}</span>
+        <svg className="w-3 h-3 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-1 w-32 bg-[#111916] border border-emerald-900/30 rounded-lg shadow-xl py-1 z-30">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              className={`w-full flex items-center justify-between px-3 py-1.5 text-xs text-left transition ${
+                opt.value === value
+                  ? 'text-emerald-400 bg-emerald-500/10'
+                  : 'text-gray-300 hover:bg-white/5'
+              }`}
+            >
+              {opt.label}
+              {opt.value === value && (
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </button>
+          ))}
         </div>
       )}
     </div>

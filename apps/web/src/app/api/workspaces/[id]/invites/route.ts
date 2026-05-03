@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import {
   generateInviteToken,
   getUserRole,
@@ -6,6 +7,13 @@ import {
   type WorkspaceRole,
 } from '@/lib/workspace';
 import { NextRequest, NextResponse } from 'next/server';
+
+function admin() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
 
 export async function GET(
   _req: NextRequest,
@@ -16,12 +24,13 @@ export async function GET(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const role = await getUserRole(supabase, user.id, id);
+  const a = admin();
+  const role = await getUserRole(a, user.id, id);
   if (!isAdminOrOwner(role)) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   }
 
-  const { data: invites } = await supabase
+  const { data: invites } = await a
     .from('workspace_invites')
     .select('id, email, role, expires_at, created_at, accepted_at, revoked_at')
     .eq('workspace_id', id)
@@ -41,7 +50,8 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const callerRole = await getUserRole(supabase, user.id, id);
+  const a = admin();
+  const callerRole = await getUserRole(a, user.id, id);
   if (!isAdminOrOwner(callerRole)) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   }
@@ -58,7 +68,7 @@ export async function POST(
   const inviteRole: WorkspaceRole = role === 'admin' ? 'admin' : 'member';
   const normalisedEmail = email.trim().toLowerCase();
 
-  const { data: workspace } = await supabase
+  const { data: workspace } = await a
     .from('workspaces')
     .select('name')
     .eq('id', id)
@@ -67,7 +77,7 @@ export async function POST(
 
   const token = generateInviteToken();
 
-  const { data: invite, error } = await supabase
+  const { data: invite, error } = await a
     .from('workspace_invites')
     .insert({
       workspace_id: id,
