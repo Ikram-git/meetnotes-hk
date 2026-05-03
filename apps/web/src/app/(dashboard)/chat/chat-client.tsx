@@ -59,9 +59,11 @@ export function ChatClient() {
       if (!res.ok) {
         setIndexResult(data.error || 'Indexing failed');
       } else {
+        const reasons = (data.failure_reasons || []) as string[];
         setIndexResult(
           `Indexed ${data.indexed} meeting${data.indexed === 1 ? '' : 's'}` +
             (data.failed ? `, ${data.failed} failed` : '') +
+            (reasons.length ? ` — first error: ${reasons[0]}` : '') +
             '. Chat is ready.',
         );
         // Refresh status so the banner disappears.
