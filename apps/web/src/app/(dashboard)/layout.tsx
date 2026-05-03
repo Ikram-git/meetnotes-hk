@@ -32,6 +32,15 @@ const navItems: { href: string; label: string; icon: React.ReactNode }[] = [
     ),
   },
   {
+    href: '/settings/team',
+    label: 'Team',
+    icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6 5.87v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m13-9a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+    ),
+  },
+  {
     href: '/pricing',
     label: 'Pricing',
     icon: (
@@ -151,6 +160,10 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           const isActive =
             item.href === '/meetings'
               ? pathname === '/meetings' || pathname.startsWith('/meetings/')
+              : item.href === '/settings/team'
+              ? pathname.startsWith('/settings/team')
+              : item.href === '/settings'
+              ? pathname === '/settings' || pathname.startsWith('/settings/billing')
               : pathname.startsWith(item.href);
           return (
             <Link

@@ -8,7 +8,14 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const workspaces = await listUserWorkspaces(supabase, user.id);
+  // Use the admin client for the membership read — auth is already
+  // verified via getUser() above, and listUserWorkspaces filters by
+  // user.id explicitly so we can't leak other users' workspaces.
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  const workspaces = await listUserWorkspaces(admin, user.id);
   return NextResponse.json({ workspaces });
 }
 

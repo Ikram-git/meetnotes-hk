@@ -2,13 +2,8 @@ export default function Loading() {
   return (
     <div>
       <div className="mb-8 space-y-2">
-        <div className="skeleton-shimmer h-7 w-32 rounded" />
-        <div className="skeleton-shimmer h-3 w-56 rounded" />
-        <div className="flex gap-1 mt-4">
-          {['Profile', 'Team', 'Billing'].map((t) => (
-            <div key={t} className="skeleton-shimmer h-8 w-20 rounded-lg" />
-          ))}
-        </div>
+        <div className="skeleton-shimmer h-7 w-20 rounded" />
+        <div className="skeleton-shimmer h-3 w-72 rounded" />
       </div>
 
       <div className="max-w-2xl space-y-6">
