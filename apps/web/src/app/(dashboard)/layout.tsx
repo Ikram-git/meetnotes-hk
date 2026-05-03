@@ -12,7 +12,14 @@ import { ConfirmHost } from '@/components/confirm-dialog';
 import { RouteProgress } from '@/components/route-progress';
 import { Suspense } from 'react';
 
-const navItems: { href: string; label: string; icon: React.ReactNode }[] = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  accent?: 'purple';
+};
+
+const navItems: NavItem[] = [
   {
     href: '/meetings',
     label: 'Home',
@@ -24,12 +31,13 @@ const navItems: { href: string; label: string; icon: React.ReactNode }[] = [
   },
   {
     href: '/chat',
-    label: 'Briva AI',
+    label: 'BRIVA AI',
     icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       </svg>
     ),
+    accent: 'purple',
   },
   {
     href: '/upload',
@@ -174,18 +182,23 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
               : item.href === '/settings'
               ? pathname === '/settings' || pathname.startsWith('/settings/billing')
               : pathname.startsWith(item.href);
+          const isPurple = item.accent === 'purple';
+          const labelClass = isPurple ? 'text-xs font-bold tracking-wider' : '';
+          const stateClass = isActive
+            ? isPurple
+              ? 'bg-purple-500/15 text-purple-300'
+              : 'bg-emerald-500/15 text-emerald-400'
+            : isPurple
+              ? 'text-purple-400/80 hover:text-purple-300 hover:bg-purple-500/10'
+              : 'text-gray-400 hover:text-white hover:bg-white/5';
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-emerald-500/15 text-emerald-400'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${stateClass}`}
             >
               {item.icon}
-              {item.label}
+              <span className={labelClass}>{item.label}</span>
             </Link>
           );
         })}
