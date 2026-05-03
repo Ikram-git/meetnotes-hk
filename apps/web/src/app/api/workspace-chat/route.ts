@@ -66,7 +66,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
   }
 
-  const body = (await req.json()) as { question?: string; history?: ChatTurn[] };
+  const body = (await req.json()) as {
+    question?: string;
+    history?: ChatTurn[];
+    threadId?: string | null;
+  };
   const question = (body.question ?? '').trim();
   if (!question) return NextResponse.json({ error: 'Question is required' }, { status: 400 });
 
@@ -76,6 +80,31 @@ export async function POST(req: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
+
+  // Resolve / create the thread the messages will be saved to.
+  let threadId = body.threadId ?? null;
+  if (threadId) {
+    const { data: existing } = await admin
+      .from('workspace_chat_threads')
+      .select('id, user_id')
+      .eq('id', threadId)
+      .maybeSingle();
+    if (!existing || existing.user_id !== user.id) {
+      threadId = null;
+    }
+  }
+  if (!threadId) {
+    const { data: created } = await admin
+      .from('workspace_chat_threads')
+      .insert({
+        workspace_id: workspaceId,
+        user_id: user.id,
+        title: question.length > 60 ? question.slice(0, 57) + '…' : question,
+      })
+      .select('id')
+      .single();
+    threadId = created?.id ?? null;
+  }
 
   // 1. Vector search for relevant chunks (skipped if obviously a "latest
   //    meeting" intent — RAG underperforms on meta-questions like
@@ -256,5 +285,35 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ answer, citations });
+  // Persist both turns. Best-effort — if it fails the user still got
+  // their answer; we just won't have the history.
+  if (threadId) {
+    const { count } = await admin
+      .from('workspace_chat_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('thread_id', threadId);
+    const startIndex = count ?? 0;
+    await admin.from('workspace_chat_messages').insert([
+      {
+        thread_id: threadId,
+        role: 'user',
+        content: question,
+        turn_index: startIndex,
+      },
+      {
+        thread_id: threadId,
+        role: 'assistant',
+        content: answer,
+        citations,
+        turn_index: startIndex + 1,
+      },
+    ]);
+    // Bump the thread's updated_at so the sidebar list reflects activity.
+    await admin
+      .from('workspace_chat_threads')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', threadId);
+  }
+
+  return NextResponse.json({ answer, citations, threadId });
 }
