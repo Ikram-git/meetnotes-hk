@@ -18,6 +18,8 @@ import { formatDate, formatDuration } from '@/lib/utils';
 import { isValidLanguageCode, getLanguageByCode } from '@/lib/i18n/languages';
 import { LanguageSelector } from './language-selector';
 import { SummaryBullets } from './summary-bullets';
+import { MeetingChatPanel } from './meeting-chat-panel';
+import { MeetingComments } from './meeting-comments';
 
 const PROCESSING_STATUSES = ['uploaded', 'transcribing', 'transcribed', 'summarising'] as const;
 type ProcessingStatus = typeof PROCESSING_STATUSES[number];
@@ -665,51 +667,59 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
           {/* Key Decisions card removed — to be replaced by AI Recommendations in a future iteration */}
         </div>
 
-        {/* Transcript */}
-        <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-4 sm:p-6">
-          {editingTranscript ? (
-            <TranscriptEditor
-              meetingId={meeting.id}
-              segments={segments}
-              speakerMap={speakerMap}
-              onSave={(updated) => { setSegments(updated); setEditingTranscript(false); }}
-              onCancel={() => setEditingTranscript(false)}
-            />
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white">Transcript</h2>
-                <div className="flex items-center gap-2">
-                  {segments.length > 0 && (
-                    <>
-                      <span className="text-xs text-gray-600">{segments.length} segments</span>
-                      <button onClick={() => setEditingTranscript(true)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 hover:text-emerald-400 transition">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Edit
-                      </button>
-                    </>
-                  )}
-                </div>
+        {/* Right column: per-meeting AI chat */}
+        <MeetingChatPanel meetingId={meeting.id} />
+      </div>
+
+      {/* Transcript — full-width section below the two-column grid */}
+      <div className="mt-6 bg-[#111916] rounded-xl border border-emerald-900/30 p-4 sm:p-6">
+        {editingTranscript ? (
+          <TranscriptEditor
+            meetingId={meeting.id}
+            segments={segments}
+            speakerMap={speakerMap}
+            onSave={(updated) => { setSegments(updated); setEditingTranscript(false); }}
+            onCancel={() => setEditingTranscript(false)}
+          />
+        ) : (
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">Transcript</h2>
+              <div className="flex items-center gap-2">
+                {segments.length > 0 && (
+                  <>
+                    <span className="text-xs text-gray-600">{segments.length} segments</span>
+                    <button onClick={() => setEditingTranscript(true)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 hover:text-emerald-400 transition">
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </button>
+                  </>
+                )}
               </div>
-              {segments.length > 0 ? (
-                <TranscriptViewer
-                  segments={segments}
-                  speakerMap={speakerMap}
-                  currentTimeMs={currentTimeMs}
-                  onSegmentClick={handleSegmentClick}
-                  onSpeakerRename={(label) => openSpeakerModal(label)}
-                />
-              ) : isProcessingStatus ? (
-                <SkeletonTranscript />
-              ) : (
-                <p className="text-gray-500 text-sm">No transcript available yet.</p>
-              )}
-            </>
-          )}
-        </div>
+            </div>
+            {segments.length > 0 ? (
+              <TranscriptViewer
+                segments={segments}
+                speakerMap={speakerMap}
+                currentTimeMs={currentTimeMs}
+                onSegmentClick={handleSegmentClick}
+                onSpeakerRename={(label) => openSpeakerModal(label)}
+              />
+            ) : isProcessingStatus ? (
+              <SkeletonTranscript />
+            ) : (
+              <p className="text-gray-500 text-sm">No transcript available yet.</p>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Comments — workspace members can leave notes on this meeting */}
+      <div className="mt-6">
+        <MeetingComments meetingId={meeting.id} />
       </div>
     </div>
   );
