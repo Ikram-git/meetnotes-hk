@@ -21,16 +21,25 @@ interface Message {
 }
 
 const SUGGESTIONS = [
-  'What did we agree on last week?',
   'Summarise our most recent meeting',
   'List every action item assigned to me',
   'When did we last talk about pricing?',
+  'What did we decide last week?',
 ];
 
-export function ChatClient() {
+export function ChatClient({
+  threadId,
+  onThreadCreated,
+  onActivity,
+}: {
+  threadId: string | null;
+  onThreadCreated: (id: string) => void;
+  onActivity: () => void;
+}) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingThread, setLoadingThread] = useState(false);
   const [indexStatus, setIndexStatus] = useState<{
     completed_meetings: number;
     indexed_chunks: number;
@@ -39,12 +48,39 @@ export function ChatClient() {
   const [indexResult, setIndexResult] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Load chat-status (meetings vs indexed chunks) once per mount
   useEffect(() => {
     fetch('/api/workspace-chat/index')
       .then((r) => r.json())
       .then((d) => setIndexStatus(d))
       .catch(() => {});
   }, []);
+
+  // Load thread messages when threadId changes
+  useEffect(() => {
+    if (!threadId) {
+      setMessages([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingThread(true);
+    fetch(`/api/workspace-chat/threads/${threadId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        const loaded: Message[] = (d.messages ?? []).map((m: any) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          citations: m.citations ?? undefined,
+        }));
+        setMessages(loaded);
+      })
+      .finally(() => !cancelled && setLoadingThread(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [threadId]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -66,7 +102,6 @@ export function ChatClient() {
             (reasons.length ? ` — first error: ${reasons[0]}` : '') +
             '. Chat is ready.',
         );
-        // Refresh status so the banner disappears.
         fetch('/api/workspace-chat/index')
           .then((r) => r.json())
           .then((d) => setIndexStatus(d))
@@ -104,7 +139,7 @@ export function ChatClient() {
       const res = await fetch('/api/workspace-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: question.trim(), history }),
+        body: JSON.stringify({ question: question.trim(), history, threadId }),
       });
 
       if (!res.ok) {
@@ -119,16 +154,28 @@ export function ChatClient() {
         return;
       }
 
-      const { answer, citations } = (await res.json()) as {
+      const data = (await res.json()) as {
         answer: string;
         citations: Citation[];
+        threadId: string | null;
       };
 
       setMessages((m) =>
         m.map((msg) =>
-          msg.id === placeholderMsg.id ? { ...msg, content: answer, citations } : msg,
+          msg.id === placeholderMsg.id
+            ? { ...msg, content: data.answer, citations: data.citations }
+            : msg,
         ),
       );
+
+      // If this was a brand-new chat (no threadId before), the server
+      // created one; reflect that in the URL so the sidebar lights up
+      // and the user can come back to it.
+      if (!threadId && data.threadId) {
+        onThreadCreated(data.threadId);
+      } else {
+        onActivity();
+      }
     } catch (err) {
       setMessages((m) =>
         m.map((msg) =>
@@ -148,7 +195,7 @@ export function ChatClient() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-220px)] min-h-[500px] bg-[#111916] border border-emerald-900/30 rounded-2xl overflow-hidden">
+    <div className="flex flex-col bg-[#111916] border border-emerald-900/30 rounded-2xl overflow-hidden">
       {needsBackfill && (
         <div className="px-5 py-3 border-b border-emerald-900/20 bg-emerald-500/[0.04] flex items-center gap-3 flex-wrap">
           <div className="flex-1 min-w-[200px]">
@@ -157,8 +204,7 @@ export function ChatClient() {
             </p>
             <p className="text-[11px] text-gray-500 mt-0.5">
               {indexStatus.completed_meetings} meeting
-              {indexStatus.completed_meetings === 1 ? '' : 's'} ready to embed. New meetings index
-              automatically after they finish.
+              {indexStatus.completed_meetings === 1 ? '' : 's'} ready to embed. New meetings index automatically.
             </p>
           </div>
           <button
@@ -175,8 +221,14 @@ export function ChatClient() {
           {indexResult}
         </div>
       )}
+
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-6">
-        {messages.length === 0 ? (
+        {loadingThread ? (
+          <div className="space-y-4">
+            <div className="skeleton-shimmer h-12 rounded-2xl ml-auto w-2/3" />
+            <div className="skeleton-shimmer h-20 rounded-2xl w-3/4" />
+          </div>
+        ) : messages.length === 0 ? (
           <div className="text-center pt-10 pb-6">
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center mx-auto mb-3">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -202,7 +254,16 @@ export function ChatClient() {
         ) : (
           <div className="space-y-5">
             {messages.map((m) => (
-              <ChatMessage key={m.id} message={m} loading={loading && m === messages[messages.length - 1] && m.role === 'assistant' && !m.content} />
+              <ChatMessage
+                key={m.id}
+                message={m}
+                loading={
+                  loading &&
+                  m === messages[messages.length - 1] &&
+                  m.role === 'assistant' &&
+                  !m.content
+                }
+              />
             ))}
           </div>
         )}
@@ -214,12 +275,12 @@ export function ChatClient() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about any meeting in this workspace…"
-          disabled={loading}
+          disabled={loading || loadingThread}
           className="flex-1 px-3.5 py-2.5 bg-white/5 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition disabled:opacity-60"
         />
         <button
           type="submit"
-          disabled={loading || !input.trim()}
+          disabled={loading || loadingThread || !input.trim()}
           className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition"
         >
           {loading ? 'Thinking…' : 'Ask'}
@@ -285,9 +346,6 @@ function ChatMessage({ message, loading }: { message: Message; loading: boolean 
   );
 }
 
-/**
- * Replace [#N] tokens in the model's text with small clickable badges.
- */
 function renderWithCitations(text: string, citations: Citation[]): React.ReactNode {
   const parts: React.ReactNode[] = [];
   const regex = /\[#?(\d+)\]/g;
