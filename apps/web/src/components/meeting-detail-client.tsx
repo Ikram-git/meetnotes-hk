@@ -66,6 +66,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
 
   // Edit modes
   const [editingTranscript, setEditingTranscript] = useState(false);
+  const [activeTab, setActiveTab] = useState<'notes' | 'transcript' | 'comments'>('notes');
   const [editingSummary, setEditingSummary] = useState(false);
 
   // Speaker naming modal
@@ -454,9 +455,80 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
         <AudioPlayer audioUrl={audioUrl} currentTimeMs={seekTimeMs} onTimeUpdate={handleTimeUpdate} />
       </div>
 
-      {/* Content grid */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
+      {/* Content grid: tabbed content on the left, sticky AI chat on the right */}
+      <div className="grid lg:grid-cols-[minmax(0,1fr),360px] gap-6 items-start">
+        <div className="min-w-0">
+          {/* Tabs */}
+          <div className="flex gap-1 mb-4 border-b border-emerald-900/20">
+            {[
+              { key: 'notes', label: 'Notes' },
+              { key: 'transcript', label: `Transcript${segments.length > 0 ? ` · ${segments.length}` : ''}` },
+              { key: 'comments', label: 'Comments' },
+            ].map((t) => {
+              const isActive = activeTab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key as 'notes' | 'transcript' | 'comments')}
+                  className={`px-4 py-2 -mb-px text-sm font-medium transition-colors border-b-2 ${
+                    isActive
+                      ? 'text-emerald-400 border-emerald-400'
+                      : 'text-gray-500 border-transparent hover:text-white'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {activeTab === 'comments' && (
+            <MeetingComments meetingId={meeting.id} />
+          )}
+
+          {activeTab === 'transcript' && (
+            <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-4 sm:p-6">
+              {editingTranscript ? (
+                <TranscriptEditor
+                  meetingId={meeting.id}
+                  segments={segments}
+                  speakerMap={speakerMap}
+                  onSave={(updated) => { setSegments(updated); setEditingTranscript(false); }}
+                  onCancel={() => setEditingTranscript(false)}
+                />
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-white">Transcript</h2>
+                    {segments.length > 0 && (
+                      <button onClick={() => setEditingTranscript(true)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 hover:text-emerald-400 transition">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit
+                      </button>
+                    )}
+                  </div>
+                  {segments.length > 0 ? (
+                    <TranscriptViewer
+                      segments={segments}
+                      speakerMap={speakerMap}
+                      currentTimeMs={currentTimeMs}
+                      onSegmentClick={handleSegmentClick}
+                      onSpeakerRename={(label) => openSpeakerModal(label)}
+                    />
+                  ) : isProcessingStatus ? (
+                    <SkeletonTranscript />
+                  ) : (
+                    <p className="text-gray-500 text-sm">No transcript available yet.</p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          <div className={activeTab === 'notes' ? 'space-y-6' : 'hidden'}>
           {/* Notes */}
           <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-4 sm:p-6">
             {editingSummary && summary ? (
@@ -635,91 +707,16 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
             </div>
           ) : null}
 
-          {/* Live Q&A — only shows on meetings that had an in-meeting AI chat */}
-          {chats.length > 0 && (
-            <div className="bg-[#111916] rounded-xl border border-purple-900/30 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="w-2 h-2 rounded-full bg-purple-500" />
-                <h2 className="text-lg font-semibold text-white">Questions asked during the meeting</h2>
-              </div>
-              <div className="space-y-4">
-                {chats.map((c, i) => (
-                  <div
-                    key={i}
-                    className={
-                      c.role === 'user'
-                        ? 'bg-purple-500/10 border border-purple-500/20 rounded-lg p-3 text-sm text-white'
-                        : 'text-sm text-gray-200 leading-relaxed pl-3 border-l-2 border-purple-500/40'
-                    }
-                  >
-                    {c.role === 'assistant' && (
-                      <div className="text-[10px] font-semibold text-purple-400 mb-1 uppercase tracking-wide">
-                        Briva AI
-                      </div>
-                    )}
-                    <div className="whitespace-pre-wrap">{c.content}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Key Decisions card removed — to be replaced by AI Recommendations in a future iteration */}
+          </div>
         </div>
 
-        {/* Right column: per-meeting AI chat */}
-        <MeetingChatPanel meetingId={meeting.id} />
-      </div>
-
-      {/* Transcript — full-width section below the two-column grid */}
-      <div className="mt-6 bg-[#111916] rounded-xl border border-emerald-900/30 p-4 sm:p-6">
-        {editingTranscript ? (
-          <TranscriptEditor
-            meetingId={meeting.id}
-            segments={segments}
-            speakerMap={speakerMap}
-            onSave={(updated) => { setSegments(updated); setEditingTranscript(false); }}
-            onCancel={() => setEditingTranscript(false)}
-          />
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Transcript</h2>
-              <div className="flex items-center gap-2">
-                {segments.length > 0 && (
-                  <>
-                    <span className="text-xs text-gray-600">{segments.length} segments</span>
-                    <button onClick={() => setEditingTranscript(true)}
-                      className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-500 hover:text-emerald-400 transition">
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Edit
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-            {segments.length > 0 ? (
-              <TranscriptViewer
-                segments={segments}
-                speakerMap={speakerMap}
-                currentTimeMs={currentTimeMs}
-                onSegmentClick={handleSegmentClick}
-                onSpeakerRename={(label) => openSpeakerModal(label)}
-              />
-            ) : isProcessingStatus ? (
-              <SkeletonTranscript />
-            ) : (
-              <p className="text-gray-500 text-sm">No transcript available yet.</p>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Comments — workspace members can leave notes on this meeting */}
-      <div className="mt-6">
-        <MeetingComments meetingId={meeting.id} />
+        {/* Right column: sticky per-meeting AI chat that follows the page
+            scroll. Fills the viewport so the input rail sits at the bottom
+            instead of floating up against an empty card. */}
+        <div className="lg:sticky lg:top-20 lg:self-start lg:h-[calc(100vh-160px)] min-h-[480px]">
+          <MeetingChatPanel meetingId={meeting.id} />
+        </div>
       </div>
     </div>
   );
