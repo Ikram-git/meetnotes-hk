@@ -1,0 +1,206 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  pending?: boolean;
+  error?: string;
+}
+
+const SUGGESTIONS = [
+  'What were the key decisions?',
+  'List every action item',
+  'Who said what about [topic]?',
+  'Was there any disagreement?',
+];
+
+export function MeetingChatPanel({ meetingId }: { meetingId: string }) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/meetings/${meetingId}/chat`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        const msgs: Message[] = (d.messages ?? []).map((m: any) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+        }));
+        setMessages(msgs);
+      })
+      .finally(() => !cancelled && setHistoryLoaded(true));
+    return () => {
+      cancelled = true;
+    };
+  }, [meetingId]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages, loading]);
+
+  const send = async (question: string) => {
+    if (!question.trim() || loading) return;
+    const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: question.trim() };
+    const placeholder: Message = {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: '',
+      pending: true,
+    };
+    setMessages((m) => [...m, userMsg, placeholder]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      const history = messages.slice(-10).map((m) => ({ role: m.role, content: m.content }));
+      const res = await fetch(`/api/meetings/${meetingId}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: question.trim(), history }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: 'Request failed' }));
+        setMessages((m) =>
+          m.map((msg) =>
+            msg.id === placeholder.id
+              ? { ...msg, content: '', error: error || 'Something went wrong', pending: false }
+              : msg,
+          ),
+        );
+        return;
+      }
+      const { answer } = (await res.json()) as { answer: string };
+      setMessages((m) =>
+        m.map((msg) =>
+          msg.id === placeholder.id ? { ...msg, content: answer, pending: false } : msg,
+        ),
+      );
+    } catch (err) {
+      setMessages((m) =>
+        m.map((msg) =>
+          msg.id === placeholder.id
+            ? {
+                ...msg,
+                content: '',
+                error: err instanceof Error ? err.message : 'Failed',
+                pending: false,
+              }
+            : msg,
+        ),
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    send(input);
+  };
+
+  return (
+    <div className="bg-[#111916] rounded-xl border border-emerald-900/30 flex flex-col overflow-hidden h-full min-h-[480px]">
+      <div className="px-5 py-3 border-b border-emerald-900/20">
+        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          Ask about this meeting
+        </h3>
+        <p className="text-[11px] text-gray-500 mt-0.5">Past questions are visible to your whole workspace.</p>
+      </div>
+
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 min-h-0">
+        {!historyLoaded ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full" />
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="text-center pt-6">
+            <p className="text-xs text-gray-500 max-w-[260px] mx-auto">
+              Ask anything about this meeting. Briva uses the full transcript and summary to answer.
+            </p>
+            <div className="mt-5 flex flex-col gap-1.5">
+              {SUGGESTIONS.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => send(s)}
+                  className="text-xs text-left text-gray-300 bg-white/5 hover:bg-white/10 border border-emerald-900/30 px-3 py-1.5 rounded-md transition"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {messages.map((m) => (
+              <ChatBubble key={m.id} message={m} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <form onSubmit={handleSubmit} className="border-t border-emerald-900/20 p-2.5 flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask about this meeting…"
+          disabled={loading}
+          className="flex-1 px-3 py-2 bg-white/5 border border-gray-800 rounded-lg text-xs text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition disabled:opacity-60"
+        />
+        <button
+          type="submit"
+          disabled={loading || !input.trim()}
+          className="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition"
+        >
+          {loading ? '…' : 'Ask'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function ChatBubble({ message }: { message: Message }) {
+  if (message.role === 'user') {
+    return (
+      <div className="flex justify-end">
+        <div className="max-w-[85%] bg-emerald-500/15 border border-emerald-500/30 text-white rounded-xl rounded-tr-sm px-3 py-2 text-xs">
+          {message.content}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="flex gap-2">
+      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold mt-0.5">
+        B
+      </div>
+      <div className="flex-1 min-w-0">
+        {message.pending ? (
+          <div className="flex gap-1 py-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse [animation-delay:0.15s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse [animation-delay:0.3s]" />
+          </div>
+        ) : message.error ? (
+          <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5">
+            {message.error}
+          </div>
+        ) : (
+          <div className="text-xs text-gray-200 leading-relaxed whitespace-pre-wrap">{message.content}</div>
+        )}
+      </div>
+    </div>
+  );
+}
