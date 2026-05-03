@@ -23,13 +23,38 @@ interface MatchedChunk {
   similarity: number;
 }
 
-const CHAT_SYSTEM_PROMPT = `You are Briva AI, a concise meeting researcher. The user asks questions about meetings their team has held; you answer using ONLY the transcript excerpts provided as <CONTEXT/>.
+interface MeetingDigest {
+  id: string;
+  title: string | null;
+  created_at: string;
+  overview: string | null;
+  summary_text: string | null;
+  key_points: Array<{ text?: string }> | null;
+  action_items: Array<{ text?: string; assignee?: string | null }> | null;
+  topics: Array<{ name?: string }> | null;
+}
+
+const CHAT_SYSTEM_PROMPT = `You are Briva AI, a concise meeting researcher. The user asks questions about meetings their team has held; you answer using ONLY the material provided in <CONTEXT/>.
+
+<CONTEXT/> contains two kinds of items:
+- <MEETING/> blocks: a high-level summary of one meeting (overview, key points, action items, topics).
+- <CHUNK/> blocks: verbatim transcript excerpts from one of those meetings.
 
 Rules:
-- If the answer is in the context, cite it with [#N] markers — N is the index of the source you used (1-based, matching the order in <CONTEXT/>). You may cite multiple sources in one sentence: "they agreed on Friday [#2][#3]".
-- If the context doesn't contain enough information, say so plainly. Do not invent facts.
-- Reply in the same language the user asked in. Mixed-language answers are fine if the user mixes languages.
+- Cite sources with [#N] markers — N is the index of the source you used (1-based, matching the order in <CONTEXT/>). You may cite multiple in one sentence: "they agreed on Friday [#2][#3]".
+- For "summarise the latest meeting" type questions, draw mostly from the relevant <MEETING/> block, not the chunks.
+- For specific factual questions ("what did Anna say about X"), prefer <CHUNK/> blocks for verbatim quotes.
+- If the context doesn't contain enough information to answer, say so plainly. Do not invent facts.
+- Reply in the same language the user asked in.
 - Keep replies tight: a paragraph or short bullets. No preamble like "Based on the transcripts...".`;
+
+const SUMMARY_INTENT_RE =
+  /\b(summari[sz]e|summary of|tell me about|recap|what (?:happened|did we discuss) in)\b.*\b(latest|recent|most recent|last|today'?s|yesterday'?s|this(?: week|'s))?\s*meeting/i;
+const PURE_LATEST_RE = /\b(latest|most recent|last)\s+meeting\b/i;
+
+function isLatestMeetingQuery(q: string): boolean {
+  return SUMMARY_INTENT_RE.test(q) || PURE_LATEST_RE.test(q);
+}
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -47,46 +72,100 @@ export async function POST(req: NextRequest) {
 
   const history = (body.history ?? []).slice(-10);
 
-  let queryEmbedding: number[];
-  try {
-    queryEmbedding = await embedQuery(question);
-  } catch (err) {
-    if (err instanceof MissingEmbeddingKeyError) {
-      return NextResponse.json(
-        {
-          error:
-            'Cross-meeting chat needs an embeddings provider. Set VOYAGE_API_KEY (preferred — free tier) or OPENAI_API_KEY in Vercel.',
-        },
-        { status: 503 },
-      );
-    }
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Embedding failed' },
-      { status: 500 },
-    );
-  }
-
-  // Use admin client for the RPC — match_workspace_chunks is SECURITY DEFINER
-  // but PostgREST still runs it inside the caller's RLS context for some
-  // joined tables. Admin keeps it predictable; we already verified workspace
-  // membership above via getActiveWorkspaceId.
   const admin = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
-  const { data: matches, error: searchErr } = await admin.rpc('match_workspace_chunks', {
-    query_embedding: JSON.stringify(queryEmbedding),
-    workspace_id_in: workspaceId,
-    match_count: 8,
-    similarity_threshold: 0.4,
-  });
-  if (searchErr) {
-    return NextResponse.json({ error: searchErr.message }, { status: 500 });
+
+  // 1. Vector search for relevant chunks (skipped if obviously a "latest
+  //    meeting" intent — RAG underperforms on meta-questions like
+  //    "summarise the latest meeting" because the query has no semantic
+  //    content matching transcript text).
+  let chunks: MatchedChunk[] = [];
+  const useRag = !isLatestMeetingQuery(question);
+
+  if (useRag) {
+    let queryEmbedding: number[];
+    try {
+      queryEmbedding = await embedQuery(question);
+    } catch (err) {
+      if (err instanceof MissingEmbeddingKeyError) {
+        return NextResponse.json(
+          {
+            error:
+              'Cross-meeting chat needs an embeddings provider. Set VOYAGE_API_KEY (preferred — free tier) or OPENAI_API_KEY in Vercel.',
+          },
+          { status: 503 },
+        );
+      }
+      return NextResponse.json(
+        { error: err instanceof Error ? err.message : 'Embedding failed' },
+        { status: 500 },
+      );
+    }
+
+    const { data: matches, error: searchErr } = await admin.rpc('match_workspace_chunks', {
+      query_embedding: JSON.stringify(queryEmbedding),
+      workspace_id_in: workspaceId,
+      match_count: 8,
+      similarity_threshold: 0.35,
+    });
+    if (searchErr) {
+      return NextResponse.json({ error: searchErr.message }, { status: 500 });
+    }
+    chunks = (matches ?? []) as MatchedChunk[];
   }
 
-  const chunks = (matches ?? []) as MatchedChunk[];
+  // 2. Pull the most recent 3 meetings as a "always-on" context (used as
+  //    the primary source for "summarise the latest meeting" questions,
+  //    and as a complement to chunks for everything else).
+  const { data: recentMeetings } = await admin
+    .from('meetings')
+    .select('id, title, created_at')
+    .eq('workspace_id', workspaceId)
+    .eq('status', 'completed')
+    .order('created_at', { ascending: false })
+    .limit(3);
 
-  if (chunks.length === 0) {
+  // 3. Collect the meeting_ids we want full summaries for: every chunk's
+  //    parent meeting + the recent 3 (deduped).
+  const summaryMeetingIds = Array.from(
+    new Set([
+      ...chunks.map((c) => c.meeting_id),
+      ...(recentMeetings ?? []).map((m) => m.id),
+    ]),
+  );
+
+  let digests: MeetingDigest[] = [];
+  if (summaryMeetingIds.length > 0) {
+    const { data: meetings } = await admin
+      .from('meetings')
+      .select('id, title, created_at')
+      .in('id', summaryMeetingIds);
+    const { data: summaries } = await admin
+      .from('summaries')
+      .select('meeting_id, overview, summary_text, key_points, action_items, topics')
+      .in('meeting_id', summaryMeetingIds);
+
+    const summaryByMeeting = new Map((summaries ?? []).map((s: any) => [s.meeting_id, s]));
+    digests = (meetings ?? []).map((m) => {
+      const s = summaryByMeeting.get(m.id) || {};
+      return {
+        id: m.id,
+        title: m.title,
+        created_at: m.created_at,
+        overview: s.overview ?? null,
+        summary_text: s.summary_text ?? null,
+        key_points: s.key_points ?? null,
+        action_items: s.action_items ?? null,
+        topics: s.topics ?? null,
+      };
+    });
+    // Sort digests by recency so [#1] tends to be the most recent meeting
+    digests.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+  }
+
+  if (digests.length === 0 && chunks.length === 0) {
     return NextResponse.json({
       answer:
         "I couldn't find anything in this workspace's meetings that answers that. Try a different question, or upload more meetings first.",
@@ -94,15 +173,65 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const contextBlock = chunks
-    .map((c, i) => {
-      const when = new Date(c.meeting_created_at).toLocaleDateString();
-      const title = c.meeting_title || 'Untitled meeting';
-      return `[${i + 1}] (${title}, ${when})\n${c.text}`;
-    })
-    .join('\n\n---\n\n');
+  // 4. Build the unified context. Citations are numbered across both
+  //    digests and chunks so the model can reference either.
+  const contextParts: string[] = [];
+  const citations: Array<{
+    index: number;
+    meeting_id: string;
+    meeting_title: string;
+    meeting_created_at: string;
+    start_ms: number | null;
+    snippet: string;
+  }> = [];
 
-  const userPrompt = `<CONTEXT>\n${contextBlock}\n</CONTEXT>\n\nQuestion: ${question}`;
+  let n = 0;
+  for (const d of digests) {
+    n++;
+    const when = new Date(d.created_at).toLocaleDateString();
+    const title = d.title || 'Untitled meeting';
+    const lines: string[] = [`[${n}] <MEETING title="${title}" date="${when}">`];
+    if (d.overview) lines.push(`Overview: ${d.overview}`);
+    if (d.summary_text) lines.push(`Summary:\n${d.summary_text}`);
+    const kps = (d.key_points ?? []).map((k) => k?.text).filter(Boolean) as string[];
+    if (kps.length) lines.push(`Key points:\n- ${kps.join('\n- ')}`);
+    const ais = (d.action_items ?? [])
+      .map((a) => (a?.text ? `${a.text}${a.assignee ? ` (${a.assignee})` : ''}` : null))
+      .filter(Boolean) as string[];
+    if (ais.length) lines.push(`Action items:\n- ${ais.join('\n- ')}`);
+    const ts = (d.topics ?? []).map((t) => t?.name).filter(Boolean) as string[];
+    if (ts.length) lines.push(`Topics: ${ts.join(', ')}`);
+    lines.push('</MEETING>');
+    contextParts.push(lines.join('\n'));
+
+    citations.push({
+      index: n,
+      meeting_id: d.id,
+      meeting_title: title,
+      meeting_created_at: d.created_at,
+      start_ms: null,
+      snippet: d.overview || d.summary_text?.slice(0, 200) || '',
+    });
+  }
+
+  for (const c of chunks) {
+    n++;
+    const when = new Date(c.meeting_created_at).toLocaleDateString();
+    const title = c.meeting_title || 'Untitled meeting';
+    contextParts.push(
+      `[${n}] <CHUNK title="${title}" date="${when}" speaker="${c.speaker_label ?? ''}">\n${c.text}\n</CHUNK>`,
+    );
+    citations.push({
+      index: n,
+      meeting_id: c.meeting_id,
+      meeting_title: title,
+      meeting_created_at: c.meeting_created_at,
+      start_ms: c.start_ms,
+      snippet: c.text.length > 200 ? c.text.slice(0, 200) + '…' : c.text,
+    });
+  }
+
+  const userPrompt = `<CONTEXT>\n${contextParts.join('\n\n---\n\n')}\n</CONTEXT>\n\nQuestion: ${question}`;
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   let answer = '';
@@ -126,15 +255,6 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-
-  const citations = chunks.map((c, i) => ({
-    index: i + 1,
-    meeting_id: c.meeting_id,
-    meeting_title: c.meeting_title || 'Untitled meeting',
-    meeting_created_at: c.meeting_created_at,
-    start_ms: c.start_ms,
-    snippet: c.text.length > 200 ? c.text.slice(0, 200) + '…' : c.text,
-  }));
 
   return NextResponse.json({ answer, citations });
 }
