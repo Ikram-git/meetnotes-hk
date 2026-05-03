@@ -34,11 +34,11 @@ export default async function TeamSettingsPage() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const [workspaceRes, membersRes, invitesRes, currentRole] = await Promise.all([
+  const [workspaceRes, memberRowsRes, invitesRes, currentRole] = await Promise.all([
     admin.from('workspaces').select('*').eq('id', workspaceId).maybeSingle(),
     admin
       .from('workspace_members')
-      .select('role, joined_at, user:profiles(id, email, full_name, avatar_url)')
+      .select('user_id, role, joined_at')
       .eq('workspace_id', workspaceId)
       .order('joined_at', { ascending: true }),
     admin
@@ -50,6 +50,31 @@ export default async function TeamSettingsPage() {
       .order('created_at', { ascending: false }),
     getUserRole(admin, user.id, workspaceId),
   ]);
+
+  // Hydrate user profiles for each membership in a separate query — the
+  // PostgREST join syntax (user:profiles(...)) was returning empty even
+  // when the underlying rows existed.
+  const memberRows = memberRowsRes.data ?? [];
+  const userIds = memberRows.map((r) => r.user_id);
+  const { data: profileRows } = userIds.length
+    ? await admin
+        .from('profiles')
+        .select('id, email, full_name, avatar_url')
+        .in('id', userIds)
+    : { data: [] };
+  const profileMap = new Map(
+    (profileRows ?? []).map((p: { id: string; email: string; full_name: string | null; avatar_url: string | null }) => [p.id, p]),
+  );
+  const members = memberRows.map((r) => ({
+    role: r.role as 'owner' | 'admin' | 'member',
+    joined_at: r.joined_at,
+    user: profileMap.get(r.user_id) ?? {
+      id: r.user_id,
+      email: '(unknown)',
+      full_name: null,
+      avatar_url: null,
+    },
+  }));
 
   return (
     <div>
@@ -70,7 +95,7 @@ export default async function TeamSettingsPage() {
 
       <TeamSettingsClient
         workspace={workspaceRes.data}
-        members={(membersRes.data ?? []) as any}
+        members={members}
         invites={invitesRes.data ?? []}
         currentUserId={user.id}
         currentUserRole={currentRole}
