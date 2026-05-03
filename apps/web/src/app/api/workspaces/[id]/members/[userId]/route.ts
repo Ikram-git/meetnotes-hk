@@ -4,6 +4,13 @@ import { getUserRole, isAdminOrOwner, type WorkspaceRole } from '@/lib/workspace
 import { syncWorkspaceSeats } from '@/lib/billing/seats';
 import { NextRequest, NextResponse } from 'next/server';
 
+function admin() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; userId: string }> },
@@ -13,7 +20,8 @@ export async function PATCH(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const callerRole = await getUserRole(supabase, user.id, id);
+  const a = admin();
+  const callerRole = await getUserRole(a, user.id, id);
   if (callerRole !== 'owner') {
     return NextResponse.json({ error: 'Owner access required' }, { status: 403 });
   }
@@ -27,7 +35,7 @@ export async function PATCH(
     if (targetUserId === user.id) {
       return NextResponse.json({ error: 'You are already owner' }, { status: 400 });
     }
-    const { error: demoteError } = await supabase
+    const { error: demoteError } = await a
       .from('workspace_members')
       .update({ role: 'admin' })
       .eq('workspace_id', id)
@@ -35,7 +43,7 @@ export async function PATCH(
     if (demoteError) {
       return NextResponse.json({ error: demoteError.message }, { status: 500 });
     }
-    const { error: ownerUpdateError } = await supabase
+    const { error: ownerUpdateError } = await a
       .from('workspaces')
       .update({ owner_id: targetUserId })
       .eq('id', id);
@@ -44,7 +52,7 @@ export async function PATCH(
     }
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await a
     .from('workspace_members')
     .update({ role })
     .eq('workspace_id', id)
@@ -65,7 +73,8 @@ export async function DELETE(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const callerRole = await getUserRole(supabase, user.id, id);
+  const a = admin();
+  const callerRole = await getUserRole(a, user.id, id);
   if (!callerRole) return NextResponse.json({ error: 'Not a member' }, { status: 403 });
 
   const isSelfRemove = targetUserId === user.id;
@@ -73,7 +82,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   }
 
-  const { data: target } = await supabase
+  const { data: target } = await a
     .from('workspace_members')
     .select('role')
     .eq('workspace_id', id)
@@ -88,18 +97,14 @@ export async function DELETE(
     );
   }
 
-  const { error } = await supabase
+  const { error } = await a
     .from('workspace_members')
     .delete()
     .eq('workspace_id', id)
     .eq('user_id', targetUserId);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const admin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-  await syncWorkspaceSeats(admin, id);
+  await syncWorkspaceSeats(a, id);
 
   return NextResponse.json({ success: true });
 }

@@ -1,6 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { getUserRole, isAdminOrOwner } from '@/lib/workspace';
 import { NextRequest, NextResponse } from 'next/server';
+
+function admin() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+}
 
 export async function GET(
   _req: NextRequest,
@@ -11,14 +19,18 @@ export async function GET(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: workspace } = await supabase
+  const a = admin();
+  const role = await getUserRole(a, user.id, id);
+  if (!role) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  const { data: workspace } = await a
     .from('workspaces')
     .select('*')
     .eq('id', id)
     .maybeSingle();
   if (!workspace) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const { data: members } = await supabase
+  const { data: members } = await a
     .from('workspace_members')
     .select('role, joined_at, user:profiles(id, email, full_name, avatar_url)')
     .eq('workspace_id', id);
@@ -35,7 +47,8 @@ export async function PATCH(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const role = await getUserRole(supabase, user.id, id);
+  const a = admin();
+  const role = await getUserRole(a, user.id, id);
   if (!isAdminOrOwner(role)) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   }
@@ -45,7 +58,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'Name is required' }, { status: 400 });
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await a
     .from('workspaces')
     .update({ name: name.trim() })
     .eq('id', id)
@@ -65,12 +78,13 @@ export async function DELETE(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const role = await getUserRole(supabase, user.id, id);
+  const a = admin();
+  const role = await getUserRole(a, user.id, id);
   if (role !== 'owner') {
     return NextResponse.json({ error: 'Owner access required' }, { status: 403 });
   }
 
-  const { count } = await supabase
+  const { count } = await a
     .from('workspace_members')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id);
@@ -81,7 +95,7 @@ export async function DELETE(
     );
   }
 
-  const { error } = await supabase.from('workspaces').delete().eq('id', id);
+  const { error } = await a.from('workspaces').delete().eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }
