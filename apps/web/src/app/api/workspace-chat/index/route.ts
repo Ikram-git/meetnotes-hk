@@ -22,9 +22,12 @@ export async function POST(_req: NextRequest) {
     return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
   }
 
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.VOYAGE_API_KEY && !process.env.OPENAI_API_KEY) {
     return NextResponse.json(
-      { error: 'OPENAI_API_KEY is not configured on the server.' },
+      {
+        error:
+          'No embedding provider configured. Set VOYAGE_API_KEY (preferred — free tier, no card) or OPENAI_API_KEY in Vercel.',
+      },
       { status: 503 },
     );
   }
@@ -76,7 +79,7 @@ export async function POST(_req: NextRequest) {
     } catch (err) {
       if (err instanceof MissingEmbeddingKeyError) {
         return NextResponse.json(
-          { error: 'OPENAI_API_KEY is not configured.' },
+          { error: err.message },
           { status: 503 },
         );
       }

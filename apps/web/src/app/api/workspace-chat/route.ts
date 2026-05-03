@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { getActiveWorkspaceId } from '@/lib/workspace';
-import { embed, MissingEmbeddingKeyError } from '@/lib/ai/embed';
+import { embedQuery, MissingEmbeddingKeyError } from '@/lib/ai/embed';
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -49,11 +49,14 @@ export async function POST(req: NextRequest) {
 
   let queryEmbedding: number[];
   try {
-    [queryEmbedding] = await embed([question]);
+    queryEmbedding = await embedQuery(question);
   } catch (err) {
     if (err instanceof MissingEmbeddingKeyError) {
       return NextResponse.json(
-        { error: 'Cross-meeting chat is not yet configured on this server (OPENAI_API_KEY missing).' },
+        {
+          error:
+            'Cross-meeting chat needs an embeddings provider. Set VOYAGE_API_KEY (preferred — free tier) or OPENAI_API_KEY in Vercel.',
+        },
         { status: 503 },
       );
     }
