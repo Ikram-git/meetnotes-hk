@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { formatDate, formatDuration, formatTime } from '@/lib/utils';
+import { SummaryBullets } from '@/components/summary-bullets';
 
 const SPEAKER_COLORS = ['text-emerald-400', 'text-cyan-400', 'text-purple-400', 'text-amber-400', 'text-pink-400'];
 
@@ -32,6 +33,7 @@ export function SharedContent({ token, requiresPassword, meetingTitle, meeting: 
   const [segments, setSegments] = useState(initialSegments || []);
   const [summary, setSummary] = useState(initialSummary);
   const [speakerMap, setSpeakerMap] = useState(initialSpeakerMap || {});
+  const [activeTab, setActiveTab] = useState<'notes' | 'transcript'>('notes');
 
   const handleUnlock = async () => {
     setLoading(true);
@@ -137,7 +139,7 @@ export function SharedContent({ token, requiresPassword, meetingTitle, meeting: 
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         <div className="mb-6 animate-fade-in">
           <h1 className="text-xl sm:text-2xl font-bold text-white">{meeting.title || 'Untitled Meeting'}</h1>
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-500">
@@ -146,9 +148,33 @@ export function SharedContent({ token, requiresPassword, meetingTitle, meeting: 
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
+        {/* Tabs — match the authenticated meeting detail layout. AI Chat
+            and Comments tabs are auth-gated, so they're omitted here. */}
+        <div className="flex gap-1 mb-4 border-b border-emerald-900/20">
+          {[
+            { key: 'notes', label: 'Notes' },
+            { key: 'transcript', label: `Transcript${segments.length > 0 ? ` · ${segments.length}` : ''}` },
+          ].map((t) => {
+            const isActive = activeTab === t.key;
+            return (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key as 'notes' | 'transcript')}
+                className={`px-4 py-2 -mb-px text-sm font-medium transition-colors border-b-2 ${
+                  isActive
+                    ? 'text-emerald-400 border-emerald-400'
+                    : 'text-gray-500 border-transparent hover:text-white'
+                }`}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {activeTab === 'notes' && (
           <div className="space-y-6 stagger-children">
-            {summary && (
+            {summary ? (
               <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-4 sm:p-6">
                 <h2 className="flex items-center gap-2 text-lg font-semibold text-white mb-5">
                   <span className="text-xl leading-none">📓</span>
@@ -171,24 +197,14 @@ export function SharedContent({ token, requiresPassword, meetingTitle, meeting: 
                         </>
                       ) : (
                         <>
-                          <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">{summary.summary_text}</p>
-                          {summary.summary_text_zh && <p className="text-gray-500 text-sm leading-relaxed mt-2 whitespace-pre-wrap">{summary.summary_text_zh}</p>}
+                          <SummaryBullets text={summary.summary_text} />
+                          {summary.summary_text_zh && (
+                            <div className="mt-2">
+                              <SummaryBullets text={summary.summary_text_zh} muted />
+                            </div>
+                          )}
                         </>
                       )}
-                    </section>
-                  )}
-
-                  {/* Longer summary (only when new `overview` also present) */}
-                  {summary.overview && summary.summary_text && summary.summary_text !== summary.overview && (
-                    <section className="pt-5 border-t border-emerald-900/20">
-                      <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
-                        </svg>
-                        Summary
-                      </h3>
-                      <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{summary.summary_text}</p>
-                      {summary.summary_text_zh && <p className="text-gray-500 text-sm leading-relaxed mt-2 whitespace-pre-wrap">{summary.summary_text_zh}</p>}
                     </section>
                   )}
 
@@ -233,6 +249,10 @@ export function SharedContent({ token, requiresPassword, meetingTitle, meeting: 
                   )}
                 </div>
               </div>
+            ) : (
+              <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-6 text-sm text-gray-500">
+                No summary available for this meeting yet.
+              </div>
             )}
 
             {summary && Array.isArray(summary.action_items) && summary.action_items.length > 0 && (
@@ -258,17 +278,17 @@ export function SharedContent({ token, requiresPassword, meetingTitle, meeting: 
                 </ul>
               </div>
             )}
-
-            {/* Key Decisions card removed — to be replaced by AI Recommendations */}
           </div>
+        )}
 
-          {segments.length > 0 && (
-            <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-4 sm:p-6 animate-slide-in-right">
+        {activeTab === 'transcript' && (
+          segments.length > 0 ? (
+            <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-4 sm:p-6 animate-fade-in">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-white">Transcript</h2>
                 <span className="text-xs text-gray-600">{segments.length} segments</span>
               </div>
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              <div className="space-y-3">
                 {segments.map((seg: any) => (
                   <div key={seg.id} className="text-sm p-2.5 rounded-lg">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -282,8 +302,12 @@ export function SharedContent({ token, requiresPassword, meetingTitle, meeting: 
                 ))}
               </div>
             </div>
-          )}
-        </div>
+          ) : (
+            <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-6 text-sm text-gray-500">
+              No transcript available.
+            </div>
+          )
+        )}
 
         <div className="mt-12 text-center animate-fade-in">
           <p className="text-sm text-gray-500 mb-4">Want AI meeting notes for your meetings?</p>
