@@ -110,18 +110,18 @@ export function MeetingChatPanel({ meetingId }: { meetingId: string }) {
   return (
     <div className="flex flex-col h-full min-h-[480px]">
       {/* Header sits ABOVE the card so its baseline aligns with the
-          tab strip on the left column. */}
-      <div className="flex items-center gap-2 px-1 pb-2 mb-4 border-b border-emerald-900/20 h-[42px]">
-        <div className="w-6 h-6 rounded-md bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[11px] font-bold">
+          tab strip on the left column. Purple = the live-AI brand colour. */}
+      <div className="flex items-center gap-2 px-1 pb-2 mb-4 border-b border-purple-900/30 h-[42px]">
+        <div className="w-6 h-6 rounded-md bg-purple-500/20 text-purple-300 flex items-center justify-center text-[11px] font-bold">
           B
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-white leading-tight">Briva AI</div>
+          <div className="text-[11px] font-bold text-purple-400 uppercase tracking-wider leading-tight">BRIVA AI</div>
           <div className="text-[10px] text-gray-500 leading-tight">Ask about this meeting · shared with your workspace</div>
         </div>
       </div>
 
-      <div className="bg-[#111916] rounded-xl border border-emerald-900/30 flex flex-col overflow-hidden flex-1 min-h-0">
+      <div className="bg-[#111916] rounded-xl border border-purple-900/30 flex flex-col overflow-hidden flex-1 min-h-0">
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 min-h-0">
         {!historyLoaded ? (
           <div className="flex items-center justify-center h-full">
@@ -137,7 +137,7 @@ export function MeetingChatPanel({ meetingId }: { meetingId: string }) {
                 <button
                   key={s}
                   onClick={() => send(s)}
-                  className="text-xs text-left text-gray-300 bg-white/5 hover:bg-white/10 border border-emerald-900/30 px-3 py-1.5 rounded-md transition"
+                  className="text-xs text-left text-gray-300 bg-white/5 hover:bg-white/10 border border-purple-900/30 px-3 py-1.5 rounded-md transition"
                 >
                   {s}
                 </button>
@@ -153,19 +153,19 @@ export function MeetingChatPanel({ meetingId }: { meetingId: string }) {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t border-emerald-900/20 p-2.5 flex gap-2">
+      <form onSubmit={handleSubmit} className="border-t border-purple-900/20 p-2.5 flex gap-2">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about this meeting…"
           disabled={loading}
-          className="flex-1 px-3 py-2 bg-white/5 border border-gray-800 rounded-lg text-xs text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition disabled:opacity-60"
+          className="flex-1 px-3 py-2 bg-white/5 border border-gray-800 rounded-lg text-xs text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition"
+          className="px-3 py-2 bg-purple-500 hover:bg-purple-400 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition"
         >
           {loading ? '…' : 'Ask'}
         </button>
@@ -179,7 +179,7 @@ function ChatBubble({ message }: { message: Message }) {
   if (message.role === 'user') {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] bg-emerald-500/15 border border-emerald-500/30 text-white rounded-xl rounded-tr-sm px-3 py-2 text-xs">
+        <div className="max-w-[85%] bg-purple-500/15 border border-purple-500/30 text-white rounded-xl rounded-tr-sm px-3 py-2 text-xs">
           {message.content}
         </div>
       </div>
@@ -187,15 +187,15 @@ function ChatBubble({ message }: { message: Message }) {
   }
   return (
     <div className="flex gap-2">
-      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold mt-0.5">
+      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-[10px] font-bold mt-0.5">
         B
       </div>
       <div className="flex-1 min-w-0">
         {message.pending ? (
           <div className="flex gap-1 py-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse" />
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse [animation-delay:0.15s]" />
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse [animation-delay:0.3s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400/60 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400/60 animate-pulse [animation-delay:0.15s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400/60 animate-pulse [animation-delay:0.3s]" />
           </div>
         ) : message.error ? (
           <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1.5">

@@ -195,7 +195,7 @@ export function ChatClient({
   };
 
   return (
-    <div className="flex flex-col bg-[#111916] border border-emerald-900/30 rounded-2xl overflow-hidden">
+    <div className="flex flex-col bg-[#111916] border border-purple-900/30 rounded-2xl overflow-hidden">
       {needsBackfill && (
         <div className="px-5 py-3 border-b border-emerald-900/20 bg-emerald-500/[0.04] flex items-center gap-3 flex-wrap">
           <div className="flex-1 min-w-[200px]">
@@ -230,13 +230,13 @@ export function ChatClient({
           </div>
         ) : messages.length === 0 ? (
           <div className="text-center pt-10 pb-6">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center mx-auto mb-3">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/15 text-purple-300 flex items-center justify-center mx-auto mb-3">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <h2 className="text-base font-semibold text-white">Briva AI</h2>
-            <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
+            <h2 className="text-[11px] font-bold uppercase tracking-wider text-purple-400">BRIVA AI</h2>
+            <p className="text-xs text-gray-500 mt-1.5 max-w-xs mx-auto">
               Ask anything about your meetings. Briva searches every transcript in this workspace and answers with citations.
             </p>
             <div className="mt-6 flex flex-wrap gap-2 justify-center">
@@ -244,7 +244,7 @@ export function ChatClient({
                 <button
                   key={s}
                   onClick={() => send(s)}
-                  className="text-xs text-gray-300 bg-white/5 hover:bg-white/10 border border-emerald-900/30 px-3 py-1.5 rounded-full transition"
+                  className="text-xs text-gray-300 bg-white/5 hover:bg-white/10 border border-purple-900/30 px-3 py-1.5 rounded-full transition"
                 >
                   {s}
                 </button>
@@ -269,19 +269,19 @@ export function ChatClient({
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t border-emerald-900/20 p-3 flex gap-2">
+      <form onSubmit={handleSubmit} className="border-t border-purple-900/20 p-3 flex gap-2">
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask about any meeting in this workspace…"
           disabled={loading || loadingThread}
-          className="flex-1 px-3.5 py-2.5 bg-white/5 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/50 transition disabled:opacity-60"
+          className="flex-1 px-3.5 py-2.5 bg-white/5 border border-gray-800 rounded-lg text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={loading || loadingThread || !input.trim()}
-          className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition"
+          className="px-4 py-2.5 bg-purple-500 hover:bg-purple-400 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition"
         >
           {loading ? 'Thinking…' : 'Ask'}
         </button>
@@ -294,7 +294,7 @@ function ChatMessage({ message, loading }: { message: Message; loading: boolean 
   if (message.role === 'user') {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[80%] bg-emerald-500/15 border border-emerald-500/30 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm">
+        <div className="max-w-[80%] bg-purple-500/15 border border-purple-500/30 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm">
           {message.content}
         </div>
       </div>
@@ -303,15 +303,15 @@ function ChatMessage({ message, loading }: { message: Message; loading: boolean 
 
   return (
     <div className="flex gap-3">
-      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[11px] font-bold mt-0.5">
+      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center text-[11px] font-bold mt-0.5">
         B
       </div>
       <div className="flex-1 min-w-0">
         {loading ? (
           <div className="flex gap-1 py-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse" />
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse [animation-delay:0.15s]" />
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/60 animate-pulse [animation-delay:0.3s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400/60 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400/60 animate-pulse [animation-delay:0.15s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400/60 animate-pulse [animation-delay:0.3s]" />
           </div>
         ) : message.error ? (
           <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
@@ -330,7 +330,7 @@ function ChatMessage({ message, loading }: { message: Message; loading: boolean 
                     <Link
                       key={c.index}
                       href={`/meetings/${c.meeting_id}${c.start_ms ? `?t=${Math.floor(c.start_ms / 1000)}` : ''}`}
-                      className="text-[11px] text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-full transition"
+                      className="text-[11px] text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 px-2 py-0.5 rounded-full transition"
                       title={c.snippet}
                     >
                       [{c.index}] {c.meeting_title}
@@ -363,7 +363,7 @@ function renderWithCitations(text: string, citations: Citation[]): React.ReactNo
         <Link
           key={`c-${nodeIdx++}`}
           href={`/meetings/${cite.meeting_id}${cite.start_ms ? `?t=${Math.floor(cite.start_ms / 1000)}` : ''}`}
-          className="inline-flex items-center px-1.5 mx-0.5 text-[10px] font-bold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 rounded hover:bg-emerald-500/25 align-baseline"
+          className="inline-flex items-center px-1.5 mx-0.5 text-[10px] font-bold text-purple-300 bg-purple-500/15 border border-purple-500/30 rounded hover:bg-purple-500/25 align-baseline"
           title={cite.snippet}
         >
           {idx}
