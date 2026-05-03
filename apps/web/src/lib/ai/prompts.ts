@@ -58,7 +58,7 @@ Style: ${options.style}
 
 Your Notes object has these parts, in order of importance:
 1. overview     — a punchy 1-2 sentence TL;DR capturing what the meeting was about and the most important outcome. This is what someone reads first.
-2. summary      — a richer paragraph (3-6 sentences) expanding on the overview. This is the traditional summary field, kept for backwards compatibility and for users who want a longer read.
+2. summary      — a richer breakdown of what happened, formatted as a markdown bullet list. EXACTLY 4-7 bullets, each starting with "- " on its own line, each one a single concise sentence (~15-25 words). NEVER write this as a paragraph — always bullets. This expands on the overview without repeating it word-for-word.
 3. key_points   — 4-8 bullet points summarising the MAIN DISCUSSION topics and what was said about them. Each bullet should be a single sentence. These are the notes someone would jot in their notebook.
 4. action_items — specific, actionable follow-ups with assignees and (if mentioned) due dates.
 5. key_quotes   — 1-3 notable verbatim quotes (in the original spoken language is fine).
@@ -69,8 +69,8 @@ Respond in this exact JSON format:
 {
   "overview": "1-2 sentence TL;DR in the requested output language",
   "overview_zh": "繁體中文 TL;DR — ONLY include when language is 'both', omit entirely otherwise",
-  "summary": "Fuller paragraph summary in the requested output language",
-  "summary_zh": "繁體中文摘要 — ONLY include when language is 'both', omit entirely otherwise",
+  "summary": "- First bullet point\\n- Second bullet point\\n- Third bullet point\\n- ...4-7 bullets total, written in the requested output language. Each bullet on its own line, starting with '- '.",
+  "summary_zh": "- 第一點\\n- 第二點\\n- ...4-7 條重點 — ONLY include when language is 'both', omit entirely otherwise",
   "key_points": [
     {"text": "A single-sentence key point", "text_zh": "中文 (only if 'both')"}
   ],

@@ -17,6 +17,7 @@ import { confirmDialog } from './confirm-dialog';
 import { formatDate, formatDuration } from '@/lib/utils';
 import { isValidLanguageCode, getLanguageByCode } from '@/lib/i18n/languages';
 import { LanguageSelector } from './language-selector';
+import { SummaryBullets } from './summary-bullets';
 
 const PROCESSING_STATUSES = ['uploaded', 'transcribing', 'transcribed', 'summarising'] as const;
 type ProcessingStatus = typeof PROCESSING_STATUSES[number];
@@ -535,33 +536,21 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
                             )}
                           </>
                         ) : (
-                          // Legacy fallback: render summary_text as the TL;DR
+                          // Legacy fallback: render summary_text as the TL;DR (bulleted)
                           <>
-                            <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap">{primarySummary}</p>
+                            <SummaryBullets text={primarySummary} />
                             {chineseSummary && (
-                              <p className="text-gray-500 text-sm leading-relaxed mt-2 whitespace-pre-wrap">{chineseSummary}</p>
+                              <div className="mt-2">
+                                <SummaryBullets text={chineseSummary} muted />
+                              </div>
                             )}
                           </>
                         )}
                       </section>
                     )}
 
-                    {/* Longer summary paragraph — only show if we ALSO have the new overview,
-                        to avoid duplicating content for legacy rows */}
-                    {overview && primarySummary && primarySummary !== overview && (
-                      <section className="pt-5 border-t border-emerald-900/20">
-                        <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-2">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
-                          </svg>
-                          Summary
-                        </h3>
-                        <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{primarySummary}</p>
-                        {chineseSummary && (
-                          <p className="text-gray-500 text-sm leading-relaxed mt-2 whitespace-pre-wrap">{chineseSummary}</p>
-                        )}
-                      </section>
-                    )}
+                    {/* The longer "Summary" section was removed — Key Points
+                        covers the same ground as a list and reads better. */}
 
                     {/* Key Points — the new bullet list */}
                     {keyPoints.length > 0 && (
