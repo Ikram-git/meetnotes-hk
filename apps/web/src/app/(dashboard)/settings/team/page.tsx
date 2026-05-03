@@ -54,8 +54,18 @@ export default async function TeamSettingsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Team</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your workspace and members</p>
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <h1 className="text-2xl font-bold text-white">Team</h1>
+          {workspaceRes.data?.name && (
+            <span className="text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+              {workspaceRes.data.name}
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-gray-500 mt-1">
+          Manage members and invites for the workspace you&apos;re currently viewing.
+          Switch workspace in the top-left to manage a different one.
+        </p>
       </div>
 
       <TeamSettingsClient
