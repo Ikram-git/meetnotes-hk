@@ -57,11 +57,22 @@ export async function POST(_req: NextRequest) {
 
   let success = 0;
   let failed = 0;
+  const failureReasons: string[] = [];
   for (const id of todo) {
     try {
       const result = await indexMeetingForChat(admin, id);
-      if ('chunkCount' in result) success++;
-      else failed++;
+      if ('chunkCount' in result) {
+        if (result.chunkCount === 0) {
+          // No segments to embed — count as skipped, not a failure.
+          continue;
+        }
+        success++;
+      } else {
+        failed++;
+        if (failureReasons.length < 3) {
+          failureReasons.push(`${id.slice(0, 8)}: ${result.error}`);
+        }
+      }
     } catch (err) {
       if (err instanceof MissingEmbeddingKeyError) {
         return NextResponse.json(
@@ -70,6 +81,10 @@ export async function POST(_req: NextRequest) {
         );
       }
       failed++;
+      const msg = err instanceof Error ? err.message : String(err);
+      if (failureReasons.length < 3) {
+        failureReasons.push(`${id.slice(0, 8)}: ${msg}`);
+      }
     }
   }
 
@@ -78,6 +93,7 @@ export async function POST(_req: NextRequest) {
     already_indexed: indexed.size,
     indexed: success,
     failed,
+    failure_reasons: failureReasons,
   });
 }
 
