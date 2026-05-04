@@ -6,6 +6,7 @@ import {
   isAdminOrOwner,
   type WorkspaceRole,
 } from '@/lib/workspace';
+import { getGates } from '@/lib/billing/gates';
 import { NextRequest, NextResponse } from 'next/server';
 
 function admin() {
@@ -70,10 +71,41 @@ export async function POST(
 
   const { data: workspace } = await a
     .from('workspaces')
-    .select('name')
+    .select('name, owner_id')
     .eq('id', id)
     .maybeSingle();
   if (!workspace) return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+
+  // Plan-based seat cap (Free: 2, Pro: 5, Team/Enterprise: unlimited).
+  const { data: ownerProfile } = await a
+    .from('profiles')
+    .select('subscription_tier')
+    .eq('id', workspace.owner_id)
+    .maybeSingle();
+  const gates = getGates(ownerProfile?.subscription_tier);
+  if (gates.maxWorkspaceMembers !== null) {
+    const [{ count: memberCount }, { count: pendingInvites }] = await Promise.all([
+      a
+        .from('workspace_members')
+        .select('*', { count: 'exact', head: true })
+        .eq('workspace_id', id),
+      a
+        .from('workspace_invites')
+        .select('*', { count: 'exact', head: true })
+        .eq('workspace_id', id)
+        .is('accepted_at', null)
+        .is('revoked_at', null),
+    ]);
+    const seatsUsed = (memberCount ?? 0) + (pendingInvites ?? 0);
+    if (seatsUsed >= gates.maxWorkspaceMembers) {
+      return NextResponse.json(
+        {
+          error: `This workspace has reached its ${gates.maxWorkspaceMembers}-member limit. Upgrade the workspace owner's plan to invite more teammates.`,
+        },
+        { status: 402 },
+      );
+    }
+  }
 
   const token = generateInviteToken();
 

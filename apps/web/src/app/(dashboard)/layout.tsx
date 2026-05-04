@@ -178,6 +178,9 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       </Link>
 
       <div className="px-3 pb-3">
+        <div className="text-[10px] uppercase tracking-wider text-gray-600 font-semibold mb-1.5 px-1">
+          Workspace
+        </div>
         <WorkspaceSwitcher />
       </div>
 
