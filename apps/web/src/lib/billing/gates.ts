@@ -15,6 +15,14 @@ export interface TierGates {
   calendarSync: boolean;
   /** Rename speakers in transcripts (PUT /api/meetings/[id]/speakers). */
   speakerNaming: boolean;
+  /** Maximum members in a workspace. null = unlimited. */
+  maxWorkspaceMembers: number | null;
+  /** Per-meeting and cross-meeting BRIVA AI chat. */
+  briveAiChat: boolean;
+  /** Comments on meetings. */
+  meetingComments: boolean;
+  /** Tasks board, assignment, status tracking. */
+  tasks: boolean;
 }
 
 const GATES: Record<SubscriptionTier, TierGates> = {
@@ -23,24 +31,40 @@ const GATES: Record<SubscriptionTier, TierGates> = {
     emailRecap: false,
     calendarSync: false,
     speakerNaming: false,
+    maxWorkspaceMembers: 2,           // solo + 1 invited collaborator
+    briveAiChat: true,
+    meetingComments: true,
+    tasks: true,
   },
   pro: {
     perMeetingMinutes: 180,
     emailRecap: true,
     calendarSync: true,
     speakerNaming: true,
+    maxWorkspaceMembers: 5,           // small team / Pro is "individual+helpers"
+    briveAiChat: true,
+    meetingComments: true,
+    tasks: true,
   },
   team: {
     perMeetingMinutes: 240,
     emailRecap: true,
     calendarSync: true,
     speakerNaming: true,
+    maxWorkspaceMembers: null,        // billed per seat — no hard cap
+    briveAiChat: true,
+    meetingComments: true,
+    tasks: true,
   },
   enterprise: {
     perMeetingMinutes: null,
     emailRecap: true,
     calendarSync: true,
     speakerNaming: true,
+    maxWorkspaceMembers: null,
+    briveAiChat: true,
+    meetingComments: true,
+    tasks: true,
   },
 };
 

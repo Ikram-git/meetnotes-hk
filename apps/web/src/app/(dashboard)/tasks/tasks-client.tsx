@@ -44,6 +44,7 @@ export function TasksClient() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [scope, setScope] = useState<'all' | 'me'>('all');
   const [loading, setLoading] = useState(true);
+  const [activeWorkspaceName, setActiveWorkspaceName] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -57,8 +58,6 @@ export function TasksClient() {
       // Pull member list for the assignee dropdown (one call, cached for the
       // life of the page).
       if (members.length === 0) {
-        // Fetch active workspace's members. We piggyback the workspaces list
-        // and then ask for the active workspace's members via /api/workspaces.
         try {
           const wsRes = await fetch('/api/workspaces');
           const wsData = await wsRes.json();
@@ -67,6 +66,7 @@ export function TasksClient() {
               document.cookie.includes(`briva_workspace_id=${w.id}`),
             ) ?? wsData.workspaces?.[0];
           if (active) {
+            setActiveWorkspaceName(active.name);
             const mRes = await fetch(`/api/workspaces/${active.id}`);
             const mData = await mRes.json();
             setMembers(
@@ -142,9 +142,17 @@ export function TasksClient() {
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div>
-          <h1 className="text-xl font-bold text-white">Tasks</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Action items pulled from your meetings, plus anything else your team is working on.
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="text-xl font-bold text-white">Tasks</h1>
+            {activeWorkspaceName && (
+              <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                {activeWorkspaceName}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Action items pulled from this workspace's meetings, plus anything else your team is working on.
+            Switch workspace in the top-left to see a different team's board.
           </p>
         </div>
 
