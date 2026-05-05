@@ -28,6 +28,7 @@ export const PLANS: Plan[] = [
     features: [
       '100 minutes / month',
       'Up to 60 minutes per meeting',
+      'Workspace with up to 2 members',
       'Live transcription with AI Q&A',
       '30+ languages with code-switching',
       'Structured summaries & action items',
@@ -50,6 +51,7 @@ export const PLANS: Plan[] = [
     features: [
       '3,000 minutes / month',
       'Up to 3 hours per meeting',
+      'Workspace with up to 5 members',
       'Everything in Basic',
       'Email recap to attendees',
       'Priority transcription queue',
@@ -72,6 +74,7 @@ export const PLANS: Plan[] = [
     features: [
       '6,000 minutes per seat / month',
       'Up to 4 hours per meeting',
+      'Unlimited workspace members',
       'Everything in Pro',
       'Shared workspace library',
       'Owner / admin / member roles',
@@ -91,6 +94,7 @@ export const PLANS: Plan[] = [
     contactOnly: true,
     features: [
       'Custom usage limits',
+      'Unlimited workspace members',
       'Everything in Team',
       'SSO (SAML / OIDC)',
       'Dedicated success manager',
