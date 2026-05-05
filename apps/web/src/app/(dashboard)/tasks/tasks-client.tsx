@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { confirmDialog } from '@/components/confirm-dialog';
+import { NewTaskDialog } from '@/components/new-task-dialog';
 
 type Status = 'todo' | 'in_progress' | 'done';
 
@@ -45,6 +46,7 @@ export function TasksClient() {
   const [scope, setScope] = useState<'all' | 'me'>('all');
   const [loading, setLoading] = useState(true);
   const [activeWorkspaceName, setActiveWorkspaceName] = useState<string | null>(null);
+  const [newTaskOpen, setNewTaskOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -156,25 +158,43 @@ export function TasksClient() {
           </p>
         </div>
 
-        <div className="flex items-center bg-white/5 border border-emerald-900/30 rounded-lg p-1">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-white/5 border border-emerald-900/30 rounded-lg p-1">
+            <button
+              onClick={() => setScope('all')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
+                scope === 'all' ? 'bg-emerald-500 text-white' : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              All tasks
+            </button>
+            <button
+              onClick={() => setScope('me')}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
+                scope === 'me' ? 'bg-emerald-500 text-white' : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              My tasks
+            </button>
+          </div>
           <button
-            onClick={() => setScope('all')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
-              scope === 'all' ? 'bg-emerald-500 text-white' : 'text-gray-400 hover:text-white'
-            }`}
+            onClick={() => setNewTaskOpen(true)}
+            className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition"
           >
-            All tasks
-          </button>
-          <button
-            onClick={() => setScope('me')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
-              scope === 'me' ? 'bg-emerald-500 text-white' : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            My tasks
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            New task
           </button>
         </div>
       </div>
+
+      <NewTaskDialog
+        open={newTaskOpen}
+        onClose={() => setNewTaskOpen(false)}
+        onCreated={load}
+        members={members}
+      />
 
       {loading ? (
         <div className="grid lg:grid-cols-3 gap-4">

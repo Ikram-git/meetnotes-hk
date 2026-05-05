@@ -47,11 +47,17 @@ export async function promoteActionItemsToTasks(
 
     if (items.length === 0) return { created: 0 };
 
-    // Pre-fetch workspace members for fuzzy matching.
-    const { data: members } = await admin
-      .from('workspace_members')
-      .select('user_id, profiles:profiles!user_id(id, email, full_name)')
-      .eq('workspace_id', meeting.workspace_id);
+    // Pre-fetch workspace members + speaker mappings.
+    const [{ data: members }, { data: mappings }] = await Promise.all([
+      admin
+        .from('workspace_members')
+        .select('user_id, profiles:profiles!user_id(id, email, full_name)')
+        .eq('workspace_id', meeting.workspace_id),
+      admin
+        .from('speaker_mappings')
+        .select('speaker_label, speaker_name')
+        .eq('meeting_id', meetingId),
+    ]);
 
     const memberIndex = (members ?? [])
       .map((m: any) => m.profiles)
@@ -61,15 +67,32 @@ export async function promoteActionItemsToTasks(
         names: candidateNamesFor(p.full_name as string | null, p.email as string | null),
       }));
 
+    // "Speaker N" → identified name (from speaker_mappings, populated by
+    // identifyAndSaveSpeakers before this runs).
+    const speakerMap = new Map<string, string>();
+    for (const m of mappings ?? []) {
+      if (m.speaker_label && m.speaker_name) {
+        speakerMap.set(
+          (m.speaker_label as string).trim().toLowerCase(),
+          m.speaker_name as string,
+        );
+      }
+    }
+
     const rows = items.map((item, index) => {
-      const matchedId = matchAssignee(item.assignee ?? null, memberIndex);
+      const rawAssignee = item.assignee ?? null;
+      const resolved =
+        rawAssignee && speakerMap.has(rawAssignee.trim().toLowerCase())
+          ? speakerMap.get(rawAssignee.trim().toLowerCase())!
+          : rawAssignee;
+      const matchedId = matchAssignee(resolved ?? null, memberIndex);
       return {
         workspace_id: meeting.workspace_id,
         meeting_id: meetingId,
         source_action_item_index: index,
         title: (item.text || '(untitled)').slice(0, 500),
         assignee_user_id: matchedId,
-        assignee_label: matchedId ? null : (item.assignee ?? null),
+        assignee_label: matchedId ? null : (resolved ?? rawAssignee ?? null),
         due_date: parseDueDate(item.due_date ?? null),
         status: item.status === 'done' ? 'done' : 'todo',
         created_by: meeting.user_id,
