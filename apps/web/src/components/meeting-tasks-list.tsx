@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useToast } from './toast';
 
 type Status = 'todo' | 'in_progress' | 'done';
 
@@ -34,6 +35,7 @@ export function MeetingTasksList({ meetingId }: { meetingId: string }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [members, setMembers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     let cancelled = false;
@@ -69,6 +71,31 @@ export function MeetingTasksList({ meetingId }: { meetingId: string }) {
       cancelled = true;
     };
   }, [meetingId]);
+
+  const renameSpeakerLabel = async (task: Task) => {
+    const oldLabel = task.assignee_label;
+    if (!oldLabel) return;
+    const newName = window.prompt(
+      `Rename "${oldLabel}" to a real name. If they're a workspace member, the task will auto-link.`,
+      oldLabel,
+    );
+    if (!newName || newName.trim().length === 0 || newName.trim() === oldLabel) return;
+    const res = await fetch(`/api/meetings/${meetingId}/speakers`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ speakerLabel: oldLabel, speakerName: newName.trim() }),
+    });
+    if (!res.ok) {
+      const { error } = await res.json().catch(() => ({}));
+      toast(error || 'Failed to rename', 'error');
+      return;
+    }
+    toast(`Renamed "${oldLabel}" → "${newName.trim()}"`);
+    // Refetch tasks — the rename API updates them server-side.
+    const tRes = await fetch(`/api/tasks?meetingId=${meetingId}`);
+    const tData = await tRes.json();
+    setTasks(tData.tasks ?? []);
+  };
 
   const updateTask = async (id: string, patch: Partial<Task>) => {
     const res = await fetch(`/api/tasks/${id}`, {
@@ -172,6 +199,19 @@ export function MeetingTasksList({ meetingId }: { meetingId: string }) {
                     </option>
                   ))}
                 </select>
+                {/* Quick rename when AI couldn't identify the speaker.
+                    Click to label them; if the new name matches a
+                    workspace member, the task re-links automatically. */}
+                {task.assignee_label && /^speaker\s*\d+$/i.test(task.assignee_label) && (
+                  <button
+                    type="button"
+                    onClick={() => renameSpeakerLabel(task)}
+                    className="text-[11px] text-emerald-400 hover:text-emerald-300 transition px-1"
+                    title="Rename this speaker"
+                  >
+                    Identify
+                  </button>
+                )}
 
                 <select
                   value={task.status}

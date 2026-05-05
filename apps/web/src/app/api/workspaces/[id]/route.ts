@@ -30,12 +30,29 @@ export async function GET(
     .maybeSingle();
   if (!workspace) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const { data: members } = await a
+  const { data: memberRows } = await a
     .from('workspace_members')
-    .select('role, joined_at, user:profiles(id, email, full_name, avatar_url)')
+    .select('user_id, role, joined_at')
     .eq('workspace_id', id);
 
-  return NextResponse.json({ workspace, members: members ?? [] });
+  const userIds = (memberRows ?? []).map((m) => m.user_id);
+  const { data: profiles } = userIds.length
+    ? await a.from('profiles').select('id, email, full_name, avatar_url').in('id', userIds)
+    : { data: [] as any[] };
+  const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+
+  const members = (memberRows ?? []).map((m) => ({
+    role: m.role,
+    joined_at: m.joined_at,
+    user: profileMap.get(m.user_id) ?? {
+      id: m.user_id,
+      email: '(unknown)',
+      full_name: null,
+      avatar_url: null,
+    },
+  }));
+
+  return NextResponse.json({ workspace, members });
 }
 
 export async function PATCH(
