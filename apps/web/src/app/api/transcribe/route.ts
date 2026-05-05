@@ -6,6 +6,7 @@ import { fanOutMeetingCompleted } from '@/lib/webhooks';
 import { indexMeetingForChat } from '@/lib/ai/index-meeting';
 import { identifyAndSaveSpeakers } from '@/lib/ai/identify-speakers';
 import { promoteActionItemsToTasks } from '@/lib/tasks/promote';
+import { sendAutoRecapIfEnabled } from '@/lib/email/auto-recap';
 import { getGates } from '@/lib/billing/gates';
 import { NextRequest, NextResponse, after } from 'next/server';
 
@@ -230,6 +231,7 @@ export async function POST(req: NextRequest) {
       // so action items get assigned to the right workspace member.
       await identifyAndSaveSpeakers(supabase, meetingId);
       await promoteActionItemsToTasks(supabase, meetingId);
+      await sendAutoRecapIfEnabled(supabase, meetingId);
     });
     return NextResponse.json({
       status: 'completed',

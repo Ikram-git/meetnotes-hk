@@ -7,6 +7,7 @@ import { fanOutMeetingCompleted } from '@/lib/webhooks';
 import { indexMeetingForChat } from '@/lib/ai/index-meeting';
 import { identifyAndSaveSpeakers } from '@/lib/ai/identify-speakers';
 import { promoteActionItemsToTasks } from '@/lib/tasks/promote';
+import { sendAutoRecapIfEnabled } from '@/lib/email/auto-recap';
 import { getGates } from '@/lib/billing/gates';
 import { NextRequest, NextResponse, after } from 'next/server';
 
@@ -235,6 +236,7 @@ export async function POST(req: NextRequest) {
       await indexMeetingForChat(supabase, meeting.id);
       await identifyAndSaveSpeakers(supabase, meeting.id);
       await promoteActionItemsToTasks(supabase, meeting.id);
+      await sendAutoRecapIfEnabled(supabase, meeting.id);
     });
     return NextResponse.json({ meetingId: meeting.id, status: 'completed', title });
   } catch (err) {
