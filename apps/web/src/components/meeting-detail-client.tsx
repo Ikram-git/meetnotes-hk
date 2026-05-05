@@ -6,7 +6,7 @@ import { AudioPlayer } from './audio-player';
 import { TranscriptViewer } from './transcript-viewer';
 import { TranscriptEditor } from './transcript-editor';
 import { SummaryEditor } from './summary-editor';
-import { ActionItemsList } from './action-items-list';
+import { MeetingTasksList } from './meeting-tasks-list';
 import { ExportDropdown } from './export-dropdown';
 import { SpeakerNamingModal } from './speaker-naming-modal';
 import { ProcessingBanner } from './processing-banner';
@@ -694,11 +694,11 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
             )}
           </div>
 
-          {/* Action Items */}
+          {/* Action Items — task-aware: assign / due-date / status inline */}
           {summary && Array.isArray(summary.action_items) && summary.action_items.length > 0 ? (
             <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-6">
               <h2 className="text-lg font-semibold text-white mb-4">Action Items</h2>
-              <ActionItemsList items={summary.action_items as any[]} speakerMap={speakerMap} onStatusChange={handleActionStatusChange} />
+              <MeetingTasksList meetingId={meeting.id} />
             </div>
           ) : isProcessingStatus && !summary ? (
             <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-6">
