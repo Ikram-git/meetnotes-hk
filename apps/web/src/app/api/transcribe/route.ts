@@ -4,6 +4,7 @@ import { summariseMeeting } from '@/lib/ai/summarise';
 import { formatTime } from '@/lib/utils';
 import { fanOutMeetingCompleted } from '@/lib/webhooks';
 import { indexMeetingForChat } from '@/lib/ai/index-meeting';
+import { identifyAndSaveSpeakers } from '@/lib/ai/identify-speakers';
 import { promoteActionItemsToTasks } from '@/lib/tasks/promote';
 import { getGates } from '@/lib/billing/gates';
 import { NextRequest, NextResponse, after } from 'next/server';
@@ -225,7 +226,9 @@ export async function POST(req: NextRequest) {
       }
       // Embed for cross-meeting chat. Best-effort; logs but doesn't block.
       await indexMeetingForChat(supabase, meetingId);
-      // Promote AI-extracted action items into the tasks board.
+      // Auto-identify "Speaker N" → real names before promoting tasks,
+      // so action items get assigned to the right workspace member.
+      await identifyAndSaveSpeakers(supabase, meetingId);
       await promoteActionItemsToTasks(supabase, meetingId);
     });
     return NextResponse.json({
