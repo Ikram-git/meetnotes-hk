@@ -221,18 +221,33 @@ export async function POST(req: NextRequest) {
     // keeps the function alive for the callback, so the POST to Zapier
     // actually completes — but the client doesn't wait on it.
     after(async () => {
+      console.log(`[after-transcribe] starting post-summary chain for ${meetingId}`);
       try {
         await fanOutMeetingCompleted(user.id, meetingId);
       } catch (e) {
         console.warn('[Transcribe] webhook fan-out failed:', e instanceof Error ? e.message : e);
       }
-      // Embed for cross-meeting chat. Best-effort; logs but doesn't block.
-      await indexMeetingForChat(supabase, meetingId);
-      // Auto-identify "Speaker N" → real names before promoting tasks,
-      // so action items get assigned to the right workspace member.
-      await identifyAndSaveSpeakers(supabase, meetingId);
-      await promoteActionItemsToTasks(supabase, meetingId);
-      await sendAutoRecapIfEnabled(supabase, meetingId);
+      try {
+        await indexMeetingForChat(supabase, meetingId);
+      } catch (e) {
+        console.warn('[after-transcribe] index failed:', e instanceof Error ? e.message : e);
+      }
+      try {
+        await identifyAndSaveSpeakers(supabase, meetingId);
+      } catch (e) {
+        console.warn('[after-transcribe] identify failed:', e instanceof Error ? e.message : e);
+      }
+      try {
+        await promoteActionItemsToTasks(supabase, meetingId);
+      } catch (e) {
+        console.warn('[after-transcribe] promote failed:', e instanceof Error ? e.message : e);
+      }
+      try {
+        await sendAutoRecapIfEnabled(supabase, meetingId);
+      } catch (e) {
+        console.warn('[after-transcribe] auto-recap failed:', e instanceof Error ? e.message : e);
+      }
+      console.log(`[after-transcribe] DONE for ${meetingId}`);
     });
     return NextResponse.json({
       status: 'completed',
