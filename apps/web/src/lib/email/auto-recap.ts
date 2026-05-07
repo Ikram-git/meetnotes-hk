@@ -132,7 +132,19 @@ export async function sendAutoRecapIfEnabled(
 
     log('resolved recipients', { count: recipients.size, emails: Array.from(recipients) });
     if (recipients.size === 0) {
-      return await recordSkip('no_recipients', 'workspace has only the owner and no calendar attendees');
+      // Re-run a quick count so the skip reason shows what we saw.
+      const memberCountResult = meeting.workspace_id
+        ? await admin
+            .from('workspace_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('workspace_id', meeting.workspace_id)
+        : { count: 0 };
+      const ws = meeting.workspace_id ?? 'none';
+      const ownerEmailDisplay = ownerEmail;
+      return await recordSkip(
+        'no_recipients',
+        `ws=${ws.slice(0, 8)}, total_members=${memberCountResult.count ?? 0}, uploader=${meeting.user_id?.slice(0, 8)}, owner_email=${ownerEmailDisplay}`,
+      );
     }
     const attendeeEmails = Array.from(recipients);
 
