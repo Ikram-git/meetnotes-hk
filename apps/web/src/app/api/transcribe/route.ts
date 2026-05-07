@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { meetingId } = await req.json();
+  console.log(`[Transcribe] received request for meeting ${meetingId}`);
 
   // Get meeting (RLS scopes to user's workspaces)
   const { data: meeting } = await supabase
