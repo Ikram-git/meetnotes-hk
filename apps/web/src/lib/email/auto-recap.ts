@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { google } from 'googleapis';
 import { buildOAuthClientFromTokens } from '@/lib/google/client';
 import { buildEmailHtml, buildEmailText } from '@/lib/export/email';
@@ -11,9 +12,17 @@ import { getGates } from '@/lib/billing/gates';
  * DB instead of digging through Vercel function logs.
  */
 export async function sendAutoRecapIfEnabled(
-  admin: SupabaseClient,
+  _supabase: SupabaseClient,
   meetingId: string,
 ): Promise<{ sent: number } | { skipped: string }> {
+  // Always use the service-role admin client internally — the cookie-bound
+  // client passed to after() blocks has auth.uid() resolve to null in
+  // some serverless contexts, which causes RLS-protected reads
+  // (workspace_members, profiles) to silently return zero rows.
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
   const log = (msg: string, extra?: Record<string, unknown>) =>
     console.log(`[auto-recap] ${meetingId.slice(0, 8)}: ${msg}`, extra ?? '');
 

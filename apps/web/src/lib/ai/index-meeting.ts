@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { chunkSegments, type SegmentInput } from './chunk';
 import { embed, MissingEmbeddingKeyError } from './embed';
 
@@ -13,9 +14,14 @@ import { embed, MissingEmbeddingKeyError } from './embed';
  * successful index attempt.
  */
 export async function indexMeetingForChat(
-  supabase: SupabaseClient,
+  _supabase: SupabaseClient,
   meetingId: string,
 ): Promise<{ chunkCount: number } | { error: string }> {
+  // Always use admin client — same RLS-null-in-after()-blocks issue.
+  const supabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
   try {
     const { data: meeting } = await supabase
       .from('meetings')
