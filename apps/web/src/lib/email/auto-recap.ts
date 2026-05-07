@@ -5,13 +5,10 @@ import { buildEmailHtml, buildEmailText } from '@/lib/export/email';
 import { getGates } from '@/lib/billing/gates';
 
 /**
- * If the meeting owner has opted in to auto-email recap AND the meeting
- * was auto-linked to a Google Calendar event AND the meeting is on a
- * tier that includes the email-recap feature, send the recap to every
- * attendee on the calendar invite.
- *
- * Best-effort: catches every error path and just logs. Idempotent via
- * meetings.auto_recap_sent_at — second invocations short-circuit.
+ * Send the meeting recap to workspace teammates + calendar attendees if
+ * the meeting owner has opted in. Records every skip reason on the
+ * meeting row (auto_recap_skip_reason) so you can SELECT it from the
+ * DB instead of digging through Vercel function logs.
  */
 export async function sendAutoRecapIfEnabled(
   admin: SupabaseClient,
@@ -19,11 +16,24 @@ export async function sendAutoRecapIfEnabled(
 ): Promise<{ sent: number } | { skipped: string }> {
   const log = (msg: string, extra?: Record<string, unknown>) =>
     console.log(`[auto-recap] ${meetingId.slice(0, 8)}: ${msg}`, extra ?? '');
+
+  const recordSkip = async (reason: string, detail?: string) => {
+    log(`skipped: ${reason}`, detail ? { detail } : undefined);
+    try {
+      await admin
+        .from('meetings')
+        .update({ auto_recap_skip_reason: detail ? `${reason}: ${detail}` : reason })
+        .eq('id', meetingId);
+    } catch {
+      // Ignore — the log is enough.
+    }
+    return { skipped: reason };
+  };
+
   try {
     log('start');
     if (!process.env.RESEND_API_KEY) {
-      log('skipped: no_resend_key');
-      return { skipped: 'no_resend_key' };
+      return await recordSkip('no_resend_key');
     }
 
     const { data: meeting } = await admin
@@ -33,10 +43,8 @@ export async function sendAutoRecapIfEnabled(
       )
       .eq('id', meetingId)
       .maybeSingle();
-    if (!meeting) {
-      log('skipped: meeting_not_found');
-      return { skipped: 'meeting_not_found' };
-    }
+    if (!meeting) return await recordSkip('meeting_not_found');
+
     log('loaded meeting', {
       workspace_id: meeting.workspace_id,
       duration: meeting.audio_duration_seconds,
@@ -44,13 +52,9 @@ export async function sendAutoRecapIfEnabled(
       already_sent: !!meeting.auto_recap_sent_at,
     });
 
-    if (meeting.auto_recap_sent_at) {
-      log('skipped: already_sent');
-      return { skipped: 'already_sent' };
-    }
+    if (meeting.auto_recap_sent_at) return await recordSkip('already_sent');
     if ((meeting.audio_duration_seconds || 0) < 120) {
-      log('skipped: too_short', { duration: meeting.audio_duration_seconds });
-      return { skipped: 'too_short' };
+      return await recordSkip('too_short', `${meeting.audio_duration_seconds}s`);
     }
 
     const { data: profile } = await admin
@@ -63,21 +67,17 @@ export async function sendAutoRecapIfEnabled(
       auto_email_recap: profile?.auto_email_recap,
       email: profile?.email,
     });
-    if (!profile?.auto_email_recap) {
-      log('skipped: opted_out');
-      return { skipped: 'opted_out' };
+    if (!profile) return await recordSkip('profile_not_found');
+    if (!profile.auto_email_recap) {
+      return await recordSkip('opted_out', `tier=${profile.subscription_tier}, email=${profile.email}`);
     }
     if (!getGates(profile.subscription_tier).emailRecap) {
-      log('skipped: tier_gate', { tier: profile.subscription_tier });
-      return { skipped: 'tier_gate' };
+      return await recordSkip('tier_gate', `tier=${profile.subscription_tier}`);
     }
 
     const ownerEmail = profile.email.toLowerCase();
     const recipients = new Set<string>();
 
-    // 1. Workspace teammates (everyone but the meeting owner). This is the
-    //    common case: a team uploads a meeting and everyone in the
-    //    workspace gets the recap.
     if (meeting.workspace_id) {
       const { data: memberRows } = await admin
         .from('workspace_members')
@@ -98,8 +98,6 @@ export async function sendAutoRecapIfEnabled(
       }
     }
 
-    // 2. Calendar event attendees (when the meeting was auto-linked to a
-    //    Google event — captures external invitees who aren't on Briva).
     if (meeting.google_event_id) {
       const { data: integration } = await admin
         .from('google_integrations')
@@ -128,15 +126,13 @@ export async function sendAutoRecapIfEnabled(
             '[auto-recap] calendar event fetch failed:',
             err instanceof Error ? err.message : err,
           );
-          // Non-fatal — continue with workspace teammates only.
         }
       }
     }
 
     log('resolved recipients', { count: recipients.size, emails: Array.from(recipients) });
     if (recipients.size === 0) {
-      log('skipped: no_recipients');
-      return { skipped: 'no_recipients' };
+      return await recordSkip('no_recipients', 'workspace has only the owner and no calendar attendees');
     }
     const attendeeEmails = Array.from(recipients);
 
@@ -147,10 +143,7 @@ export async function sendAutoRecapIfEnabled(
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!summary) {
-      log('skipped: no_summary');
-      return { skipped: 'no_summary' };
-    }
+    if (!summary) return await recordSkip('no_summary');
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://meetbriva.com';
     const opts = {
@@ -172,8 +165,7 @@ export async function sendAutoRecapIfEnabled(
       text: buildEmailText(opts),
     });
     if (error) {
-      log('resend failed', { error: error.message });
-      return { skipped: 'resend_failed' };
+      return await recordSkip('resend_failed', error.message);
     }
 
     await admin
@@ -181,6 +173,7 @@ export async function sendAutoRecapIfEnabled(
       .update({
         auto_recap_sent_at: new Date().toISOString(),
         auto_recap_recipient_count: attendeeEmails.length,
+        auto_recap_skip_reason: null,
       })
       .eq('id', meetingId);
 
@@ -195,10 +188,16 @@ export async function sendAutoRecapIfEnabled(
     log(`SENT ${attendeeEmails.length} emails`, { to: attendeeEmails });
     return { sent: attendeeEmails.length };
   } catch (err) {
-    console.error(
-      `[auto-recap] ${meetingId.slice(0, 8)}: unexpected error:`,
-      err instanceof Error ? err.message : err,
-    );
+    const msg = err instanceof Error ? err.message : String(err);
+    try {
+      await admin
+        .from('meetings')
+        .update({ auto_recap_skip_reason: `unexpected_error: ${msg}` })
+        .eq('id', meetingId);
+    } catch {
+      // Ignore.
+    }
+    console.error(`[auto-recap] ${meetingId.slice(0, 8)}: unexpected error:`, msg);
     return { skipped: 'unexpected_error' };
   }
 }
