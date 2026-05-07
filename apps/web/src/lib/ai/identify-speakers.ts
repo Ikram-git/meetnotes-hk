@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 /**
  * Use Claude to figure out who each "Speaker N" actually is, based on
@@ -13,10 +14,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * overwrite — the user's edit always wins.
  */
 export async function identifyAndSaveSpeakers(
-  admin: SupabaseClient,
+  _supabase: SupabaseClient,
   meetingId: string,
 ): Promise<Record<string, string>> {
   if (!process.env.ANTHROPIC_API_KEY) return {};
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
 
   try {
     const { data: meeting } = await admin

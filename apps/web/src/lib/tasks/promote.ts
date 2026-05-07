@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 interface ActionItem {
   text?: string;
@@ -17,9 +18,13 @@ interface ActionItem {
  * the raw label is preserved on assignee_label so the user can re-assign.
  */
 export async function promoteActionItemsToTasks(
-  admin: SupabaseClient,
+  _supabase: SupabaseClient,
   meetingId: string,
 ): Promise<{ created: number } | { error: string }> {
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
   try {
     const { data: meeting } = await admin
       .from('meetings')
