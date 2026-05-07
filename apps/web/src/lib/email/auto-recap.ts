@@ -17,8 +17,14 @@ export async function sendAutoRecapIfEnabled(
   admin: SupabaseClient,
   meetingId: string,
 ): Promise<{ sent: number } | { skipped: string }> {
+  const log = (msg: string, extra?: Record<string, unknown>) =>
+    console.log(`[auto-recap] ${meetingId.slice(0, 8)}: ${msg}`, extra ?? '');
   try {
-    if (!process.env.RESEND_API_KEY) return { skipped: 'no_resend_key' };
+    log('start');
+    if (!process.env.RESEND_API_KEY) {
+      log('skipped: no_resend_key');
+      return { skipped: 'no_resend_key' };
+    }
 
     const { data: meeting } = await admin
       .from('meetings')
@@ -27,10 +33,23 @@ export async function sendAutoRecapIfEnabled(
       )
       .eq('id', meetingId)
       .maybeSingle();
-    if (!meeting) return { skipped: 'meeting_not_found' };
+    if (!meeting) {
+      log('skipped: meeting_not_found');
+      return { skipped: 'meeting_not_found' };
+    }
+    log('loaded meeting', {
+      workspace_id: meeting.workspace_id,
+      duration: meeting.audio_duration_seconds,
+      has_event: !!meeting.google_event_id,
+      already_sent: !!meeting.auto_recap_sent_at,
+    });
 
-    if (meeting.auto_recap_sent_at) return { skipped: 'already_sent' };
+    if (meeting.auto_recap_sent_at) {
+      log('skipped: already_sent');
+      return { skipped: 'already_sent' };
+    }
     if ((meeting.audio_duration_seconds || 0) < 120) {
+      log('skipped: too_short', { duration: meeting.audio_duration_seconds });
       return { skipped: 'too_short' };
     }
 
@@ -39,8 +58,17 @@ export async function sendAutoRecapIfEnabled(
       .select('subscription_tier, auto_email_recap, email, full_name')
       .eq('id', meeting.user_id)
       .maybeSingle();
-    if (!profile?.auto_email_recap) return { skipped: 'opted_out' };
+    log('loaded profile', {
+      tier: profile?.subscription_tier,
+      auto_email_recap: profile?.auto_email_recap,
+      email: profile?.email,
+    });
+    if (!profile?.auto_email_recap) {
+      log('skipped: opted_out');
+      return { skipped: 'opted_out' };
+    }
     if (!getGates(profile.subscription_tier).emailRecap) {
+      log('skipped: tier_gate', { tier: profile.subscription_tier });
       return { skipped: 'tier_gate' };
     }
 
@@ -105,7 +133,11 @@ export async function sendAutoRecapIfEnabled(
       }
     }
 
-    if (recipients.size === 0) return { skipped: 'no_recipients' };
+    log('resolved recipients', { count: recipients.size, emails: Array.from(recipients) });
+    if (recipients.size === 0) {
+      log('skipped: no_recipients');
+      return { skipped: 'no_recipients' };
+    }
     const attendeeEmails = Array.from(recipients);
 
     const { data: summary } = await admin
@@ -115,7 +147,10 @@ export async function sendAutoRecapIfEnabled(
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (!summary) return { skipped: 'no_summary' };
+    if (!summary) {
+      log('skipped: no_summary');
+      return { skipped: 'no_summary' };
+    }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://meetbriva.com';
     const opts = {
@@ -137,7 +172,7 @@ export async function sendAutoRecapIfEnabled(
       text: buildEmailText(opts),
     });
     if (error) {
-      console.warn('[auto-recap] resend failed:', error.message);
+      log('resend failed', { error: error.message });
       return { skipped: 'resend_failed' };
     }
 
@@ -157,11 +192,11 @@ export async function sendAutoRecapIfEnabled(
       metadata: { auto: true, recipients: attendeeEmails },
     });
 
-    console.log(`[auto-recap] sent ${attendeeEmails.length} emails for meeting ${meetingId}`);
+    log(`SENT ${attendeeEmails.length} emails`, { to: attendeeEmails });
     return { sent: attendeeEmails.length };
   } catch (err) {
-    console.warn(
-      '[auto-recap] failed:',
+    console.error(
+      `[auto-recap] ${meetingId.slice(0, 8)}: unexpected error:`,
       err instanceof Error ? err.message : err,
     );
     return { skipped: 'unexpected_error' };
