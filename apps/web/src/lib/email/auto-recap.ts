@@ -23,14 +23,13 @@ export async function sendAutoRecapIfEnabled(
     const { data: meeting } = await admin
       .from('meetings')
       .select(
-        'id, user_id, title, created_at, audio_duration_seconds, google_event_id, auto_recap_sent_at',
+        'id, user_id, workspace_id, title, created_at, audio_duration_seconds, google_event_id, auto_recap_sent_at',
       )
       .eq('id', meetingId)
       .maybeSingle();
     if (!meeting) return { skipped: 'meeting_not_found' };
 
     if (meeting.auto_recap_sent_at) return { skipped: 'already_sent' };
-    if (!meeting.google_event_id) return { skipped: 'no_calendar_event' };
     if ((meeting.audio_duration_seconds || 0) < 120) {
       return { skipped: 'too_short' };
     }
@@ -45,39 +44,69 @@ export async function sendAutoRecapIfEnabled(
       return { skipped: 'tier_gate' };
     }
 
-    const { data: integration } = await admin
-      .from('google_integrations')
-      .select('access_token, refresh_token')
-      .eq('user_id', meeting.user_id)
-      .maybeSingle();
-    if (!integration?.access_token) return { skipped: 'google_not_connected' };
+    const ownerEmail = profile.email.toLowerCase();
+    const recipients = new Set<string>();
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://meetbriva.com';
-    const client = buildOAuthClientFromTokens(
-      `${appUrl}/api/google/auth/callback`,
-      integration.access_token,
-      integration.refresh_token,
-    );
-    const calendar = google.calendar({ version: 'v3', auth: client });
-    let attendeeEmails: string[] = [];
-    try {
-      const { data: event } = await calendar.events.get({
-        calendarId: 'primary',
-        eventId: meeting.google_event_id,
-      });
-      attendeeEmails = (event.attendees ?? [])
-        .map((a) => a.email)
-        .filter((e): e is string => !!e && e.includes('@'))
-        .filter((e) => e.toLowerCase() !== profile.email.toLowerCase());
-    } catch (err) {
-      console.warn(
-        '[auto-recap] calendar event fetch failed:',
-        err instanceof Error ? err.message : err,
-      );
-      return { skipped: 'event_fetch_failed' };
+    // 1. Workspace teammates (everyone but the meeting owner). This is the
+    //    common case: a team uploads a meeting and everyone in the
+    //    workspace gets the recap.
+    if (meeting.workspace_id) {
+      const { data: memberRows } = await admin
+        .from('workspace_members')
+        .select('user_id')
+        .eq('workspace_id', meeting.workspace_id);
+      const otherIds = (memberRows ?? [])
+        .map((m) => m.user_id)
+        .filter((id) => id !== meeting.user_id);
+      if (otherIds.length > 0) {
+        const { data: memberProfiles } = await admin
+          .from('profiles')
+          .select('email')
+          .in('id', otherIds);
+        for (const p of memberProfiles ?? []) {
+          const e = (p.email as string | null)?.toLowerCase();
+          if (e && e !== ownerEmail) recipients.add(e);
+        }
+      }
     }
 
-    if (attendeeEmails.length === 0) return { skipped: 'no_attendees' };
+    // 2. Calendar event attendees (when the meeting was auto-linked to a
+    //    Google event — captures external invitees who aren't on Briva).
+    if (meeting.google_event_id) {
+      const { data: integration } = await admin
+        .from('google_integrations')
+        .select('access_token, refresh_token')
+        .eq('user_id', meeting.user_id)
+        .maybeSingle();
+      if (integration?.access_token) {
+        try {
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://meetbriva.com';
+          const client = buildOAuthClientFromTokens(
+            `${appUrl}/api/google/auth/callback`,
+            integration.access_token,
+            integration.refresh_token,
+          );
+          const calendar = google.calendar({ version: 'v3', auth: client });
+          const { data: event } = await calendar.events.get({
+            calendarId: 'primary',
+            eventId: meeting.google_event_id,
+          });
+          for (const att of event.attendees ?? []) {
+            const e = att.email?.toLowerCase();
+            if (e && e.includes('@') && e !== ownerEmail) recipients.add(e);
+          }
+        } catch (err) {
+          console.warn(
+            '[auto-recap] calendar event fetch failed:',
+            err instanceof Error ? err.message : err,
+          );
+          // Non-fatal — continue with workspace teammates only.
+        }
+      }
+    }
+
+    if (recipients.size === 0) return { skipped: 'no_recipients' };
+    const attendeeEmails = Array.from(recipients);
 
     const { data: summary } = await admin
       .from('summaries')
@@ -88,6 +117,7 @@ export async function sendAutoRecapIfEnabled(
       .maybeSingle();
     if (!summary) return { skipped: 'no_summary' };
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://meetbriva.com';
     const opts = {
       to: attendeeEmails,
       meeting,
