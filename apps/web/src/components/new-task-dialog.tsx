@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Modal } from './modal';
+import { friendlyErrorMessage } from '@/lib/errors';
 
 interface Profile {
   id: string;
@@ -58,7 +59,7 @@ export function NewTaskDialog({
       });
       if (!res.ok) {
         const { error: msg } = await res.json().catch(() => ({}));
-        setError(msg ?? 'Failed to create task');
+        setError(friendlyErrorMessage(msg, 'Failed to create task'));
         return;
       }
       onCreated();

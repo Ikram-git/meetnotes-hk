@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { friendlyErrorMessage } from '@/lib/errors';
 
 interface Message {
   id: string;
@@ -72,7 +73,7 @@ export function MeetingChatPanel({ meetingId }: { meetingId: string }) {
         setMessages((m) =>
           m.map((msg) =>
             msg.id === placeholder.id
-              ? { ...msg, content: '', error: error || 'Something went wrong', pending: false }
+              ? { ...msg, content: '', error: friendlyErrorMessage(error), pending: false }
               : msg,
           ),
         );
@@ -91,7 +92,7 @@ export function MeetingChatPanel({ meetingId }: { meetingId: string }) {
             ? {
                 ...msg,
                 content: '',
-                error: err instanceof Error ? err.message : 'Failed',
+                error: friendlyErrorMessage(err),
                 pending: false,
               }
             : msg,
