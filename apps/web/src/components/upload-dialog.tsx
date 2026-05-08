@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Modal } from './modal';
+import { friendlyErrorMessage } from '@/lib/errors';
 import * as tus from 'tus-js-client';
 
 const ACCEPTED_TYPES = [
@@ -230,7 +231,7 @@ export function UploadDialog({
       setStage('done');
     } catch (err) {
       if (abortedRef.current) return;
-      setError(err instanceof Error ? err.message : 'Upload failed.');
+      setError(friendlyErrorMessage(err, 'Upload failed. Please try again.'));
       setStage('error');
     }
   };
@@ -333,7 +334,7 @@ export function UploadDialog({
 
             {error && (
               <div className="mt-3 bg-red-500/10 border border-red-500/20 text-red-400 px-3 py-2 rounded-lg text-xs">
-                {error}
+                {friendlyErrorMessage(error)}
               </div>
             )}
 
@@ -411,16 +412,30 @@ export function UploadDialog({
               </svg>
             </div>
             <h3 className="mt-3 text-sm font-semibold text-white">Upload failed</h3>
-            <p className="mt-1 text-xs text-red-400 px-4">{error}</p>
-            <button
-              onClick={() => {
-                setStage('pick');
-                setError(null);
-              }}
-              className="mt-4 text-xs text-emerald-400 hover:text-emerald-300 font-medium"
-            >
-              Try again
-            </button>
+            <p className="mt-1 text-xs text-gray-400 px-4">{friendlyErrorMessage(error)}</p>
+            <div className="mt-4 flex gap-2 justify-center">
+              <button
+                onClick={() => {
+                  // Keep the file selected so retry just hits "Upload" again.
+                  setStage('pick');
+                  setError(null);
+                }}
+                className="px-3 py-1.5 text-xs text-gray-400 hover:text-white"
+              >
+                Pick different file
+              </button>
+              {file && (
+                <button
+                  onClick={() => {
+                    setError(null);
+                    startUpload();
+                  }}
+                  className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg text-xs font-medium transition"
+                >
+                  Try again
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

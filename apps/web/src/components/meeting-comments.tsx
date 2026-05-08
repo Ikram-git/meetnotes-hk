@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { confirmDialog } from './confirm-dialog';
+import { friendlyErrorMessage } from '@/lib/errors';
 
 interface Comment {
   id: string;
@@ -53,7 +54,7 @@ export function MeetingComments({ meetingId }: { meetingId: string }) {
       });
       if (!res.ok) {
         const { error: msg } = await res.json().catch(() => ({}));
-        setError(msg ?? 'Failed to post comment');
+        setError(friendlyErrorMessage(msg, 'Failed to post comment'));
         return;
       }
       // Refetch so we get the new comment with hydrated author

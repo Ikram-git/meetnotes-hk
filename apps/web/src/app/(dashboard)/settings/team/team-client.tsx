@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { confirmDialog } from '@/components/confirm-dialog';
+import { friendlyErrorMessage } from '@/lib/errors';
 
 type Member = {
   role: 'owner' | 'admin' | 'member';
@@ -179,7 +180,7 @@ export function TeamSettingsClient({
     <div className="max-w-2xl space-y-6">
       {error && (
         <div className="px-4 py-3 rounded-xl text-sm bg-red-500/10 border border-red-500/20 text-red-400">
-          {error}
+          {friendlyErrorMessage(error)}
         </div>
       )}
       {success && (
