@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { BookDemoButton } from '@/components/book-demo-button';
 import { PricingClient } from './pricing-client';
 
 export const dynamic = 'force-dynamic';
@@ -55,6 +56,9 @@ export default async function PricingPage() {
             <Link href="/demo" className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition px-2 sm:px-4 py-2 hidden sm:block">
               Demo
             </Link>
+            <BookDemoButton variant="link" className="text-xs sm:text-sm px-2 sm:px-4 py-2 hidden md:inline-block">
+              Book a demo
+            </BookDemoButton>
             <ThemeToggle />
             {isLoggedIn ? (
               <Link

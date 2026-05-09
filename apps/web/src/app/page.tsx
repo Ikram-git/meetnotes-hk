@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { HeroCtas } from '@/components/hero-ctas';
 import { DemoReel } from '@/components/demo-reel';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { BookDemoButton } from '@/components/book-demo-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +38,9 @@ export default async function LandingPage() {
             <Link href="/pricing" className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition px-2 sm:px-4 py-2 hidden sm:block">
               Pricing
             </Link>
+            <BookDemoButton variant="link" className="text-xs sm:text-sm px-2 sm:px-4 py-2 hidden md:inline-block">
+              Book a demo
+            </BookDemoButton>
             <ThemeToggle />
             {isLoggedIn ? (
               <>
@@ -86,7 +90,10 @@ export default async function LandingPage() {
               <p className="text-base sm:text-lg text-gray-400 max-w-xl mx-auto lg:mx-0 mb-7 leading-relaxed">
                 Capture live, ask BRIVA AI anything across every meeting, and ship the action items — automatically.
               </p>
-              <HeroCtas isLoggedIn={isLoggedIn} />
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+                <HeroCtas isLoggedIn={isLoggedIn} />
+                <BookDemoButton variant="ghost" size="md">Book a demo</BookDemoButton>
+              </div>
             </div>
 
             {/* Right: demo reel */}
@@ -238,15 +245,22 @@ export default async function LandingPage() {
           <p className="text-lg text-gray-500 mb-8">
             {isLoggedIn ? 'Upload a recording or use the Chrome extension to capture your next meeting.' : 'Start with 300 free minutes every month. No credit card required.'}
           </p>
-          {isLoggedIn ? (
-            <Link href="/meetings" className="inline-block bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
-              Go to Dashboard
-            </Link>
-          ) : (
-            <Link href="/signup" className="inline-block bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
-              Get Started Free
-            </Link>
-          )}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {isLoggedIn ? (
+              <Link href="/meetings" className="inline-block bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
+                Go to Dashboard
+              </Link>
+            ) : (
+              <Link href="/signup" className="inline-block bg-emerald-500 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25">
+                Get Started Free
+              </Link>
+            )}
+            {!isLoggedIn && (
+              <BookDemoButton variant="ghost" size="md" className="px-6 py-3.5 text-base">
+                Or book a demo
+              </BookDemoButton>
+            )}
+          </div>
         </div>
       </section>
 
