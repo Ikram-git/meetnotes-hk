@@ -195,10 +195,26 @@ export async function POST(req: NextRequest) {
   }
 
   if (digests.length === 0 && chunks.length === 0) {
-    return NextResponse.json({
-      answer:
-        "I couldn't find anything in this workspace's meetings that answers that. Try a different question, or upload more meetings first.",
-      citations: [],
+    const encoder = new TextEncoder();
+    const noResultsStream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(JSON.stringify({ threadId: null, citations: [] }) + '\n'),
+        );
+        controller.enqueue(
+          encoder.encode(
+            "I couldn't find anything in this workspace's meetings that answers that. Try a different question, or upload more meetings first.",
+          ),
+        );
+        controller.close();
+      },
+    });
+    return new Response(noResultsStream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        'X-Accel-Buffering': 'no',
+      },
     });
   }
 
@@ -263,57 +279,75 @@ export async function POST(req: NextRequest) {
   const userPrompt = `<CONTEXT>\n${contextParts.join('\n\n---\n\n')}\n</CONTEXT>\n\nQuestion: ${question}`;
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
-  let answer = '';
-  try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 800,
-      system: CHAT_SYSTEM_PROMPT,
-      messages: [
-        ...history.map((t) => ({ role: t.role, content: t.content })),
-        { role: 'user' as const, content: userPrompt },
-      ],
-    });
-    answer = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('\n');
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'AI call failed' },
-      { status: 500 },
-    );
-  }
 
-  // Persist both turns. Best-effort — if it fails the user still got
-  // their answer; we just won't have the history.
-  if (threadId) {
-    const { count } = await admin
-      .from('workspace_chat_messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('thread_id', threadId);
-    const startIndex = count ?? 0;
-    await admin.from('workspace_chat_messages').insert([
-      {
-        thread_id: threadId,
-        role: 'user',
-        content: question,
-        turn_index: startIndex,
-      },
-      {
-        thread_id: threadId,
-        role: 'assistant',
-        content: answer,
-        citations,
-        turn_index: startIndex + 1,
-      },
-    ]);
-    // Bump the thread's updated_at so the sidebar list reflects activity.
-    await admin
-      .from('workspace_chat_threads')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', threadId);
-  }
+  // Stream the response. Frame: first line is JSON metadata
+  // {"threadId":..., "citations":[...]}, remaining body is the
+  // assistant text streaming token-by-token.
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      try {
+        controller.enqueue(
+          encoder.encode(JSON.stringify({ threadId, citations }) + '\n'),
+        );
+        let answer = '';
+        const claudeStream = anthropic.messages.stream({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 800,
+          system: CHAT_SYSTEM_PROMPT,
+          messages: [
+            ...history.map((t) => ({ role: t.role, content: t.content })),
+            { role: 'user' as const, content: userPrompt },
+          ],
+        });
 
-  return NextResponse.json({ answer, citations, threadId });
+        for await (const event of claudeStream) {
+          if (
+            event.type === 'content_block_delta' &&
+            event.delta.type === 'text_delta'
+          ) {
+            const piece = event.delta.text;
+            answer += piece;
+            controller.enqueue(encoder.encode(piece));
+          }
+        }
+
+        // Persist both turns once streaming is done. Best-effort.
+        if (threadId) {
+          const { count } = await admin
+            .from('workspace_chat_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('thread_id', threadId);
+          const startIndex = count ?? 0;
+          await admin.from('workspace_chat_messages').insert([
+            { thread_id: threadId, role: 'user', content: question, turn_index: startIndex },
+            { thread_id: threadId, role: 'assistant', content: answer, citations, turn_index: startIndex + 1 },
+          ]);
+          await admin
+            .from('workspace_chat_threads')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', threadId);
+        }
+
+        controller.close();
+      } catch (err) {
+        controller.enqueue(
+          encoder.encode(
+            '\n\n[error: ' +
+              (err instanceof Error ? err.message : 'AI call failed') +
+              ']',
+          ),
+        );
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'X-Accel-Buffering': 'no',
+    },
+  });
 }
