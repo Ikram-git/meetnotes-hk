@@ -80,10 +80,16 @@
 /* Theme-aware overrides */
 .light .bg-\[\#080c0a\] { background-color: var(--page-bg) !important; }
 .light .bg-\[\#111916\] { background-color: var(--card-bg) !important; }
+/* Sidebar / sticky-header surfaces — sit one shade above the page bg.
+   Includes both the full-opacity (sidebar) and the /80 (sticky-blur header) variants. */
+.light .bg-\[\#0a0f0d\] { background-color: #f1f5f3 !important; }
 .light .bg-\[\#0a0f0d\]\/80 { background-color: rgba(248, 250, 249, 0.8) !important; }
+/* Task board column wells — a half-shade darker than cards. */
+.light .bg-\[\#0d1311\] { background-color: #eef2f0 !important; }
 .light .border-emerald-900\/30 { border-color: var(--card-border) !important; }
 .light .border-emerald-900\/20 { border-color: rgba(6, 78, 59, 0.08) !important; }
 .light .text-white { color: var(--text-primary) !important; }
+.light .text-gray-200 { color: var(--text-primary) !important; }
 .light .text-gray-300 { color: var(--text-secondary) !important; }
 .light .text-gray-400 { color: var(--text-secondary) !important; }
 .light .text-gray-500 { color: var(--text-muted) !important; }
@@ -231,7 +237,12 @@
 .stagger-children > *:nth-child(6) { animation-delay: 400ms; }
 
 /* Smooth transitions for theme switching */
-body, .bg-\[\#080c0a\], .bg-\[\#111916\], .bg-\[\#0a0f0d\]\/80 {
+body,
+.bg-\[\#080c0a\],
+.bg-\[\#111916\],
+.bg-\[\#0a0f0d\],
+.bg-\[\#0a0f0d\]\/80,
+.bg-\[\#0d1311\] {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
