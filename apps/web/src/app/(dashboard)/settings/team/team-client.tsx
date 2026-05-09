@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { confirmDialog } from '@/components/confirm-dialog';
 import { friendlyErrorMessage } from '@/lib/errors';
+import { VocabularyCard } from '@/components/vocabulary-card';
+import { WorkspaceAutomationCard } from '@/components/workspace-automation-card';
 
 type Member = {
   role: 'owner' | 'admin' | 'member';
@@ -268,8 +270,8 @@ export function TeamSettingsClient({
       )}
 
       {/* Members */}
-      <div className="bg-[#111916] rounded-xl border border-emerald-900/30 overflow-hidden">
-        <div className="px-6 py-4 border-b border-emerald-900/20 flex items-center justify-between">
+      <div className="bg-[#111916] rounded-xl border border-emerald-900/30">
+        <div className="px-6 py-4 border-b border-emerald-900/20 flex items-center justify-between rounded-t-xl">
           <h2 className="text-sm font-semibold text-white">Members ({members.length})</h2>
         </div>
         <div className="divide-y divide-emerald-900/20">
@@ -277,7 +279,7 @@ export function TeamSettingsClient({
             const isSelf = m.user.id === currentUserId;
             const initials = (m.user.full_name || m.user.email)[0]?.toUpperCase() ?? '?';
             return (
-              <div key={m.user.id} className="px-6 py-3 flex items-center gap-3">
+              <div key={m.user.id} className="relative px-6 py-3 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-semibold">
                   {initials}
                 </div>
@@ -338,6 +340,13 @@ export function TeamSettingsClient({
           </div>
         </div>
       )}
+
+      {/* Workspace-wide custom vocabulary */}
+      <VocabularyCard />
+
+      {/* Per-user auto-email-recap toggle (lives here because it
+          controls fan-out to teammates) */}
+      <WorkspaceAutomationCard />
 
       {/* Danger zone — owner only */}
       {isOwner && (
@@ -402,7 +411,7 @@ function RoleSelect({
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 mt-1 w-32 bg-[#111916] border border-emerald-900/30 rounded-lg shadow-xl py-1 z-30">
+        <div className="absolute right-0 mt-1 w-32 bg-[#111916] border border-emerald-900/30 rounded-lg shadow-xl py-1 z-50">
           {options.map((opt) => (
             <button
               key={opt.value}
