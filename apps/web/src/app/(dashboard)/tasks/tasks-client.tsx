@@ -266,7 +266,13 @@ function TaskCard({
     new Date(task.due_date) < new Date(new Date().toDateString());
 
   return (
-    <div className="bg-[#111916] border border-emerald-900/30 rounded-lg p-3 group">
+    <div
+      className={`bg-[#111916] rounded-lg p-3 group transition ${
+        overdue
+          ? 'border border-red-500/40 border-l-2 border-l-red-500/80 bg-red-500/[0.04]'
+          : 'border border-emerald-900/30'
+      }`}
+    >
       <div className="flex items-start gap-2">
         <button
           onClick={() =>
@@ -286,13 +292,11 @@ function TaskCard({
           )}
         </button>
         <div className="flex-1 min-w-0">
-          <p
-            className={`text-sm leading-snug ${
-              task.status === 'done' ? 'line-through text-gray-500' : 'text-gray-200'
-            }`}
-          >
-            {task.title}
-          </p>
+          <EditableTaskTitle
+            value={task.title}
+            done={task.status === 'done'}
+            onSave={(v) => onUpdate(task.id, { title: v })}
+          />
           <div className="mt-1.5 flex items-center gap-2 flex-wrap text-[11px]">
             {/* Assignee */}
             <AssigneeSelect
@@ -385,6 +389,62 @@ function StatusSelect({
       <option value="in_progress" className="bg-[#111916]">In progress</option>
       <option value="done" className="bg-[#111916]">Done</option>
     </select>
+  );
+}
+
+function EditableTaskTitle({
+  value,
+  done,
+  onSave,
+}: {
+  value: string;
+  done: boolean;
+  onSave: (v: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  const commit = () => {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== value) onSave(trimmed);
+    else setDraft(value);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') {
+            setDraft(value);
+            setEditing(false);
+          }
+        }}
+        className="w-full text-sm leading-snug bg-white/5 border border-emerald-500/40 rounded px-2 py-0.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+      />
+    );
+  }
+
+  return (
+    <p
+      onClick={() => setEditing(true)}
+      title="Click to edit"
+      className={`text-sm leading-snug cursor-text rounded hover:bg-white/[0.03] px-1 -mx-1 ${
+        done ? 'line-through text-gray-500' : 'text-gray-200'
+      }`}
+    >
+      {value}
+    </p>
   );
 }
 

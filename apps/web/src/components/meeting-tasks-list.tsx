@@ -154,7 +154,12 @@ export function MeetingTasksList({ meetingId }: { meetingId: string }) {
           task.status !== 'done' &&
           new Date(task.due_date) < new Date(new Date().toDateString());
         return (
-          <li key={task.id} className="flex items-start gap-3 group">
+          <li
+            key={task.id}
+            className={`flex items-start gap-3 group rounded-r-md transition ${
+              overdue ? 'border-l-2 border-l-red-500/60 pl-2 bg-red-500/[0.04]' : ''
+            }`}
+          >
             <button
               onClick={() =>
                 updateTask(task.id, {
@@ -175,13 +180,11 @@ export function MeetingTasksList({ meetingId }: { meetingId: string }) {
               )}
             </button>
             <div className="flex-1 min-w-0">
-              <p
-                className={`text-sm leading-relaxed ${
-                  task.status === 'done' ? 'text-gray-600 line-through' : 'text-gray-300'
-                }`}
-              >
-                {task.title}
-              </p>
+              <EditableTitle
+                value={task.title}
+                done={task.status === 'done'}
+                onSave={(v) => updateTask(task.id, { title: v })}
+              />
               <div className="mt-1.5 flex items-center gap-2 flex-wrap text-[11px]">
                 <select
                   value={task.assignee_user_id ?? ''}
@@ -296,6 +299,62 @@ function DueDateControl({
     >
       + due
     </button>
+  );
+}
+
+function EditableTitle({
+  value,
+  done,
+  onSave,
+}: {
+  value: string;
+  done: boolean;
+  onSave: (v: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  useEffect(() => {
+    setDraft(value);
+  }, [value]);
+
+  const commit = () => {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== value) onSave(trimmed);
+    else setDraft(value);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit();
+          if (e.key === 'Escape') {
+            setDraft(value);
+            setEditing(false);
+          }
+        }}
+        className="w-full text-sm leading-relaxed bg-white/5 border border-emerald-500/40 rounded px-2 py-0.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+      />
+    );
+  }
+
+  return (
+    <p
+      onClick={() => setEditing(true)}
+      title="Click to edit"
+      className={`text-sm leading-relaxed cursor-text rounded hover:bg-white/[0.03] px-1 -mx-1 ${
+        done ? 'text-gray-600 line-through' : 'text-gray-300'
+      }`}
+    >
+      {value}
+    </p>
   );
 }
 
