@@ -101,8 +101,8 @@ function SignupForm() {
           </div>
         </Link>
         <div>
-          <h2 className="text-3xl font-bold text-white mb-4">100 free minutes every month — and your team's invited.</h2>
-          <p className="text-gray-400 text-lg leading-relaxed">Live transcription with AI Q&amp;A, structured summaries in 18 languages, and a shared workspace for your team. No credit card.</p>
+          <h2 className="text-3xl font-bold text-white mb-4">300 free minutes every month — and your team's invited.</h2>
+          <p className="text-gray-400 text-lg leading-relaxed">Live transcription with AI Q&amp;A, structured summaries in 30+ languages, and a shared workspace for your team. No credit card.</p>
         </div>
         <p className="text-gray-600 text-sm italic">Hear Beyond Words.</p>
       </div>

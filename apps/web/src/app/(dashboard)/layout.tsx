@@ -109,7 +109,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState('');
   const [userTier, setUserTier] = useState('free');
   const [minutesUsed, setMinutesUsed] = useState(0);
-  const [minutesLimit, setMinutesLimit] = useState(100);
+  const [minutesLimit, setMinutesLimit] = useState(300);
   const [desktop, setDesktop] = useState(false);
   const [overdueCount, setOverdueCount] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -134,7 +134,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       if (profile) {
         setUserTier(profile.subscription_tier || 'free');
         setMinutesUsed(profile.minutes_used_this_month || 0);
-        setMinutesLimit(profile.minutes_limit || 100);
+        setMinutesLimit(profile.minutes_limit || 300);
       }
     }
     loadUser();

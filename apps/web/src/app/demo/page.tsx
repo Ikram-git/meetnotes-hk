@@ -63,7 +63,7 @@ export default function DemoPage() {
             >
               Get Started Free
             </Link>
-            <p className="text-xs text-gray-600 mt-3">100 free minutes every month · No credit card</p>
+            <p className="text-xs text-gray-600 mt-3">300 free minutes every month · No credit card</p>
           </div>
         </div>
       </main>
