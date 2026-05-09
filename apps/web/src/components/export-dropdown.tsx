@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from './toast';
 import { ShareDialog } from './share-dialog';
+import { DraftEmailDialog } from './draft-email-dialog';
 
 interface ExportDropdownProps {
   meetingId: string;
@@ -13,6 +14,7 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [draftEmailOpen, setDraftEmailOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -30,6 +32,11 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
     if (type === 'share') {
       setOpen(false);
       setShareOpen(true);
+      return;
+    }
+    if (type === 'draft-email') {
+      setOpen(false);
+      setDraftEmailOpen(true);
       return;
     }
 
@@ -101,6 +108,11 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
         <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
       </svg>
     )},
+    { type: 'draft-email', label: 'Draft follow-up email', icon: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    )},
     { type: 'clipboard', label: 'Copy as Text', icon: (
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
@@ -155,6 +167,7 @@ export function ExportDropdown({ meetingId, disabled }: ExportDropdownProps) {
       )}
 
       <ShareDialog open={shareOpen} onClose={() => setShareOpen(false)} meetingId={meetingId} />
+      <DraftEmailDialog open={draftEmailOpen} onClose={() => setDraftEmailOpen(false)} meetingId={meetingId} />
     </div>
   );
 }
