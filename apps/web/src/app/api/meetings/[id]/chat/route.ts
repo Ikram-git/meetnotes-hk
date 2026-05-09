@@ -120,41 +120,66 @@ export async function POST(
   const userPrompt = `Meeting: ${meeting.title || 'Untitled meeting'}\n\n<SUMMARY>\n${summaryBlock}\n</SUMMARY>\n\n<TRANSCRIPT>\n${transcriptText || '(empty)'}\n</TRANSCRIPT>\n\nQuestion: ${question}`;
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
-  let answer = '';
-  try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 600,
-      system: SYSTEM_PROMPT,
-      messages: [
-        ...history.map((t) => ({ role: t.role, content: t.content } as Anthropic.MessageParam)),
-        { role: 'user' as const, content: userPrompt },
-      ],
-    });
-    answer = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('\n');
-  } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'AI call failed' },
-      { status: 500 },
-    );
-  }
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      try {
+        // Same metadata-then-text framing as workspace-chat. Per-meeting
+        // chat doesn't have citations, so the metadata is just a marker.
+        controller.enqueue(encoder.encode(JSON.stringify({}) + '\n'));
+        let answer = '';
+        const claudeStream = anthropic.messages.stream({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 600,
+          system: SYSTEM_PROMPT,
+          messages: [
+            ...history.map((t) => ({ role: t.role, content: t.content } as Anthropic.MessageParam)),
+            { role: 'user' as const, content: userPrompt },
+          ],
+        });
+        for await (const event of claudeStream) {
+          if (
+            event.type === 'content_block_delta' &&
+            event.delta.type === 'text_delta'
+          ) {
+            const piece = event.delta.text;
+            answer += piece;
+            controller.enqueue(encoder.encode(piece));
+          }
+        }
 
-  // Persist both turns to meeting_chats so workspace members see the
-  // shared Q&A history.
-  const { count } = await a
-    .from('meeting_chats')
-    .select('*', { count: 'exact', head: true })
-    .eq('meeting_id', meetingId);
-  const startIndex = count ?? 0;
-  await a.from('meeting_chats').insert([
-    { meeting_id: meetingId, role: 'user', content: question, turn_index: startIndex },
-    { meeting_id: meetingId, role: 'assistant', content: answer, turn_index: startIndex + 1 },
-  ]);
+        // Persist Q&A
+        const { count } = await a
+          .from('meeting_chats')
+          .select('*', { count: 'exact', head: true })
+          .eq('meeting_id', meetingId);
+        const startIndex = count ?? 0;
+        await a.from('meeting_chats').insert([
+          { meeting_id: meetingId, role: 'user', content: question, turn_index: startIndex },
+          { meeting_id: meetingId, role: 'assistant', content: answer, turn_index: startIndex + 1 },
+        ]);
 
-  return NextResponse.json({ answer });
+        controller.close();
+      } catch (err) {
+        controller.enqueue(
+          encoder.encode(
+            '\n\n[error: ' +
+              (err instanceof Error ? err.message : 'AI call failed') +
+              ']',
+          ),
+        );
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'X-Accel-Buffering': 'no',
+    },
+  });
 }
 
 function buildSummaryBlock(s: {

@@ -79,12 +79,42 @@ export function MeetingChatPanel({ meetingId }: { meetingId: string }) {
         );
         return;
       }
-      const { answer } = (await res.json()) as { answer: string };
-      setMessages((m) =>
-        m.map((msg) =>
-          msg.id === placeholder.id ? { ...msg, content: answer, pending: false } : msg,
-        ),
-      );
+      // Streaming: first line is JSON metadata (empty for per-meeting),
+      // rest is the answer text streaming token-by-token.
+      if (!res.body) throw new Error('Empty response body');
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let metadataParsed = false;
+      let answer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const piece = decoder.decode(value, { stream: true });
+        if (!metadataParsed) {
+          buffer += piece;
+          const nl = buffer.indexOf('\n');
+          if (nl >= 0) {
+            metadataParsed = true;
+            answer += buffer.slice(nl + 1);
+            buffer = '';
+            const a = answer;
+            setMessages((m) =>
+              m.map((msg) =>
+                msg.id === placeholder.id ? { ...msg, content: a, pending: false } : msg,
+              ),
+            );
+          }
+        } else {
+          answer += piece;
+          const a = answer;
+          setMessages((m) =>
+            m.map((msg) =>
+              msg.id === placeholder.id ? { ...msg, content: a, pending: false } : msg,
+            ),
+          );
+        }
+      }
     } catch (err) {
       setMessages((m) =>
         m.map((msg) =>

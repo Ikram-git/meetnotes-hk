@@ -154,25 +154,64 @@ export function ChatClient({
         return;
       }
 
-      const data = (await res.json()) as {
-        answer: string;
-        citations: Citation[];
-        threadId: string | null;
-      };
+      // Streaming response: first line is JSON metadata
+      // {threadId, citations}, the rest is the answer text streaming.
+      if (!res.body) throw new Error('Empty response body');
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let metadataParsed = false;
+      let metadataCitations: Citation[] = [];
+      let metadataThreadId: string | null = null;
+      let answer = '';
 
-      setMessages((m) =>
-        m.map((msg) =>
-          msg.id === placeholderMsg.id
-            ? { ...msg, content: data.answer, citations: data.citations }
-            : msg,
-        ),
-      );
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        if (!metadataParsed) {
+          buffer += chunk;
+          const newlineIdx = buffer.indexOf('\n');
+          if (newlineIdx >= 0) {
+            const metaLine = buffer.slice(0, newlineIdx);
+            try {
+              const meta = JSON.parse(metaLine) as {
+                threadId?: string | null;
+                citations?: Citation[];
+              };
+              metadataCitations = meta.citations ?? [];
+              metadataThreadId = meta.threadId ?? null;
+            } catch {
+              /* ignore */
+            }
+            metadataParsed = true;
+            answer += buffer.slice(newlineIdx + 1);
+            buffer = '';
+            // Render any text that came after the metadata in the same chunk
+            const a0 = answer;
+            setMessages((m) =>
+              m.map((msg) =>
+                msg.id === placeholderMsg.id
+                  ? { ...msg, content: a0, citations: metadataCitations }
+                  : msg,
+              ),
+            );
+          }
+        } else {
+          answer += chunk;
+          const a = answer;
+          setMessages((m) =>
+            m.map((msg) =>
+              msg.id === placeholderMsg.id
+                ? { ...msg, content: a, citations: metadataCitations }
+                : msg,
+            ),
+          );
+        }
+      }
 
-      // If this was a brand-new chat (no threadId before), the server
-      // created one; reflect that in the URL so the sidebar lights up
-      // and the user can come back to it.
-      if (!threadId && data.threadId) {
-        onThreadCreated(data.threadId);
+      if (!threadId && metadataThreadId) {
+        onThreadCreated(metadataThreadId);
       } else {
         onActivity();
       }
