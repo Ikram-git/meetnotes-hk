@@ -345,6 +345,39 @@
   animation: blink-cursor 1s steps(1) infinite;
 }
 
+/* Demo reel is a "screen / video" — keep it dark regardless of page
+   theme. These rules undo the light-mode overrides for elements inside
+   the reel frame so the marketing footage stays cinematic on a white
+   page too. Listed AFTER the .light overrides so equal-specificity
+   !important rules win on cascade order. */
+.demo-reel-frame .bg-\[\#080c0a\],
+.demo-reel-frame .bg-\[\#080c0a\]\/60 {
+  background-color: #080c0a !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.demo-reel-frame .bg-\[\#0a0f0d\] {
+  background-color: #0a0f0d !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.demo-reel-frame .text-white { color: #ffffff !important; }
+.demo-reel-frame .text-gray-100 { color: #f3f4f6 !important; }
+.demo-reel-frame .text-gray-200 { color: #e5e7eb !important; }
+.demo-reel-frame .text-gray-300 { color: #d1d5db !important; }
+.demo-reel-frame .text-gray-400 { color: #9ca3af !important; }
+.demo-reel-frame .text-gray-500 { color: #6b7280 !important; }
+.demo-reel-frame .text-gray-600 { color: #4b5563 !important; }
+.demo-reel-frame .text-emerald-300 { color: #6ee7b7 !important; }
+.demo-reel-frame .text-emerald-200 { color: #a7f3d0 !important; }
+.demo-reel-frame .text-purple-200 { color: #ddd6fe !important; }
+.demo-reel-frame .text-purple-300 { color: #c4b5fd !important; }
+.demo-reel-frame .text-cyan-200 { color: #a5f3fc !important; }
+.demo-reel-frame .text-cyan-300 { color: #67e8f9 !important; }
+.demo-reel-frame .text-amber-300 { color: #fcd34d !important; }
+.demo-reel-frame .border-emerald-900\/30 { border-color: rgba(6, 78, 59, 0.4) !important; }
+
 /* Soft hover lift — for cards/buttons we want to feel tactile. */
 .hover-lift {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
