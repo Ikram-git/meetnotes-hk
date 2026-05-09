@@ -113,7 +113,7 @@ export function DemoReel({ compact = false }: { compact?: boolean }) {
         </div>
 
         {/* Scene viewport — fixed aspect for stable embedding */}
-        <div className={`relative ${compact ? 'h-[440px]' : 'h-[540px] md:h-[580px]'} bg-[#080c0a] overflow-hidden`}>
+        <div className={`relative ${compact ? 'h-[400px] sm:h-[420px]' : 'h-[540px] md:h-[580px]'} bg-[#080c0a] overflow-hidden`}>
           {/* Brand glow backdrop */}
           <div className="absolute inset-0 pointer-events-none opacity-60">
             <div className="absolute -top-20 -left-20 w-80 h-80 bg-emerald-500/12 rounded-full blur-3xl" />
