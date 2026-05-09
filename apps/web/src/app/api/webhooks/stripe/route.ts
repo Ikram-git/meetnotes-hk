@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
         .update({
           subscription_tier: 'free',
           subscription_status: 'cancelled',
-          minutes_limit: 100,
+          minutes_limit: 300,
           stripe_subscription_id: null,
         })
         .eq('stripe_customer_id', customerId)
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
       if (ownerProfile?.id) {
         await supabase
           .from('workspaces')
-          .update({ minutes_limit: 100 })
+          .update({ minutes_limit: 300 })
           .eq('owner_id', ownerProfile.id);
       }
 

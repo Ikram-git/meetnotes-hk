@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     await supabase.from('profiles').update({
       subscription_tier: 'free',
       subscription_status: 'active',
-      minutes_limit: 100,
+      minutes_limit: 300,
     }).eq('id', user.id);
     return NextResponse.json({ synced: true, tier: 'free' });
   }

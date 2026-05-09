@@ -32,7 +32,7 @@ export default async function MeetingsPage() {
   const totalMeetings = meetings?.length || 0;
   const completedMeetings = meetings?.filter((m) => m.status === 'completed').length || 0;
   const minutesUsed = profile?.minutes_used_this_month || 0;
-  const minutesLimit = profile?.minutes_limit || 100;
+  const minutesLimit = profile?.minutes_limit || 300;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr,340px] gap-6 max-w-[1400px] mx-auto">
