@@ -35,6 +35,20 @@ export class DeepgramProvider implements STTProvider {
     // with `detect_language: true` auto-detects from ~36 supported languages
     // and picks the right model for each. Setting `language: 'en'` would
     // bias towards English and hurt accuracy for non-English meetings.
+    //
+    // `keywords` boosts proper nouns / jargon supplied by the workspace's
+    // custom vocabulary. Format is `term:intensifier` (intensifier 1–10).
+    // 5 is high enough to nudge recognition without hallucinating the term
+    // into unrelated audio. Deepgram caps total keywords-per-request at 200.
+    const keywords = (options?.keywords ?? [])
+      .map((k) => k.trim())
+      .filter((k) => k.length > 0 && k.length <= 80)
+      .slice(0, 200)
+      .map((k) => `${k}:5`);
+    if (keywords.length > 0) {
+      console.log(`[Deepgram] Boosting ${keywords.length} custom-vocabulary terms`);
+    }
+
     const transcribePromise = this.client.listen.prerecorded.transcribeFile(
       audioBuffer,
       {
@@ -45,6 +59,7 @@ export class DeepgramProvider implements STTProvider {
         punctuate: true,
         utterances: true,
         mimetype,
+        ...(keywords.length > 0 ? { keywords } : {}),
       }
     );
 
