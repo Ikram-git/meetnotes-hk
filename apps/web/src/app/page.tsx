@@ -79,9 +79,7 @@ export default async function LandingPage() {
               <p className="text-base sm:text-lg text-gray-400 max-w-xl mx-auto lg:mx-0 mb-7 leading-relaxed">
                 Capture live, ask BRIVA AI anything across every meeting, and ship the action items — automatically.
               </p>
-              <div className="lg:flex lg:items-center lg:gap-4">
-                <HeroCtas isLoggedIn={isLoggedIn} />
-              </div>
+              <HeroCtas isLoggedIn={isLoggedIn} />
             </div>
 
             {/* Right: demo reel */}
