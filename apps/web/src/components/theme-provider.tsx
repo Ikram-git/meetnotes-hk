@@ -7,19 +7,19 @@ type Theme = 'dark' | 'light';
 const ThemeContext = createContext<{
   theme: Theme;
   toggleTheme: () => void;
-}>({ theme: 'dark', toggleTheme: () => {} });
+}>({ theme: 'light', toggleTheme: () => {} });
 
 export function useTheme() {
   return useContext(ThemeContext);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('briva-theme') as Theme | null;
-    if (saved) setTheme(saved);
+    if (saved === 'dark' || saved === 'light') setTheme(saved);
     setMounted(true);
   }, []);
 
