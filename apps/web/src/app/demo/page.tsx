@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { DemoReel } from '@/components/demo-reel';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function DemoPage() {
   return (
@@ -18,12 +19,15 @@ export default function DemoPage() {
             </div>
             <span className="text-xl font-bold text-white">Briva</span>
           </Link>
-          <Link
-            href="/signup"
-            className="text-sm font-medium bg-emerald-500 text-white px-5 py-2 rounded-lg hover:bg-emerald-400 transition"
-          >
-            Get Started Free
-          </Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link
+              href="/signup"
+              className="text-sm font-medium bg-emerald-500 text-white px-5 py-2 rounded-lg hover:bg-emerald-400 transition"
+            >
+              Get Started Free
+            </Link>
+          </div>
         </div>
       </header>
 
