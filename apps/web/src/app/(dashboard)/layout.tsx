@@ -111,6 +111,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const [minutesUsed, setMinutesUsed] = useState(0);
   const [minutesLimit, setMinutesLimit] = useState(100);
   const [desktop, setDesktop] = useState(false);
+  const [overdueCount, setOverdueCount] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
   const { theme, toggleTheme } = useTheme();
 
@@ -146,6 +147,24 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      fetch('/api/tasks/my-overdue-count')
+        .then((r) => (r.ok ? r.json() : { count: 0 }))
+        .then((d) => {
+          if (!cancelled) setOverdueCount(d.count ?? 0);
+        })
+        .catch(() => {});
+    };
+    load();
+    // Re-check whenever the route changes — visiting /tasks should
+    // refresh the badge once the user has reviewed/completed items.
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
   useEffect(() => {
     setMobileNavOpen(false);
@@ -203,6 +222,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             : isPurple
               ? 'text-purple-400/80 hover:text-purple-300 hover:bg-purple-500/10'
               : 'text-gray-400 hover:text-white hover:bg-white/5';
+          const showOverdueBadge = item.href === '/tasks' && overdueCount > 0;
           return (
             <Link
               key={item.href}
@@ -211,6 +231,14 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             >
               {item.icon}
               <span className={labelClass}>{item.label}</span>
+              {showOverdueBadge && (
+                <span
+                  className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 text-[10px] font-bold rounded-full bg-red-500 text-white"
+                  title={`${overdueCount} task${overdueCount === 1 ? '' : 's'} due or overdue`}
+                >
+                  {overdueCount > 99 ? '99+' : overdueCount}
+                </span>
+              )}
             </Link>
           );
         })}
