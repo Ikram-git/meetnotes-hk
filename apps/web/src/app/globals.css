@@ -346,19 +346,26 @@
 }
 
 /* Demo reel is a "screen / video" — keep it dark regardless of page
-   theme. These rules undo the light-mode overrides for elements inside
-   the reel frame so the marketing footage stays cinematic on a white
-   page too. Listed AFTER the .light overrides so equal-specificity
-   !important rules win on cascade order. */
-.demo-reel-frame .bg-\[\#080c0a\],
+   theme. Uses a deep-emerald palette (not pitch black) so it reads as
+   "branded dark surface" on a white page rather than a hard rectangle.
+   Listed AFTER the .light overrides so equal-specificity !important
+   rules win on cascade order. */
+.demo-reel-frame .bg-\[\#080c0a\] {
+  background-color: #061814 !important;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.10) 0%, transparent 55%),
+    radial-gradient(at 100% 100%, rgba(20, 184, 166, 0.08) 0%, transparent 55%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
 .demo-reel-frame .bg-\[\#080c0a\]\/60 {
-  background-color: #080c0a !important;
+  background-color: rgba(6, 22, 18, 0.85) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
 .demo-reel-frame .bg-\[\#0a0f0d\] {
-  background-color: #0a0f0d !important;
-  background-image: none !important;
+  background-color: #082720 !important;
+  background-image: linear-gradient(180deg, #0a2e26 0%, #061814 100%) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }

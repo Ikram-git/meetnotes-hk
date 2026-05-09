@@ -56,34 +56,38 @@ export default async function LandingPage() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="pt-24 sm:pt-32 pb-16 sm:pb-20 px-4 sm:px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/30 via-transparent to-transparent" />
-        <div className="max-w-4xl mx-auto text-center relative stagger-children">
-          <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-sm font-medium px-4 py-1.5 rounded-full mb-8 border border-emerald-500/20">
-            <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-            Live transcription &middot; Team workspaces &middot; Windows desktop app
-          </div>
-          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight mb-6">
-            AI Meeting Notes
-            <br />
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-              For You And Your Team
-            </span>
-          </h1>
-          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Record meetings live or upload audio, get AI summaries and action items in 18 languages, ask questions about any meeting, and share a workspace with your team.
-          </p>
-          <div>
-            <HeroCtas isLoggedIn={isLoggedIn} />
-          </div>
-        </div>
-      </section>
+      {/* Hero + demo reel — side-by-side on desktop so the reel is
+          above the fold. Stacks on mobile with tighter spacing. */}
+      <section className="relative pt-20 sm:pt-24 pb-10 sm:pb-12 px-4 sm:px-6 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/30 via-transparent to-transparent pointer-events-none" />
+        <div className="max-w-7xl mx-auto relative">
+          <div className="grid lg:grid-cols-[minmax(0,1fr),minmax(0,1.15fr)] gap-8 lg:gap-12 items-center">
+            {/* Left: copy */}
+            <div className="text-center lg:text-left stagger-children">
+              <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-xs sm:text-sm font-medium px-3 py-1 rounded-full mb-5 border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                Live transcription &middot; AI Q&amp;A &middot; Team workspaces
+              </div>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-[1.1] tracking-tight mb-5">
+                AI meeting notes
+                <br />
+                <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+                  for you and your team
+                </span>
+              </h1>
+              <p className="text-base sm:text-lg text-gray-400 max-w-xl mx-auto lg:mx-0 mb-7 leading-relaxed">
+                Record live or upload audio. Get structured summaries, ask anything across every meeting, and ship the action items — automatically.
+              </p>
+              <div className="lg:flex lg:items-center lg:gap-4">
+                <HeroCtas isLoggedIn={isLoggedIn} />
+              </div>
+            </div>
 
-      {/* Animated product demo */}
-      <section className="relative px-4 sm:px-6 pb-12 sm:pb-16">
-        <div className="max-w-6xl mx-auto">
-          <DemoReel compact />
+            {/* Right: demo reel */}
+            <div className="lg:pl-2 animate-fade-in-up">
+              <DemoReel compact />
+            </div>
+          </div>
         </div>
       </section>
 
