@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { HeroCtas } from '@/components/hero-ctas';
+import { DemoReel } from '@/components/demo-reel';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,6 +77,13 @@ export default async function LandingPage() {
           <div>
             <HeroCtas isLoggedIn={isLoggedIn} />
           </div>
+        </div>
+      </section>
+
+      {/* Animated product demo */}
+      <section className="relative px-4 sm:px-6 pb-12 sm:pb-16">
+        <div className="max-w-6xl mx-auto">
+          <DemoReel compact />
         </div>
       </section>
 

@@ -336,6 +336,15 @@
   animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Blinking cursor for typed-text effects (DemoReel "ask AI" scene). */
+@keyframes blink-cursor {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.animate-blink {
+  animation: blink-cursor 1s steps(1) infinite;
+}
+
 /* Soft hover lift — for cards/buttons we want to feel tactile. */
 .hover-lift {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
