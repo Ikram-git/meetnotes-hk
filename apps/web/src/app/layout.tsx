@@ -20,8 +20,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Inline script runs before hydration to avoid a dark→light flash.
+  // Light is the new default; users who explicitly toggled to dark
+  // get their preference from localStorage.
+  const noFlashScript = `(function(){try{var s=localStorage.getItem('briva-theme');var t=s==='dark'?'dark':'light';document.documentElement.classList.add(t);}catch(e){document.documentElement.classList.add('light');}})();`;
+
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
+      </head>
       <body className={font.className}>
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>
