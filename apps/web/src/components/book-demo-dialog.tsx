@@ -65,7 +65,7 @@ export function BookDemoDialog({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Book a demo" size="md" closeOnBackdrop={!submitting}>
+    <Modal open={open} onClose={onClose} title="Book a demo" size="lg" closeOnBackdrop={!submitting}>
       {done ? (
         <div className="p-6 text-center">
           <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
@@ -86,7 +86,10 @@ export function BookDemoDialog({
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
+        <form
+          onSubmit={handleSubmit}
+          className="p-5 space-y-3.5 max-h-[calc(100vh-160px)] overflow-y-auto"
+        >
           <p className="text-xs text-gray-500">
             Tell us a little about your team and we&apos;ll set up a 20-minute walkthrough on the features that matter to you.
           </p>
