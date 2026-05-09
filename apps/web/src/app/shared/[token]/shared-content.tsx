@@ -131,7 +131,12 @@ export function SharedContent({ token, requiresPassword, meetingTitle, meeting: 
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5.6 15.94 Q5.6 4.69 11.25 4.69 L12.75 4.69 Q18.38 4.69 18.38 15.94" /><rect x="8.44" y="11.25" width="1.5" height="5.63" rx="0.75" fill="currentColor" stroke="none" /><rect x="11.25" y="9" width="1.5" height="7.88" rx="0.75" fill="currentColor" stroke="none" /><rect x="14.06" y="12.38" width="1.5" height="4.5" rx="0.75" fill="currentColor" stroke="none" />
               </svg>
             </div>
-            <span className="text-base font-bold text-white">Briva</span>
+            <div className="leading-tight">
+              <div className="text-base font-bold text-white">Briva</div>
+              <div className="text-[9px] font-medium italic text-emerald-400/90 tracking-wide hidden sm:block">
+                Hear Beyond Words.
+              </div>
+            </div>
           </Link>
           <Link href="/signup" className="text-xs sm:text-sm font-medium bg-emerald-500 text-white px-3 sm:px-4 py-1.5 rounded-lg hover:bg-emerald-400 transition">
             Try Briva Free

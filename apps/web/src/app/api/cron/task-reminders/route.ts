@@ -141,6 +141,7 @@ export async function GET(req: NextRequest) {
 ${sections.join('')}
 <p style="margin:28px 0 12px;"><a href="${appUrl}/tasks" style="display:inline-block;background:#10b981;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:14px;">View all tasks →</a></p>
 <p style="margin:0;font-size:12px;color:#888;">You're receiving this because you're assigned to open tasks in Briva. Manage notifications in <a href="${appUrl}/settings" style="color:#10b981;">Settings</a>.</p>
+<p style="margin:14px 0 0;font-size:11px;color:#aaa;"><strong style="color:#10b981;">Briva</strong> &mdash; <em style="color:#10b981;">Hear Beyond Words.</em></p>
 </body></html>`;
 
     const text = [

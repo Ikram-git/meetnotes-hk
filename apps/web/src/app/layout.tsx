@@ -7,9 +7,9 @@ import './globals.css';
 const font = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 
 export const metadata: Metadata = {
-  title: 'Briva — AI meeting notes with live transcription & team workspaces',
+  title: 'Briva — Hear Beyond Words. The AI workspace for meetings.',
   description:
-    'Record meetings live or upload audio, get AI summaries and action items, ask questions about any meeting, and share a workspace with your team. 30+ languages with code-switching.',
+    'Hear Beyond Words. Briva captures, summarises, and ships the action items from every meeting your team runs — across 30+ languages, with cross-meeting AI search and shared task workflows.',
   icons: {
     icon: '/favicon.svg',
   },

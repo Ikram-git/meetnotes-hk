@@ -105,7 +105,7 @@ export async function POST(
 
   const senderName = profile?.full_name || 'Briva';
   const replyTo = profile?.email || undefined;
-  const html = `<!DOCTYPE html><html><body style="margin:0;padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1a1a1a;line-height:1.55;font-size:15px;">${bodyToHtml(text)}<hr style="border:none;border-top:1px solid #eee;margin:28px 0 14px;"><p style="margin:0;font-size:12px;color:#888;">Sent via <a href="https://meetbriva.com" style="color:#10b981;text-decoration:none;">Briva</a></p></body></html>`;
+  const html = `<!DOCTYPE html><html><body style="margin:0;padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1a1a1a;line-height:1.55;font-size:15px;">${bodyToHtml(text)}<hr style="border:none;border-top:1px solid #eee;margin:28px 0 14px;"><p style="margin:0;font-size:12px;color:#888;">Sent via <a href="https://meetbriva.com" style="color:#10b981;text-decoration:none;font-weight:600;">Briva</a> &mdash; <em style="color:#10b981;">Hear Beyond Words.</em></p></body></html>`;
 
   try {
     const { Resend } = await import('resend');
