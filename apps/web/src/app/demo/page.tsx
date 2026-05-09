@@ -17,7 +17,12 @@ export default function DemoPage() {
                 <rect x="14.06" y="12.38" width="1.5" height="4.5" rx="0.75" fill="currentColor" stroke="none" />
               </svg>
             </div>
-            <span className="text-xl font-bold text-white">Briva</span>
+            <div className="leading-tight">
+              <div className="text-xl font-bold text-white">Briva</div>
+              <div className="text-[10px] font-medium italic text-emerald-400/90 tracking-wide">
+                Hear Beyond Words.
+              </div>
+            </div>
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />

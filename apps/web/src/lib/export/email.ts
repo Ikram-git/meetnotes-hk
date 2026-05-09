@@ -62,8 +62,9 @@ export function buildEmailHtml(options: EmailExportOptions): string {
 
       <hr style="border:none;border-top:1px solid #eee;margin:32px 0 16px;" />
       <p style="color:#999;font-size:12px;text-align:center;">
-        Sent via <a href="${appUrl}" style="color:#10b981;text-decoration:none;">Briva</a>
-        &nbsp;&middot;&nbsp;
+        Sent via <a href="${appUrl}" style="color:#10b981;text-decoration:none;font-weight:600;">Briva</a>
+        &mdash; <em style="color:#10b981;">Hear Beyond Words.</em>
+        <br/>
         <a href="${appUrl}/meetings/${meeting.id}" style="color:#10b981;text-decoration:none;">View full meeting</a>
       </p>
     </div>

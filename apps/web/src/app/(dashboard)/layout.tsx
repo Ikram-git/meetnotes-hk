@@ -185,7 +185,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const sidebar = (
     <>
       <Link href="/meetings" className="flex items-center gap-2 px-4 pt-5 pb-3">
-        <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+        <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
           <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5.6 15.94 Q5.6 4.69 11.25 4.69 L12.75 4.69 Q18.38 4.69 18.38 15.94" />
             <rect x="8.44" y="11.25" width="1.5" height="5.63" rx="0.75" fill="currentColor" stroke="none" />
@@ -193,7 +193,12 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             <rect x="14.06" y="12.38" width="1.5" height="4.5" rx="0.75" fill="currentColor" stroke="none" />
           </svg>
         </div>
-        <span className="text-lg font-bold text-white">Briva</span>
+        <div className="leading-tight">
+          <div className="text-lg font-bold text-white">Briva</div>
+          <div className="text-[9px] font-medium italic text-emerald-400/90 tracking-wide -mt-0.5">
+            Hear Beyond Words.
+          </div>
+        </div>
       </Link>
 
       <div className="px-3 pb-3">

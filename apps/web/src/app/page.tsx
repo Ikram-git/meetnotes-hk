@@ -70,12 +70,16 @@ export default async function LandingPage() {
                 <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
                 The AI workspace for meetings
               </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-[1.1] tracking-tight mb-5">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-white leading-[1.1] tracking-tight mb-3">
                 Turn meetings into{' '}
                 <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
                   action.
                 </span>
               </h1>
+              {/* Slogan — small italic, right under the headline */}
+              <p className="text-sm sm:text-base font-medium italic text-emerald-400/90 mb-5 tracking-wide">
+                Hear Beyond Words.
+              </p>
               <p className="text-base sm:text-lg text-gray-400 max-w-xl mx-auto lg:mx-0 mb-7 leading-relaxed">
                 Capture live, ask BRIVA AI anything across every meeting, and ship the action items — automatically.
               </p>
@@ -255,7 +259,9 @@ export default async function LandingPage() {
                 <rect x="14.06" y="12.38" width="1.5" height="4.5" rx="0.75" fill="currentColor" stroke="none" />
               </svg>
             </div>
-            <span>Briva</span>
+            <span className="font-medium text-gray-400">Briva</span>
+            <span className="hidden sm:inline text-gray-700">·</span>
+            <span className="hidden sm:inline italic text-emerald-500/80">Hear Beyond Words.</span>
           </div>
           <div className="flex gap-4">
             <Link href="/privacy" className="hover:text-gray-400 transition">Privacy Policy</Link>
