@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/client';
 import { SettingsNav } from '@/components/settings-nav';
 import { LanguageSelector } from '@/components/language-selector';
 import { GoogleIntegrationCard } from '@/components/google-integration-card';
-import { VocabularyCard } from '@/components/vocabulary-card';
 // API Keys / Zapier hidden from UI until public Zapier review is complete.
 // See docs/zapier-status.md for current state and resume instructions.
 // import { ApiKeysCard } from '@/components/api-keys-card';
@@ -17,9 +16,7 @@ export default function SettingsPage() {
   const [userEmail, setUserEmail] = useState('');
   const [settings, setSettings] = useState({
     full_name: '', preferred_language: 'en', preferred_summary_style: 'concise', timezone: 'Asia/Hong_Kong',
-    auto_email_recap: false,
   });
-  const [tier, setTier] = useState<'free' | 'pro' | 'team' | 'enterprise'>('free');
 
   useEffect(() => {
     async function loadProfile() {
@@ -27,16 +24,14 @@ export default function SettingsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserEmail(user.email || '');
-      const { data } = await supabase.from('profiles').select('full_name, preferred_language, preferred_summary_style, timezone, auto_email_recap, subscription_tier').eq('id', user.id).single();
+      const { data } = await supabase.from('profiles').select('full_name, preferred_language, preferred_summary_style, timezone').eq('id', user.id).single();
       if (data) {
         setSettings({
           full_name: data.full_name || '',
           preferred_language: data.preferred_language || 'en',
           preferred_summary_style: data.preferred_summary_style || 'concise',
           timezone: data.timezone || 'Asia/Hong_Kong',
-          auto_email_recap: !!data.auto_email_recap,
         });
-        setTier((data.subscription_tier || 'free') as any);
       }
       setLoading(false);
     }
@@ -136,46 +131,10 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="bg-[#111916] rounded-xl border border-emerald-900/30 overflow-hidden">
-          <div className="px-6 py-4 border-b border-emerald-900/20">
-            <h2 className="text-sm font-semibold text-white">Automation</h2>
-          </div>
-          <div className="p-6 space-y-3">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.auto_email_recap}
-                disabled={tier === 'free'}
-                onChange={(e) => setSettings({ ...settings, auto_email_recap: e.target.checked })}
-                className="mt-1 w-4 h-4 rounded border-gray-700 bg-white/5 text-emerald-500 focus:ring-emerald-500/30 disabled:opacity-50"
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm text-white">Auto-email recap to attendees</span>
-                  {tier === 'free' && (
-                    <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">PRO+</span>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  When a meeting finishes summarising and Briva auto-linked it to a Google Calendar event, send the recap to every attendee on the invite.
-                  Skips short meetings (&lt;2 min) and only sends once per meeting.
-                </p>
-                {tier === 'free' && (
-                  <p className="text-xs text-amber-400/80 mt-1.5">
-                    Upgrade to Pro to enable auto-recap.
-                  </p>
-                )}
-              </div>
-            </label>
-          </div>
-        </div>
-
         <button onClick={handleSave} disabled={saving}
           className="w-full bg-emerald-500 text-white py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-400 transition disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
-
-        <VocabularyCard />
 
         <GoogleIntegrationCard />
         {/* <ApiKeysCard /> hidden — see docs/zapier-status.md */}
