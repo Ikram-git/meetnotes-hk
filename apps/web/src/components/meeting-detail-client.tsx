@@ -698,7 +698,7 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
           {summary && Array.isArray(summary.action_items) && summary.action_items.length > 0 ? (
             <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-6">
               <h2 className="text-lg font-semibold text-white mb-4">Action Items</h2>
-              <MeetingTasksList meetingId={meeting.id} />
+              <MeetingTasksList meetingId={meeting.id} fallbackItems={summary.action_items} />
             </div>
           ) : isProcessingStatus && !summary ? (
             <div className="bg-[#111916] rounded-xl border border-emerald-900/30 p-6">

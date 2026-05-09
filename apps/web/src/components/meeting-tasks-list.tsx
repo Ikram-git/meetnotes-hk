@@ -25,13 +25,31 @@ interface Task {
   assignee: Profile | null;
 }
 
+interface FallbackItem {
+  text?: string;
+  assignee?: string | null;
+}
+
 /**
  * Task-aware action item list shown inside the meeting detail page.
  * Loads /api/tasks?meetingId=... and renders each as an editable row
- * with assignee dropdown, status, and due-date chip. Falls back to a
- * read-only static list when the tasks API can't be reached.
+ * with assignee dropdown, status, and due-date chip.
+ *
+ * On first render right after a meeting completes, the `tasks` table
+ * is briefly empty because promoteActionItemsToTasks runs in an
+ * after() block that completes 1-3s after the response is sent.
+ * To avoid showing "No action items identified." in that gap, we
+ * render the raw summary.action_items as a read-only fallback and
+ * poll /api/tasks every 2s for up to ~24s, swapping to the editable
+ * view as soon as the tasks have been promoted.
  */
-export function MeetingTasksList({ meetingId }: { meetingId: string }) {
+export function MeetingTasksList({
+  meetingId,
+  fallbackItems = [],
+}: {
+  meetingId: string;
+  fallbackItems?: FallbackItem[];
+}) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [members, setMembers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,14 +57,27 @@ export function MeetingTasksList({ meetingId }: { meetingId: string }) {
 
   useEffect(() => {
     let cancelled = false;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 12; // ~24s with 2s interval
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const loadTasks = async (): Promise<Task[]> => {
+      const r = await fetch(`/api/tasks?meetingId=${meetingId}`);
+      if (!r.ok) return [];
+      const d = await r.json();
+      return (d.tasks ?? []) as Task[];
+    };
+
+    const expectedCount = fallbackItems.length;
+
     (async () => {
       try {
-        const [tasksRes, wsRes] = await Promise.all([
-          fetch(`/api/tasks?meetingId=${meetingId}`).then((r) => r.json()),
+        const [initialTasks, wsRes] = await Promise.all([
+          loadTasks(),
           fetch('/api/workspaces').then((r) => r.json()),
         ]);
         if (cancelled) return;
-        setTasks(tasksRes.tasks ?? []);
+        setTasks(initialTasks);
 
         const active =
           wsRes.workspaces?.find((w: any) =>
@@ -66,11 +97,38 @@ export function MeetingTasksList({ meetingId }: { meetingId: string }) {
       } finally {
         if (!cancelled) setLoading(false);
       }
+
+      // Poll until tasks have been promoted (or we hit the cap).
+      const poll = async () => {
+        if (cancelled) return;
+        attempts += 1;
+        const next = await loadTasks();
+        if (cancelled) return;
+        if (next.length > 0) {
+          setTasks(next);
+          return;
+        }
+        if (expectedCount > 0 && attempts < MAX_ATTEMPTS) {
+          timer = setTimeout(poll, 2000);
+        }
+      };
+      // Only poll when we expect tasks but haven't seen them yet.
+      if (expectedCount > 0) {
+        // Re-read state via the same fetch to decide whether to start polling.
+        const fresh = await loadTasks();
+        if (cancelled) return;
+        if (fresh.length > 0) {
+          setTasks(fresh);
+        } else {
+          timer = setTimeout(poll, 2000);
+        }
+      }
     })();
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
-  }, [meetingId]);
+  }, [meetingId, fallbackItems.length]);
 
   const renameSpeakerLabel = async (task: Task) => {
     const oldLabel = task.assignee_label;
@@ -143,6 +201,34 @@ export function MeetingTasksList({ meetingId }: { meetingId: string }) {
   }
 
   if (tasks.length === 0) {
+    if (fallbackItems.length > 0) {
+      // Tasks haven't been promoted yet (after-block still running).
+      // Show the raw items read-only with a syncing hint; the polling
+      // effect will swap to the editable list once they land.
+      return (
+        <div>
+          <ul className="space-y-3">
+            {fallbackItems.map((item, i) => (
+              <li key={i} className="flex items-start gap-3 opacity-80">
+                <div className="flex-shrink-0 mt-0.5 w-5 h-5 rounded border-2 border-gray-700" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm leading-relaxed text-gray-300">
+                    {item.text || '(untitled)'}
+                  </p>
+                  {item.assignee && (
+                    <div className="mt-1 text-[11px] text-gray-500">· {item.assignee}</div>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-[11px] text-gray-600 inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+            Syncing as editable tasks…
+          </p>
+        </div>
+      );
+    }
     return <p className="text-sm text-gray-500">No action items identified.</p>;
   }
 
