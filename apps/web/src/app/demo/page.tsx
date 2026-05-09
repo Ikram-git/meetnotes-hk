@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { DemoReel } from '@/components/demo-reel';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { BookDemoButton } from '@/components/book-demo-button';
 
 export default function DemoPage() {
   return (
@@ -25,6 +26,9 @@ export default function DemoPage() {
             </div>
           </Link>
           <div className="flex items-center gap-2">
+            <BookDemoButton variant="link" className="text-sm px-3 py-2 hidden sm:inline-block">
+              Book a demo
+            </BookDemoButton>
             <ThemeToggle />
             <Link
               href="/signup"

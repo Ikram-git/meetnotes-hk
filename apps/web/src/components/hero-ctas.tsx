@@ -14,7 +14,7 @@ export function HeroCtas({ isLoggedIn }: { isLoggedIn: boolean }) {
   }, []);
 
   return (
-    <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+    <>
       {/* Hide download CTA when running inside the desktop app — they
           already have it. Render it by default during SSR so non-JS
           crawlers see it; the useEffect flips state on mount in Tauri. */}
@@ -52,6 +52,6 @@ export function HeroCtas({ isLoggedIn }: { isLoggedIn: boolean }) {
           {mounted && desktop ? 'Get started' : 'Use the web app'}
         </Link>
       )}
-    </div>
+    </>
   );
 }
