@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export function Modal({
   open,
@@ -17,6 +18,11 @@ export function Modal({
   closeOnBackdrop?: boolean;
   children: React.ReactNode;
 }) {
+  // Portal target — defer until mount so we don't try to read document
+  // during SSR.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -30,13 +36,16 @@ export function Modal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const widthClass = size === 'sm' ? 'max-w-sm' : size === 'lg' ? 'max-w-2xl' : 'max-w-md';
 
-  return (
+  // Render via portal so the modal escapes any transformed / filtered
+  // ancestor stacking contexts and always sits at the document root,
+  // properly centered above all sticky nav chrome.
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn"
       onClick={() => closeOnBackdrop && onClose()}
     >
       <div
@@ -59,6 +68,7 @@ export function Modal({
         )}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
