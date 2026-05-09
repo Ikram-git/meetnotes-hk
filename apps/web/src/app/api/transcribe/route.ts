@@ -60,12 +60,27 @@ export async function POST(req: NextRequest) {
       throw new Error('Failed to get signed URL');
     }
 
+    // Pull workspace's custom vocabulary so the transcriber stops mangling
+    // names/jargon. Best-effort — if the lookup fails, we transcribe
+    // without keyword boosting rather than failing the whole pipeline.
+    let vocabularyTerms: string[] = [];
+    if (meeting.workspace_id) {
+      const { data: vocab } = await supabase
+        .from('workspace_vocabulary')
+        .select('term')
+        .eq('workspace_id', meeting.workspace_id);
+      vocabularyTerms = (vocab ?? [])
+        .map((v) => v.term as string)
+        .filter((t): t is string => !!t);
+    }
+
     // Transcribe
     const provider = getSTTProvider();
     console.log(`[Transcribe] Starting transcription for meeting ${meetingId}`);
     const result = await provider.transcribe(signedUrl.signedUrl, {
       languages: ['en', 'yue-Hant-HK'],
       enableDiarisation: true,
+      keywords: vocabularyTerms,
     });
     console.log(`[Transcribe] Done: ${result.segments.length} segments, ${result.durationMs}ms duration`);
 

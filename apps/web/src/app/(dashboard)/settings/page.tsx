@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { SettingsNav } from '@/components/settings-nav';
 import { LanguageSelector } from '@/components/language-selector';
 import { GoogleIntegrationCard } from '@/components/google-integration-card';
+import { VocabularyCard } from '@/components/vocabulary-card';
 // API Keys / Zapier hidden from UI until public Zapier review is complete.
 // See docs/zapier-status.md for current state and resume instructions.
 // import { ApiKeysCard } from '@/components/api-keys-card';
@@ -173,6 +174,8 @@ export default function SettingsPage() {
           className="w-full bg-emerald-500 text-white py-2.5 px-4 rounded-xl text-sm font-medium hover:bg-emerald-400 transition disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
+
+        <VocabularyCard />
 
         <GoogleIntegrationCard />
         {/* <ApiKeysCard /> hidden — see docs/zapier-status.md */}

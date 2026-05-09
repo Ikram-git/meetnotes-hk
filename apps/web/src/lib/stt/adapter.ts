@@ -23,4 +23,9 @@ export interface STTOptions {
   languages?: string[];
   enableDiarisation?: boolean;
   model?: string;
+  /**
+   * Custom vocabulary — proper nouns, jargon, product names — that the
+   * provider should bias towards. Used by Deepgram's keyword boosting.
+   */
+  keywords?: string[];
 }
