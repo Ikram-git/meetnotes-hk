@@ -58,7 +58,7 @@ export default async function LandingPage() {
       {/* Hero */}
       <section className="pt-24 sm:pt-32 pb-16 sm:pb-20 px-4 sm:px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/30 via-transparent to-transparent" />
-        <div className="max-w-4xl mx-auto text-center relative">
+        <div className="max-w-4xl mx-auto text-center relative stagger-children">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-sm font-medium px-4 py-1.5 rounded-full mb-8 border border-emerald-500/20">
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
             Live transcription &middot; Team workspaces &middot; Windows desktop app
@@ -73,7 +73,9 @@ export default async function LandingPage() {
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
             Record meetings live or upload audio, get AI summaries and action items in 18 languages, ask questions about any meeting, and share a workspace with your team.
           </p>
-          <HeroCtas isLoggedIn={isLoggedIn} />
+          <div>
+            <HeroCtas isLoggedIn={isLoggedIn} />
+          </div>
         </div>
       </section>
 
@@ -103,9 +105,9 @@ export default async function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
             {/* Live transcription + AI chat */}
-            <div className="bg-gradient-to-br from-purple-950/50 to-purple-950/20 rounded-2xl p-8 border border-purple-800/30">
+            <div className="bg-gradient-to-br from-purple-950/50 to-purple-950/20 rounded-2xl p-8 border border-purple-800/30 hover-lift">
               <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-5">
                 <svg className="w-6 h-6 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
@@ -118,7 +120,7 @@ export default async function LandingPage() {
             </div>
 
             {/* Multilingual */}
-            <div className="bg-gradient-to-br from-teal-950/50 to-teal-950/20 rounded-2xl p-8 border border-teal-800/30">
+            <div className="bg-gradient-to-br from-teal-950/50 to-teal-950/20 rounded-2xl p-8 border border-teal-800/30 hover-lift">
               <div className="w-12 h-12 bg-teal-500/20 rounded-xl flex items-center justify-center mb-5">
                 <svg className="w-6 h-6 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
@@ -131,7 +133,7 @@ export default async function LandingPage() {
             </div>
 
             {/* AI summaries */}
-            <div className="bg-gradient-to-br from-emerald-950/50 to-emerald-950/20 rounded-2xl p-8 border border-emerald-800/30">
+            <div className="bg-gradient-to-br from-emerald-950/50 to-emerald-950/20 rounded-2xl p-8 border border-emerald-800/30 hover-lift">
               <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center mb-5">
                 <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -144,7 +146,7 @@ export default async function LandingPage() {
             </div>
 
             {/* Team workspaces */}
-            <div className="bg-gradient-to-br from-blue-950/50 to-blue-950/20 rounded-2xl p-8 border border-blue-800/30">
+            <div className="bg-gradient-to-br from-blue-950/50 to-blue-950/20 rounded-2xl p-8 border border-blue-800/30 hover-lift">
               <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-5">
                 <svg className="w-6 h-6 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6 5.87v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2m13-9a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -157,7 +159,7 @@ export default async function LandingPage() {
             </div>
 
             {/* Desktop app */}
-            <div className="bg-gradient-to-br from-amber-950/50 to-amber-950/20 rounded-2xl p-8 border border-amber-800/30">
+            <div className="bg-gradient-to-br from-amber-950/50 to-amber-950/20 rounded-2xl p-8 border border-amber-800/30 hover-lift">
               <div className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center mb-5">
                 <svg className="w-6 h-6 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -170,7 +172,7 @@ export default async function LandingPage() {
             </div>
 
             {/* Calendar + integrations */}
-            <div className="bg-gradient-to-br from-rose-950/50 to-rose-950/20 rounded-2xl p-8 border border-rose-800/30">
+            <div className="bg-gradient-to-br from-rose-950/50 to-rose-950/20 rounded-2xl p-8 border border-rose-800/30 hover-lift">
               <div className="w-12 h-12 bg-rose-500/20 rounded-xl flex items-center justify-center mb-5">
                 <svg className="w-6 h-6 text-rose-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -189,7 +191,7 @@ export default async function LandingPage() {
       <section className="py-16 sm:py-24 px-4 sm:px-6 bg-emerald-950/15">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-16">How it works</h2>
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-4 gap-8 stagger-children">
             {[
               { step: '1', title: 'Capture or upload', desc: 'Record live with the desktop app or upload any audio file' },
               { step: '2', title: 'Auto-transcribe', desc: 'Speakers detected, 30+ languages, no setup' },

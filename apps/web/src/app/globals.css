@@ -78,31 +78,40 @@
 }
 
 /* Theme-aware overrides */
-/* Page background: subtle purple→white→emerald gradient for visual depth.
-   Cards on top still read as crisp white. */
+/* Page background: emerald-tinted radial wash that ties to the brand
+   (no purple/blue). Cards on top still read as crisp white. */
 .light body {
   background-color: var(--page-bg);
   background-image:
-    radial-gradient(at 8% 0%, rgba(167, 139, 250, 0.18) 0%, transparent 45%),
-    radial-gradient(at 92% 4%, rgba(16, 185, 129, 0.10) 0%, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(139, 92, 246, 0.08) 0%, transparent 55%);
+    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.14) 0%, transparent 45%),
+    radial-gradient(at 100% 0%, rgba(20, 184, 166, 0.10) 0%, transparent 55%),
+    radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.06) 0%, transparent 60%);
   background-attachment: fixed;
 }
-/* Wherever an outer wrapper used the dark page bg, drop it to transparent
-   in light mode so the body gradient shows through. */
+/* Drop outer-wrapper page bg to transparent so the body gradient shows. */
 .light .bg-\[\#080c0a\] { background-color: transparent !important; }
 .light .bg-\[\#111916\] { background-color: var(--card-bg) !important; }
-/* Sticky / blurred chrome — homepage nav, dashboard top bar. */
-.light .bg-\[\#080c0a\]\/80 { background-color: rgba(248, 250, 249, 0.7) !important; }
-.light .bg-\[\#0a0f0d\]\/80 { background-color: rgba(248, 250, 249, 0.7) !important; }
-/* Sidebar (no opacity variant) — sits one shade above the page bg with
-   a faint purple wash to echo the body gradient. */
+/* Glassy sticky chrome — homepage nav, dashboard top bar. Lets the
+   gradient bleed through with a soft blur instead of cutting it off
+   with a solid white slab. */
+.light .bg-\[\#080c0a\]\/80 {
+  background-color: rgba(255, 255, 255, 0.55) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.light .bg-\[\#0a0f0d\]\/80 {
+  background-color: rgba(255, 255, 255, 0.55) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+/* Sidebar — also glassy, slightly more opaque so nav text stays crisp. */
 .light .bg-\[\#0a0f0d\] {
-  background-color: #f6f4fb !important;
-  background-image: linear-gradient(180deg, rgba(167, 139, 250, 0.08) 0%, transparent 100%);
+  background-color: rgba(255, 255, 255, 0.65) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 /* Task board column wells — a half-shade darker than cards. */
-.light .bg-\[\#0d1311\] { background-color: #eef2f0 !important; }
+.light .bg-\[\#0d1311\] { background-color: #eaf2ee !important; }
 
 /* Keep WHITE text on colored CTA buttons in light mode. The blanket
    .text-white override would otherwise turn them dark and invisible
@@ -132,6 +141,34 @@
 .light .text-amber-400 { color: #b45309 !important; }
 .light .text-red-300 { color: #b91c1c !important; }
 .light .text-red-400 { color: #dc2626 !important; }
+/* Landing-page feature-card gradients were tuned for dark mode (950 tones).
+   In light mode they would render as ugly dark washes on white — remap to
+   light tints of the same hue family. */
+.light .from-emerald-950\/30 { --tw-gradient-from: rgba(16, 185, 129, 0.05) var(--tw-gradient-from-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important; }
+.light .from-emerald-950\/50 { --tw-gradient-from: rgba(16, 185, 129, 0.10) var(--tw-gradient-from-position) !important; }
+.light .to-emerald-950\/20 { --tw-gradient-to: rgba(16, 185, 129, 0.03) var(--tw-gradient-to-position) !important; }
+.light .from-purple-950\/50 { --tw-gradient-from: rgba(167, 139, 250, 0.10) var(--tw-gradient-from-position) !important; }
+.light .to-purple-950\/20 { --tw-gradient-to: rgba(167, 139, 250, 0.03) var(--tw-gradient-to-position) !important; }
+.light .from-teal-950\/50 { --tw-gradient-from: rgba(45, 212, 191, 0.10) var(--tw-gradient-from-position) !important; }
+.light .to-teal-950\/20 { --tw-gradient-to: rgba(45, 212, 191, 0.03) var(--tw-gradient-to-position) !important; }
+.light .from-blue-950\/50 { --tw-gradient-from: rgba(96, 165, 250, 0.10) var(--tw-gradient-from-position) !important; }
+.light .to-blue-950\/20 { --tw-gradient-to: rgba(96, 165, 250, 0.03) var(--tw-gradient-to-position) !important; }
+.light .from-amber-950\/50 { --tw-gradient-from: rgba(251, 191, 36, 0.10) var(--tw-gradient-from-position) !important; }
+.light .to-amber-950\/20 { --tw-gradient-to: rgba(251, 191, 36, 0.03) var(--tw-gradient-to-position) !important; }
+.light .from-rose-950\/50 { --tw-gradient-from: rgba(251, 113, 133, 0.10) var(--tw-gradient-from-position) !important; }
+.light .to-rose-950\/20 { --tw-gradient-to: rgba(251, 113, 133, 0.03) var(--tw-gradient-to-position) !important; }
+.light .border-purple-800\/30 { border-color: rgba(167, 139, 250, 0.30) !important; }
+.light .border-teal-800\/30 { border-color: rgba(45, 212, 191, 0.30) !important; }
+.light .border-emerald-800\/30 { border-color: rgba(16, 185, 129, 0.30) !important; }
+.light .border-blue-800\/30 { border-color: rgba(96, 165, 250, 0.30) !important; }
+.light .border-amber-800\/30 { border-color: rgba(251, 191, 36, 0.30) !important; }
+.light .border-rose-800\/30 { border-color: rgba(251, 113, 133, 0.30) !important; }
+.light .bg-emerald-950\/15, .light .bg-emerald-950\/20 { background-color: rgba(16, 185, 129, 0.04) !important; }
+.light .text-teal-400 { color: #0d9488 !important; }
+.light .text-rose-300 { color: #be123c !important; }
+.light .text-amber-300 { color: #b45309 !important; }
+.light .text-blue-300 { color: #1d4ed8 !important; }
+
 /* Soft tinted button surfaces — bump opacity so the wash actually shows. */
 .light .bg-emerald-500\/10 { background-color: rgba(16, 185, 129, 0.10) !important; }
 .light .bg-emerald-500\/15 { background-color: rgba(16, 185, 129, 0.13) !important; }
@@ -282,14 +319,34 @@
 /* Stagger children animations */
 .stagger-children > * {
   opacity: 0;
-  animation: fade-in-up 0.4s ease-out forwards;
+  animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 80ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 160ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 240ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 320ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 400ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 70ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 140ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 210ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 280ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 350ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 420ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 490ms; }
+
+/* Page-load fade — use on the main container of static pages so the
+   landing/loading transition feels intentional rather than a hard cut. */
+.animate-page-in {
+  animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Soft hover lift — for cards/buttons we want to feel tactile. */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -12px rgba(16, 185, 129, 0.18);
+}
+.dark .hover-lift:hover {
+  box-shadow: 0 10px 30px -12px rgba(16, 185, 129, 0.30);
+}
 
 /* Smooth transitions for theme switching */
 body,
