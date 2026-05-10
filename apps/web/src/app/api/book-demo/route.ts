@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SALES_EMAIL = 'sales@meetbriva.com';
+const SALES_EMAIL = 'sattarikram81@gmail.com';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function escapeHtml(s: string) {
