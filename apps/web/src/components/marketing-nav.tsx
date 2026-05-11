@@ -132,7 +132,7 @@ export function MarketingNav({ isLoggedIn }: { isLoggedIn: boolean }) {
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="absolute top-0 left-0 right-0 bg-[#0a0f0d] border-b border-emerald-900/30 shadow-2xl">
+          <div className="absolute top-0 left-0 right-0 bg-[#111916] border-b border-emerald-900/30 shadow-2xl">
             <div className="px-6 h-16 flex items-center justify-between border-b border-emerald-900/20">
               <span className="text-base font-bold text-white">Menu</span>
               <button
