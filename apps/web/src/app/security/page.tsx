@@ -260,8 +260,8 @@ export default function SecurityPage() {
             <Section title="Reporting a security concern">
               <p>
                 If you believe you&apos;ve found a vulnerability, please email{' '}
-                <a href="mailto:security@meetbriva.com" className="text-emerald-400 hover:text-emerald-300 underline">
-                  security@meetbriva.com
+                <a href="mailto:sattarikram81@gmail.com?subject=Briva%20security%20report" className="text-emerald-400 hover:text-emerald-300 underline">
+                  sattarikram81@gmail.com
                 </a>{' '}
                 with a description and reproduction steps. We&apos;ll acknowledge within one business day and follow up
                 with a triage timeline.

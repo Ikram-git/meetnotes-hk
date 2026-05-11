@@ -26,6 +26,12 @@ export default function DemoPage() {
             </div>
           </Link>
           <div className="flex items-center gap-2">
+            <Link href="/pricing" className="text-sm font-medium text-gray-400 hover:text-white transition px-3 py-2 hidden sm:inline-block">
+              Pricing
+            </Link>
+            <Link href="/security" className="text-sm font-medium text-gray-400 hover:text-white transition px-3 py-2 hidden lg:inline-block">
+              Security
+            </Link>
             <BookDemoButton variant="link" className="text-sm px-3 py-2 hidden sm:inline-block">
               Book a demo
             </BookDemoButton>

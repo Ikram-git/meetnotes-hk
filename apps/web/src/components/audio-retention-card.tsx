@@ -76,7 +76,10 @@ export function AudioRetentionCard() {
         <h2 className="text-sm font-semibold text-white">Audio retention</h2>
         <p className="text-xs text-gray-500 mt-0.5">
           Workspace-wide rule for what happens to raw audio after transcription. Transcripts and
-          summaries are always kept until you delete the meeting.
+          summaries are always kept until you delete the meeting.{' '}
+          <a href="/security" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 underline">
+            Read our security commitments →
+          </a>
         </p>
       </div>
       <div className="p-6 space-y-2">
