@@ -139,6 +139,9 @@
 .light .text-purple-300 { color: #6d28d9 !important; }
 .light .text-purple-400 { color: #7c3aed !important; }
 .light .text-amber-400 { color: #b45309 !important; }
+.light .text-amber-100 { color: #78350f !important; }
+.light .text-amber-200, .light .text-amber-200\/90 { color: #92400e !important; }
+.light .text-amber-300 { color: #b45309 !important; }
 .light .text-red-300 { color: #b91c1c !important; }
 .light .text-red-400 { color: #dc2626 !important; }
 /* Landing-page feature-card gradients were tuned for dark mode (950 tones).
