@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { SettingsNav } from '@/components/settings-nav';
 import { LanguageSelector } from '@/components/language-selector';
 import { GoogleIntegrationCard } from '@/components/google-integration-card';
+import { OutlookIntegrationCard } from '@/components/outlook-integration-card';
 // API Keys / Zapier hidden from UI until public Zapier review is complete.
 // See docs/zapier-status.md for current state and resume instructions.
 // import { ApiKeysCard } from '@/components/api-keys-card';
@@ -137,6 +138,7 @@ export default function SettingsPage() {
         </button>
 
         <GoogleIntegrationCard />
+        <OutlookIntegrationCard />
         {/* <ApiKeysCard /> hidden — see docs/zapier-status.md */}
       </div>
     </div>

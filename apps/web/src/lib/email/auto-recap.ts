@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { google } from 'googleapis';
 import { buildOAuthClientFromTokens } from '@/lib/google/client';
+import { fetchEvent, refreshAccessToken } from '@/lib/outlook/client';
 import { buildEmailHtml, buildEmailText } from '@/lib/export/email';
 import { getGates } from '@/lib/billing/gates';
 
@@ -48,7 +49,7 @@ export async function sendAutoRecapIfEnabled(
     const { data: meeting } = await admin
       .from('meetings')
       .select(
-        'id, user_id, workspace_id, title, created_at, audio_duration_seconds, google_event_id, auto_recap_sent_at',
+        'id, user_id, workspace_id, title, created_at, audio_duration_seconds, google_event_id, outlook_event_id, auto_recap_sent_at',
       )
       .eq('id', meetingId)
       .maybeSingle();
@@ -57,7 +58,8 @@ export async function sendAutoRecapIfEnabled(
     log('loaded meeting', {
       workspace_id: meeting.workspace_id,
       duration: meeting.audio_duration_seconds,
-      has_event: !!meeting.google_event_id,
+      has_google_event: !!meeting.google_event_id,
+      has_outlook_event: !!meeting.outlook_event_id,
       already_sent: !!meeting.auto_recap_sent_at,
     });
 
@@ -132,7 +134,44 @@ export async function sendAutoRecapIfEnabled(
           }
         } catch (err) {
           console.warn(
-            '[auto-recap] calendar event fetch failed:',
+            '[auto-recap] google calendar event fetch failed:',
+            err instanceof Error ? err.message : err,
+          );
+        }
+      }
+    }
+
+    if (meeting.outlook_event_id) {
+      const { data: integration } = await admin
+        .from('outlook_integrations')
+        .select('access_token, refresh_token, expires_at')
+        .eq('user_id', meeting.user_id)
+        .maybeSingle();
+      if (integration?.access_token) {
+        try {
+          let token = integration.access_token as string;
+          const expiresAt = new Date(integration.expires_at as string).getTime();
+          if (Date.now() >= expiresAt - 5 * 60 * 1000) {
+            const refreshed = await refreshAccessToken(integration.refresh_token as string);
+            token = refreshed.access_token;
+            await admin
+              .from('outlook_integrations')
+              .update({
+                access_token: refreshed.access_token,
+                refresh_token: refreshed.refresh_token || integration.refresh_token,
+                expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('user_id', meeting.user_id);
+          }
+          const event = await fetchEvent(token, meeting.outlook_event_id);
+          for (const att of event.attendees ?? []) {
+            const e = att.emailAddress?.address?.toLowerCase();
+            if (e && e.includes('@') && e !== ownerEmail) recipients.add(e);
+          }
+        } catch (err) {
+          console.warn(
+            '[auto-recap] outlook calendar event fetch failed:',
             err instanceof Error ? err.message : err,
           );
         }
