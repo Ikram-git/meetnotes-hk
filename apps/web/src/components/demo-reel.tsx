@@ -13,7 +13,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
  * automatically until the tab is hidden or the user pauses.
  */
 
-type SceneId = 'capture' | 'summary' | 'ask' | 'team' | 'share' | 'cta';
+type SceneId = 'title' | 'capture' | 'summary' | 'ask' | 'team' | 'share' | 'trust' | 'cta';
 
 interface Scene {
   id: SceneId;
@@ -21,11 +21,13 @@ interface Scene {
 }
 
 const SCENES: Scene[] = [
-  { id: 'capture', durationMs: 6000 },
-  { id: 'summary', durationMs: 5000 },
-  { id: 'ask',     durationMs: 6500 },
+  { id: 'title',   durationMs: 3000 },
+  { id: 'capture', durationMs: 5500 },
+  { id: 'summary', durationMs: 4500 },
+  { id: 'ask',     durationMs: 6000 },
   { id: 'team',    durationMs: 5000 },
   { id: 'share',   durationMs: 4500 },
+  { id: 'trust',   durationMs: 4500 },
   { id: 'cta',     durationMs: 3500 },
 ];
 
@@ -105,7 +107,7 @@ export function DemoReel({ compact = false }: { compact?: boolean }) {
             <span className="text-[11px] font-bold text-white tracking-wide">Briva</span>
           </div>
           <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-md bg-white/[0.04] border border-emerald-900/30 text-[10px] text-gray-400 font-mono">
-            meetings · Q3 Product Roadmap
+            Briva in action — product tour
           </span>
           <div className="ml-auto">
             <SceneTimeline current={sceneIndex} />
@@ -122,11 +124,13 @@ export function DemoReel({ compact = false }: { compact?: boolean }) {
           </div>
 
           <div className="relative h-full">
+            {scene === 'title'   && <SceneTitle />}
             {scene === 'capture' && <SceneCapture offset={sceneOffset} />}
             {scene === 'summary' && <SceneSummary offset={sceneOffset} />}
             {scene === 'ask'     && <SceneAsk offset={sceneOffset} />}
             {scene === 'team'    && <SceneTeam offset={sceneOffset} />}
             {scene === 'share'   && <SceneShare offset={sceneOffset} />}
+            {scene === 'trust'   && <SceneTrust offset={sceneOffset} />}
             {scene === 'cta'     && <SceneCta />}
           </div>
         </div>
@@ -160,12 +164,14 @@ export function DemoReel({ compact = false }: { compact?: boolean }) {
 
 function sceneCaption(s: SceneId): string {
   switch (s) {
-    case 'capture': return 'Live capture — speakers, 30+ languages, and timestamps detected automatically.';
+    case 'title':   return 'Briva — the AI workspace for meetings.';
+    case 'capture': return 'Live capture — speakers, 30+ languages, custom vocabulary, and timestamps — automatic.';
     case 'summary': return 'AI summary with structured action items, the moment recording stops.';
     case 'ask':     return 'Ask BRIVA AI anything — across every meeting your team has run.';
-    case 'team':    return 'Comments, task assignments, and reminders shared with the workspace.';
+    case 'team':    return 'Comments, auto-assigned tasks, daily reminders — shared with the workspace.';
     case 'share':   return 'PDF, email recap, and secure share links — exported in one click.';
-    case 'cta':     return 'Briva — every meeting, every action, captured.';
+    case 'trust':   return 'Your data stays yours — encrypted, never used for training, configurable retention.';
+    case 'cta':     return 'Briva — Hear Beyond Words.';
   }
 }
 
@@ -184,6 +190,36 @@ function SceneTimeline({ current }: { current: number }) {
           }`}
         />
       ))}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────── */
+/* Scene 0 — Title card                                       */
+/* ────────────────────────────────────────────────────────── */
+
+function SceneTitle() {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+      <div className="animate-scale-in">
+        <div className="w-20 h-20 mx-auto bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/40 animate-glow-pulse mb-6">
+          <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5.6 15.94 Q5.6 4.69 11.25 4.69 L12.75 4.69 Q18.38 4.69 18.38 15.94" />
+            <rect x="8.44" y="11.25" width="1.5" height="5.63" rx="0.75" fill="currentColor" stroke="none" />
+            <rect x="11.25" y="9" width="1.5" height="7.88" rx="0.75" fill="currentColor" stroke="none" />
+            <rect x="14.06" y="12.38" width="1.5" height="4.5" rx="0.75" fill="currentColor" stroke="none" />
+          </svg>
+        </div>
+      </div>
+      <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight animate-fade-in-up">
+        Briva <span className="text-emerald-400">in action</span>
+      </h1>
+      <p className="mt-3 text-base md:text-lg italic text-emerald-300 animate-fade-in-up tracking-wide">
+        Hear Beyond Words.
+      </p>
+      <p className="mt-5 text-xs text-gray-500 uppercase tracking-[0.2em] animate-fade-in">
+        30 seconds · the product tour
+      </p>
     </div>
   );
 }
@@ -216,12 +252,20 @@ function SceneCapture({ offset }: { offset: number }) {
         </div>
       </div>
 
-      {/* Calendar auto-link toast */}
-      <div className="flex items-center gap-2 mb-3 px-2.5 py-1.5 rounded-md bg-white/[0.03] border border-emerald-900/30 text-[11px] text-gray-300 animate-fade-in">
-        <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        Auto-linked to <span className="text-white font-medium">Google Calendar event</span> · 3 attendees
+      {/* Calendar auto-link + custom vocabulary toast */}
+      <div className="flex flex-wrap items-center gap-1.5 mb-3 animate-fade-in">
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/[0.03] border border-emerald-900/30 text-[11px] text-gray-300">
+          <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Auto-linked to <span className="text-white font-medium">Google Calendar</span>
+        </div>
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-white/[0.03] border border-emerald-900/30 text-[11px] text-gray-300">
+          <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          Custom vocab boosted: <span className="text-white font-medium">Briva, Voyage AI</span>
+        </div>
       </div>
 
       {/* Waveform */}
@@ -473,7 +517,7 @@ function SceneTeam({ offset }: { offset: number }) {
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-200 border border-purple-500/30">Lisa</span>
                 <span className="text-[11px] text-gray-500">Due: Friday</span>
                 {taskDone && (
-                  <span className="text-[11px] text-emerald-300 ml-auto animate-fade-in">✓ Done — emailed to attendees</span>
+                  <span className="text-[11px] text-emerald-300 ml-auto animate-fade-in">✓ Daily reminder dispatched</span>
                 )}
               </div>
             </div>
@@ -585,7 +629,76 @@ function SceneShare({ offset }: { offset: number }) {
 }
 
 /* ────────────────────────────────────────────────────────── */
-/* Scene 6 — CTA                                              */
+/* Scene 6 — Trust & privacy                                  */
+/* ────────────────────────────────────────────────────────── */
+
+function SceneTrust({ offset }: { offset: number }) {
+  return (
+    <div className="absolute inset-0 p-6 md:p-8 flex flex-col gap-4">
+      <div className="flex items-center gap-2 animate-fade-in">
+        <ShieldIcon />
+        <span className="text-sm font-medium text-white">Your data stays yours</span>
+        <span className="ml-auto px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[11px] font-medium border border-emerald-500/30">
+          Privacy by default
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {offset > 100 && (
+          <TrustPill
+            label="No training"
+            body="Deepgram & Anthropic never train on your meeting data."
+          />
+        )}
+        {offset > 700 && (
+          <TrustPill
+            label="Encrypted everywhere"
+            body="TLS in transit. AES-256 at rest. Always."
+          />
+        )}
+        {offset > 1300 && (
+          <TrustPill
+            label="Workspace isolation"
+            body="RLS-enforced; only members access workspace meetings."
+          />
+        )}
+        {offset > 1900 && (
+          <TrustPill
+            label="You control retention"
+            body="Delete after processing · 7 / 30 days · keep forever."
+          />
+        )}
+      </div>
+
+      {offset > 2600 && (
+        <div className="mt-auto bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-4 py-3 animate-fade-in-up flex items-center gap-3">
+          <div className="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 flex-shrink-0 flex items-center justify-center">
+            <ShieldIcon small />
+          </div>
+          <div className="text-[12px] text-gray-200 leading-snug">
+            <strong className="text-white">Built for enterprise trust</strong> — SOC 2-certified
+            vendors, audit-ready compliance roadmap, signed DPAs available.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TrustPill({ label, body }: { label: string; body: string }) {
+  return (
+    <div className="bg-white/[0.03] border border-emerald-900/30 rounded-lg p-3 animate-fade-in-up">
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        <div className="text-xs font-semibold text-white">{label}</div>
+      </div>
+      <p className="text-[11px] text-gray-400 leading-snug">{body}</p>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────── */
+/* Scene 7 — CTA                                              */
 /* ────────────────────────────────────────────────────────── */
 
 function SceneCta() {
@@ -601,19 +714,23 @@ function SceneCta() {
           </svg>
         </div>
       </div>
-      <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 animate-fade-in-up">
-        Every meeting. Every action.
+      <h2 className="text-3xl md:text-4xl font-bold text-white mb-2 animate-fade-in-up tracking-tight">
+        Briva.
       </h2>
-      <p className="text-base md:text-lg text-gray-400 mb-6 animate-fade-in-up">
-        Captured, summarised, shared.
+      <p className="text-xl md:text-2xl italic text-emerald-300 mb-4 animate-fade-in-up tracking-wide">
+        Hear Beyond Words.
       </p>
-      <div className="flex items-center gap-3 animate-fade-in-up">
+      <p className="text-sm md:text-base text-gray-400 mb-6 animate-fade-in-up max-w-md">
+        Every meeting captured, summarised, and shipped — automatically.
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-3 animate-fade-in-up">
         <a
           href="/signup"
           className="bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-xl text-sm font-semibold transition shadow-lg shadow-emerald-500/30"
         >
-          Get started — 100 free min/month
+          Try free — 300 min/month
         </a>
+        <span className="text-xs text-gray-500">meetbriva.com</span>
       </div>
     </div>
   );
@@ -668,6 +785,15 @@ function LockIcon() {
   return (
     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0-1.1.9-2 2-2s2 .9 2 2v2H8v-2c0-1.1.9-2 2-2zM5 13h14v8H5z" />
+    </svg>
+  );
+}
+
+function ShieldIcon({ small }: { small?: boolean }) {
+  const size = small ? 'w-3.5 h-3.5' : 'w-4 h-4';
+  return (
+    <svg className={`${size} text-emerald-300`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
     </svg>
   );
 }
