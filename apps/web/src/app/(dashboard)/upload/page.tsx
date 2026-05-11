@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { UploadDropzone } from '@/components/upload-dropzone';
 import * as tus from 'tus-js-client';
 import { isTauri, readRecordingBytes, startRecording, stopRecording } from '@/lib/tauri';
+import { confirmDialog } from '@/components/confirm-dialog';
 
 type DesktopRecordingState = 'idle' | 'recording' | 'finalizing';
 
@@ -100,6 +101,28 @@ export default function UploadPage() {
       setRecState('idle');
       setRecordingError(err instanceof Error ? err.message : String(err));
     }
+  };
+
+  const handleCancelDesktopRecording = async () => {
+    const ok = await confirmDialog({
+      title: 'Discard recording?',
+      message:
+        'This recording will be stopped and the audio thrown away — nothing will be uploaded or transcribed.',
+      confirmLabel: 'Discard',
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    try {
+      // Stop the recording but don't read or upload the bytes. The
+      // local file is left in the OS temp dir and gets overwritten
+      // on the next recording.
+      await stopRecording();
+    } catch {
+      // Ignore — we're discarding anyway.
+    }
+    setRecState('idle');
+    setElapsed(0);
+    setRecordingError(null);
   };
 
   const handleUpload = async (override?: File) => {
@@ -234,12 +257,12 @@ export default function UploadPage() {
             </div>
             {recState === 'idle' && (
               <>
-                <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200/90 leading-relaxed">
-                  <svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/15 border border-amber-500/40 text-xs text-amber-200 leading-relaxed">
+                  <svg className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                   <span>
-                    <strong className="text-amber-200">Recording consent:</strong> Please ensure all
+                    <strong className="text-amber-100">Recording consent:</strong> ensure all
                     participants are aware this meeting is being recorded — local laws vary.
                   </span>
                 </div>
@@ -253,12 +276,21 @@ export default function UploadPage() {
               </>
             )}
             {recState === 'recording' && (
-              <button
-                onClick={handleStopDesktopRecording}
-                className="mt-3 w-full bg-red-500 hover:bg-red-400 text-white py-2.5 px-4 rounded-lg font-medium text-sm transition"
-              >
-                Stop and upload
-              </button>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={handleCancelDesktopRecording}
+                  className="flex-shrink-0 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-gray-800 hover:border-red-500/40 text-gray-300 hover:text-red-300 rounded-lg font-medium text-sm transition"
+                  title="Discard this recording without uploading"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleStopDesktopRecording}
+                  className="flex-1 bg-red-500 hover:bg-red-400 text-white py-2.5 px-4 rounded-lg font-medium text-sm transition"
+                >
+                  Stop and upload
+                </button>
+              </div>
             )}
             {recState === 'finalizing' && (
               <button
