@@ -7,6 +7,7 @@ import { indexMeetingForChat } from '@/lib/ai/index-meeting';
 import { identifyAndSaveSpeakers } from '@/lib/ai/identify-speakers';
 import { promoteActionItemsToTasks } from '@/lib/tasks/promote';
 import { sendAutoRecapIfEnabled } from '@/lib/email/auto-recap';
+import { enforceRetentionOnComplete } from '@/lib/retention';
 import { getGates } from '@/lib/billing/gates';
 import { NextRequest, NextResponse, after } from 'next/server';
 
@@ -261,6 +262,14 @@ export async function POST(req: NextRequest) {
         await sendAutoRecapIfEnabled(supabase, meetingId);
       } catch (e) {
         console.warn('[after-transcribe] auto-recap failed:', e instanceof Error ? e.message : e);
+      }
+      // Audio retention runs LAST so other after-block steps (indexing,
+      // speaker ID, auto-recap) have a chance to read the audio if they
+      // ever need to.
+      try {
+        await enforceRetentionOnComplete(meetingId);
+      } catch (e) {
+        console.warn('[after-transcribe] retention failed:', e instanceof Error ? e.message : e);
       }
       console.log(`[after-transcribe] DONE for ${meetingId}`);
     });

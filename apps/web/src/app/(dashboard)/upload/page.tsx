@@ -233,13 +233,24 @@ export default function UploadPage() {
               )}
             </div>
             {recState === 'idle' && (
-              <button
-                onClick={handleStartDesktopRecording}
-                disabled={uploading}
-                className="mt-3 w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white py-2.5 px-4 rounded-lg font-medium text-sm transition"
-              >
-                Start recording
-              </button>
+              <>
+                <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-200/90 leading-relaxed">
+                  <svg className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span>
+                    <strong className="text-amber-200">Recording consent:</strong> Please ensure all
+                    participants are aware this meeting is being recorded — local laws vary.
+                  </span>
+                </div>
+                <button
+                  onClick={handleStartDesktopRecording}
+                  disabled={uploading}
+                  className="mt-3 w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white py-2.5 px-4 rounded-lg font-medium text-sm transition"
+                >
+                  Start recording
+                </button>
+              </>
             )}
             {recState === 'recording' && (
               <button

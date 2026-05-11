@@ -236,6 +236,29 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
     } catch { toast('Failed to delete meeting', 'error'); }
   };
 
+  const [audioDeleted, setAudioDeleted] = useState(false);
+  const handleDeleteAudio = async () => {
+    const ok = await confirmDialog({
+      title: 'Delete recording only',
+      message:
+        'Delete the raw audio file? The transcript, summary, and tasks will stay. This cannot be undone.',
+      confirmLabel: 'Delete audio',
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    try {
+      const res = await fetch(`/api/meetings/${meeting.id}/audio`, { method: 'DELETE' });
+      if (res.ok) {
+        setAudioDeleted(true);
+        toast('Audio deleted — transcript and summary kept');
+      } else {
+        toast('Failed to delete audio', 'error');
+      }
+    } catch {
+      toast('Failed to delete audio', 'error');
+    }
+  };
+
   const handleRetryTranscription = useCallback(async () => {
     setIsProcessing(true);
     try {
@@ -452,7 +475,25 @@ export function MeetingDetailClient({ meeting: initialMeeting, segments: initial
 
       {/* Audio Player */}
       <div className="mb-6">
-        <AudioPlayer audioUrl={audioUrl} currentTimeMs={seekTimeMs} onTimeUpdate={handleTimeUpdate} />
+        <AudioPlayer
+          audioUrl={audioDeleted ? null : audioUrl}
+          currentTimeMs={seekTimeMs}
+          onTimeUpdate={handleTimeUpdate}
+        />
+        {audioUrl && !audioDeleted && (
+          <div className="mt-2 flex justify-end">
+            <button
+              onClick={handleDeleteAudio}
+              className="text-[11px] text-gray-500 hover:text-red-400 transition inline-flex items-center gap-1"
+              title="Permanently delete the raw audio file; keep transcript and summary"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+              </svg>
+              Delete audio only — keep transcript &amp; summary
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Content grid: tabbed content on the left, sticky AI chat on the right */}
