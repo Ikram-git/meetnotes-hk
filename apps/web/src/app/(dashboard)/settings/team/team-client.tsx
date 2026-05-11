@@ -6,6 +6,7 @@ import { confirmDialog } from '@/components/confirm-dialog';
 import { friendlyErrorMessage } from '@/lib/errors';
 import { VocabularyCard } from '@/components/vocabulary-card';
 import { WorkspaceAutomationCard } from '@/components/workspace-automation-card';
+import { AudioRetentionCard } from '@/components/audio-retention-card';
 
 type Member = {
   role: 'owner' | 'admin' | 'member';
@@ -343,6 +344,9 @@ export function TeamSettingsClient({
 
       {/* Workspace-wide custom vocabulary */}
       <VocabularyCard />
+
+      {/* Audio retention policy — workspace-scoped */}
+      <AudioRetentionCard />
 
       {/* Per-user auto-email-recap toggle (lives here because it
           controls fan-out to teammates) */}

@@ -280,9 +280,10 @@ export default async function LandingPage() {
             <span className="hidden sm:inline text-gray-700">·</span>
             <span className="hidden sm:inline italic text-emerald-500/80">Hear Beyond Words.</span>
           </div>
-          <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-gray-400 transition">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-gray-400 transition">Terms of Service</Link>
+          <div className="flex gap-4 flex-wrap">
+            <Link href="/security" className="hover:text-gray-400 transition">Security</Link>
+            <Link href="/privacy" className="hover:text-gray-400 transition">Privacy</Link>
+            <Link href="/terms" className="hover:text-gray-400 transition">Terms</Link>
           </div>
         </div>
       </footer>
