@@ -434,8 +434,9 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           <div className="px-4 sm:px-6 py-4 flex items-center justify-between text-xs text-gray-600">
             <span>Briva</span>
             <div className="flex gap-4">
-              <Link href="/privacy" className="hover:text-gray-400 transition">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-gray-400 transition">Terms of Service</Link>
+              <Link href="/security" className="hover:text-gray-400 transition">Security</Link>
+              <Link href="/privacy" className="hover:text-gray-400 transition">Privacy</Link>
+              <Link href="/terms" className="hover:text-gray-400 transition">Terms</Link>
             </div>
           </div>
         </footer>

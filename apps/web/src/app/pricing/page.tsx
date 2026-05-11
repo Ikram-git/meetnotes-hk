@@ -56,6 +56,9 @@ export default async function PricingPage() {
             <Link href="/demo" className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition px-2 sm:px-4 py-2 hidden sm:block">
               Demo
             </Link>
+            <Link href="/security" className="text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition px-2 sm:px-4 py-2 hidden lg:block">
+              Security
+            </Link>
             <BookDemoButton variant="link" className="text-xs sm:text-sm px-2 sm:px-4 py-2 hidden md:inline-block">
               Book a demo
             </BookDemoButton>
