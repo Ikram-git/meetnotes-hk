@@ -196,6 +196,11 @@ export default async function SecurityPage() {
                     <td className="py-2">US · No training, no retention beyond request</td>
                   </tr>
                   <tr className="border-b border-emerald-900/20">
+                    <td className="py-2 pr-3"><a href="https://learn.microsoft.com/en-us/compliance/regulatory/offering-home" className="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">Microsoft Graph</a></td>
+                    <td className="py-2 pr-3">Outlook Calendar (optional, OAuth)</td>
+                    <td className="py-2">Global · SOC 2 / ISO 27001 / GDPR · Read-only</td>
+                  </tr>
+                  <tr className="border-b border-emerald-900/20">
                     <td className="py-2 pr-3"><a href="https://supabase.com/security" className="text-emerald-400 hover:text-emerald-300 underline" target="_blank" rel="noopener noreferrer">Supabase</a></td>
                     <td className="py-2 pr-3">Database + audio storage</td>
                     <td className="py-2">Singapore · SOC 2 Type II · AES-256 at rest</td>
