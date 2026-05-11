@@ -28,10 +28,13 @@ export async function POST(
     .from('meetings').select('id, share_token, user_id').eq('id', meetingId).single();
   if (!meeting) return NextResponse.json({ error: 'Meeting not found' }, { status: 404 });
 
-  // Reuse existing token or create new
+  // Reuse existing token or create new. 21 chars = ~126 bits of
+  // entropy, the nanoid default — well above any realistic
+  // brute-force or enumeration risk. Existing 12-char tokens stay
+  // valid because we only mint new ones when there isn't one already.
   let token = meeting.share_token;
   if (!token) {
-    token = nanoid(12);
+    token = nanoid(21);
   }
 
   // Use admin client to bypass RLS for the update
