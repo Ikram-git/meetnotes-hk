@@ -10,7 +10,13 @@ interface Status {
   email?: string;
 }
 
+// Hide the Outlook integration card until MS_CLIENT_ID / MS_CLIENT_SECRET
+// are configured in Vercel and the Azure app registration is complete.
+// Flip NEXT_PUBLIC_OUTLOOK_ENABLED=true in Vercel when ready to ship it.
+const OUTLOOK_ENABLED = process.env.NEXT_PUBLIC_OUTLOOK_ENABLED === 'true';
+
 export function OutlookIntegrationCard() {
+  if (!OUTLOOK_ENABLED) return null;
   const [status, setStatus] = useState<Status | null>(null);
   const [busy, setBusy] = useState(false);
   const searchParams = useSearchParams();
