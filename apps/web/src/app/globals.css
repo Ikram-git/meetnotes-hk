@@ -90,6 +90,11 @@
 }
 /* Drop outer-wrapper page bg to transparent so the body gradient shows. */
 .light .bg-\[\#080c0a\] { background-color: transparent !important; }
+/* Same hex used as a gradient endpoint (auth-page side panels). Without
+   this override the gradient was fading into solid near-black in light
+   mode, which made overlaid white text invisible. */
+.light .to-\[\#080c0a\] { --tw-gradient-to: transparent !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+.light .from-\[\#080c0a\] { --tw-gradient-from: transparent !important; }
 .light .bg-\[\#111916\] { background-color: var(--card-bg) !important; }
 /* Glassy sticky chrome — homepage nav, dashboard top bar. Lets the
    gradient bleed through with a soft blur instead of cutting it off
