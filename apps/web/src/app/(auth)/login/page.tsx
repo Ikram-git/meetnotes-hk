@@ -72,7 +72,7 @@ function LoginContent() {
             Built for professionals who work across languages and across teams.
           </p>
         </div>
-        <p className="text-gray-600 text-sm italic">Hear Beyond Words.</p>
+        <p className="text-emerald-500/80 dark:text-emerald-300/70 text-sm italic font-medium">Hear Beyond Words.</p>
       </div>
 
       {/* Right panel */}

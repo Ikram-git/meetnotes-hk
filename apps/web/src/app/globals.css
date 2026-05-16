@@ -150,9 +150,11 @@
 .light .from-emerald-950\/30 { --tw-gradient-from: rgba(16, 185, 129, 0.05) var(--tw-gradient-from-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, transparent) !important; }
 .light .from-emerald-950\/50 { --tw-gradient-from: rgba(16, 185, 129, 0.10) var(--tw-gradient-from-position) !important; }
 .light .to-emerald-950\/20 { --tw-gradient-to: rgba(16, 185, 129, 0.03) var(--tw-gradient-to-position) !important; }
-/* Bare 950 (no opacity) — used by auth-page side panels. */
-.light .from-emerald-950 { --tw-gradient-from: rgba(16, 185, 129, 0.14) var(--tw-gradient-from-position) !important; }
-.light .to-emerald-950 { --tw-gradient-to: rgba(16, 185, 129, 0.05) var(--tw-gradient-to-position) !important; }
+/* Bare 950 (no opacity) — used by auth-page side panels.
+   Stronger emerald wash in light mode so the panel reads as a
+   distinct branded surface rather than near-transparent. */
+.light .from-emerald-950 { --tw-gradient-from: rgba(16, 185, 129, 0.22) var(--tw-gradient-from-position) !important; }
+.light .to-emerald-950 { --tw-gradient-to: rgba(16, 185, 129, 0.08) var(--tw-gradient-to-position) !important; }
 /* Gradient text endpoints used in the landing hero. The dark-mode
    light-tone shades (emerald-400, teal-300) wash out on white. */
 .light .from-emerald-400 { --tw-gradient-from: #059669 var(--tw-gradient-from-position) !important; }
