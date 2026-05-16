@@ -66,10 +66,13 @@ function LoginContent() {
         </Link>
         <div>
           <h2 className="text-3xl font-bold text-white mb-4">
-            Live transcription. AI Q&amp;A. A library your whole team can search.
+            Every meeting captured.
+            <br />
+            Every action shipped.
           </h2>
           <p className="text-gray-400 text-lg leading-relaxed">
-            Built for professionals who work across languages and across teams.
+            The AI workspace for meetings — across 30+ languages,
+            with cross-meeting search and a shared task board.
           </p>
         </div>
         <p className="text-emerald-500/80 dark:text-emerald-300/70 text-sm italic font-medium">Hear Beyond Words.</p>
