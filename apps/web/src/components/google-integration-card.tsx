@@ -10,6 +10,13 @@ interface Status {
   email?: string;
 }
 
+// While we wait for Google's OAuth verification to approve the
+// `calendar.events.readonly` sensitive scope, hide the Connect button
+// so users don't see Google's "unverified app" warning screen. Set
+// NEXT_PUBLIC_GOOGLE_CALENDAR_ENABLED=true in Vercel the moment
+// verification clears — no code change needed.
+const CALENDAR_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_CALENDAR_ENABLED === 'true';
+
 export function GoogleIntegrationCard() {
   const [status, setStatus] = useState<Status | null>(null);
   const [busy, setBusy] = useState(false);
@@ -91,7 +98,11 @@ export function GoogleIntegrationCard() {
             </div>
             <div>
               <h3 className="text-sm font-semibold text-white">Google Calendar</h3>
-              {status === null ? (
+              {!CALENDAR_ENABLED && !status?.connected ? (
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Auto-link recordings to your meetings. <span className="text-amber-300">Coming soon</span> — verification pending with Google.
+                </p>
+              ) : status === null ? (
                 <p className="text-xs text-gray-500 mt-0.5">Checking status…</p>
               ) : status.connected ? (
                 <>
@@ -103,7 +114,11 @@ export function GoogleIntegrationCard() {
               )}
             </div>
           </div>
-          {status === null ? null : status.connected ? (
+          {!CALENDAR_ENABLED && !status?.connected ? (
+            <span className="text-[11px] font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-full flex-shrink-0">
+              Soon
+            </span>
+          ) : status === null ? null : status.connected ? (
             <button
               onClick={disconnect}
               disabled={busy}
