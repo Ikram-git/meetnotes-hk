@@ -8,6 +8,7 @@ import { useTheme } from '@/components/theme-provider';
 import { isTauri } from '@/lib/tauri';
 import { WorkspaceSwitcher } from '@/components/workspace-switcher';
 import { UploadProvider, useUpload } from '@/components/upload-provider';
+import { LiveRecordingProvider } from '@/components/live-recording-provider';
 import { ConfirmHost } from '@/components/confirm-dialog';
 import { RouteProgress } from '@/components/route-progress';
 import { Suspense } from 'react';
@@ -90,11 +91,13 @@ const navItems: NavItem[] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <UploadProvider>
-      <ConfirmHost />
-      <Suspense fallback={null}>
-        <RouteProgress />
-      </Suspense>
-      <DashboardLayoutInner>{children}</DashboardLayoutInner>
+      <LiveRecordingProvider>
+        <ConfirmHost />
+        <Suspense fallback={null}>
+          <RouteProgress />
+        </Suspense>
+        <DashboardLayoutInner>{children}</DashboardLayoutInner>
+      </LiveRecordingProvider>
     </UploadProvider>
   );
 }

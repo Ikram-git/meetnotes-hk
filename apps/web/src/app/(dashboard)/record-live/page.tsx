@@ -1,28 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import {
-  isTauri,
-  startLiveCapture,
-  stopLiveCapture,
-  onTranscript,
-  onTranscriptError,
-  onTranscriptReady,
-  type LiveCaptureFormat,
-} from '@/lib/tauri';
+import { isTauri } from '@/lib/tauri';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
-
-type Status = 'idle' | 'connecting' | 'live' | 'stopping' | 'error';
-
-interface TranscriptLine {
-  id: string;
-  text: string;
-  final: boolean;
-  startMs: number;
-  endMs: number;
-  speaker: string;
-}
+import { useLiveRecording } from '@/components/live-recording-provider';
 
 interface ChatMessage {
   id: string;
@@ -33,24 +14,13 @@ interface ChatMessage {
 
 export default function RecordLivePage() {
   const [desktop, setDesktop] = useState(false);
-  const [status, setStatus] = useState<Status>('idle');
-  const [error, setError] = useState<string | null>(null);
-  const [format, setFormat] = useState<LiveCaptureFormat | null>(null);
-  const [lines, setLines] = useState<TranscriptLine[]>([]);
-  const [interim, setInterim] = useState('');
-  const [elapsed, setElapsed] = useState(0);
+  const { status, error, format, lines, interim, elapsed, saving, start, stop, stopAndSave } =
+    useLiveRecording();
 
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState('');
   const [asking, setAsking] = useState(false);
-  const [saving, setSaving] = useState(false);
 
-  const router = useRouter();
-
-  const unlistenTranscriptRef = useRef<(() => void) | null>(null);
-  const unlistenErrorRef = useRef<(() => void) | null>(null);
-  const unlistenReadyRef = useRef<(() => void) | null>(null);
-  const startedAtRef = useRef<number>(0);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const transcriptScrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -58,14 +28,6 @@ export default function RecordLivePage() {
   useEffect(() => {
     setDesktop(isTauri());
   }, []);
-
-  useEffect(() => {
-    if (status !== 'live') return;
-    const id = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startedAtRef.current) / 1000));
-    }, 250);
-    return () => clearInterval(id);
-  }, [status]);
 
   useEffect(() => {
     chatScrollRef.current?.scrollTo({ top: chatScrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -78,131 +40,12 @@ export default function RecordLivePage() {
     });
   }, [lines, interim]);
 
-  const start = async () => {
-    setError(null);
-    setLines([]);
-    setInterim('');
-    setStatus('connecting');
-    try {
-      const tokenRes = await fetch('/api/deepgram/token');
-      if (!tokenRes.ok) {
-        const err = await tokenRes.json().catch(() => ({}));
-        throw new Error(err.error || 'Could not mint Deepgram token');
-      }
-      const { token } = await tokenRes.json();
-
-      unlistenTranscriptRef.current = await onTranscript((raw) => {
-        try {
-          const msg = JSON.parse(raw);
-          if (msg.type !== 'Results') return;
-          const alt = msg.channel?.alternatives?.[0];
-          const text = (alt?.transcript || '').trim();
-          if (!text) return;
-          const startMs = Math.round((msg.start ?? 0) * 1000);
-          const endMs = Math.round(((msg.start ?? 0) + (msg.duration ?? 0)) * 1000);
-          const words: Array<{ speaker?: number }> = alt?.words || [];
-          const speakerNum = words[0]?.speaker ?? 0;
-          const speaker = `Speaker ${speakerNum}`;
-          if (msg.is_final) {
-            setLines((prev) => [
-              ...prev,
-              { id: crypto.randomUUID(), text, final: true, startMs, endMs, speaker },
-            ]);
-            setInterim('');
-          } else {
-            setInterim(text);
-          }
-        } catch {}
-      });
-
-      unlistenErrorRef.current = await onTranscriptError((message) => {
-        setError(message);
-        setStatus('error');
-      });
-
-      unlistenReadyRef.current = await onTranscriptReady(() => {
-        startedAtRef.current = Date.now();
-        setStatus('live');
-      });
-
-      const fmt = await startLiveCapture(token);
-      setFormat(fmt);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setStatus('error');
-      try {
-        await stopLiveCapture();
-      } catch {}
-    }
-  };
-
-  const teardownCapture = async () => {
-    try {
-      await stopLiveCapture();
-    } catch (err) {
-      console.error('[live] stop capture failed', err);
-    }
-    unlistenTranscriptRef.current?.();
-    unlistenTranscriptRef.current = null;
-    unlistenErrorRef.current?.();
-    unlistenErrorRef.current = null;
-    unlistenReadyRef.current?.();
-    unlistenReadyRef.current = null;
-  };
-
-  const stop = async () => {
-    setStatus('stopping');
-    await teardownCapture();
-    setStatus('idle');
-    setInterim('');
-    setElapsed(0);
-  };
-
-  const stopAndSave = async () => {
-    if (lines.length === 0) {
-      setError('No transcript captured yet — keep talking before saving.');
-      return;
-    }
-    setStatus('stopping');
-    const capturedLines = lines;
-    const durationSeconds = elapsed;
-    await teardownCapture();
-    setSaving(true);
-    try {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
-
-      const res = await fetch('/api/meetings/finalise-live', {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({
-          lines: capturedLines.map((l) => ({
-            text: l.text,
-            startMs: l.startMs,
-            endMs: l.endMs,
-            speaker: l.speaker,
-          })),
-          chat: chat
-            .filter((m) => m.content.trim() && !m.streaming)
-            .map((m) => ({ role: m.role, content: m.content })),
-          durationSeconds,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.meetingId) {
-        throw new Error(data.error || `HTTP ${res.status}`);
-      }
-      router.push(`/meetings/${data.meetingId}`);
-    } catch (err) {
-      setSaving(false);
-      setStatus('idle');
-      setInterim('');
-      setElapsed(0);
-      setError(err instanceof Error ? err.message : String(err));
-    }
+  const handleStopAndSave = () => {
+    stopAndSave(
+      chat
+        .filter((m) => m.content.trim() && !m.streaming)
+        .map((m) => ({ role: m.role, content: m.content })),
+    );
   };
 
   const ask = async () => {
@@ -268,11 +111,7 @@ export default function RecordLivePage() {
 
   useEffect(() => {
     return () => {
-      unlistenTranscriptRef.current?.();
-      unlistenErrorRef.current?.();
-      unlistenReadyRef.current?.();
       if (abortRef.current) abortRef.current.abort();
-      stopLiveCapture().catch(() => {});
     };
   }, []);
 
@@ -296,7 +135,9 @@ export default function RecordLivePage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Live Meeting</h1>
           <p className="text-xs text-gray-500 mt-0.5">
-            System audio transcribed live. Ask AI questions on the right.
+            {status === 'live'
+              ? 'Recording — you can switch to other pages, it keeps running.'
+              : 'System audio transcribed live. Ask AI questions on the right.'}
           </p>
         </div>
         {status === 'idle' && (
@@ -342,7 +183,7 @@ export default function RecordLivePage() {
                 {status === 'stopping' && !saving ? 'Stopping…' : 'Discard'}
               </button>
               <button
-                onClick={stopAndSave}
+                onClick={handleStopAndSave}
                 disabled={status === 'stopping' || saving || lines.length === 0}
                 className="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2"
                 title="Stop, save transcript, and summarise"
