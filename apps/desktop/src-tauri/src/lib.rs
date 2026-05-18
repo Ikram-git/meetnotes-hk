@@ -115,11 +115,7 @@ fn start_live_capture(
         return Err("already capturing".into());
     }
 
-    let host = cpal::default_host();
-    let device = host
-        .default_output_device()
-        .ok_or("no default output device")?;
-    let supported = device.default_output_config().map_err(|e| e.to_string())?;
+    let (device, supported) = open_capture_device()?;
     let sample_format = supported.sample_format();
     let channels = supported.channels();
     let sample_rate = supported.sample_rate().0;
@@ -392,12 +388,53 @@ fn _unused_b64_keeper() {
     let _ = B64.encode([0u8]);
 }
 
-fn run_capture(path: &Path, stop_rx: mpsc::Receiver<()>) -> Result<PathBuf, String> {
+/// Pick the device + config Briva captures a meeting from.
+///
+/// Windows: open the default *output* device as an input — WASAPI loopback,
+/// which records everything you hear (both sides of the call).
+///
+/// macOS / Linux: an output device can't be opened for input there. If a
+/// virtual loopback device is installed (BlackHole / Loopback / an Aggregate
+/// device) we capture that, since it carries the system/call audio. Otherwise
+/// we fall back to the default microphone — recording still works, it just
+/// captures only the local mic side of the call.
+fn open_capture_device() -> Result<(cpal::Device, cpal::SupportedStreamConfig), String> {
     let host = cpal::default_host();
-    let device = host
-        .default_output_device()
-        .ok_or("no default output device")?;
-    let supported = device.default_output_config().map_err(|e| e.to_string())?;
+
+    #[cfg(target_os = "windows")]
+    {
+        let device = host
+            .default_output_device()
+            .ok_or("no default output device")?;
+        let config = device.default_output_config().map_err(|e| e.to_string())?;
+        return Ok((device, config));
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let loopback = host.input_devices().ok().and_then(|devices| {
+            devices.into_iter().find(|d| {
+                let name = d.name().unwrap_or_default().to_lowercase();
+                name.contains("blackhole")
+                    || name.contains("loopback")
+                    || name.contains("aggregate")
+                    || name.contains("soundflower")
+            })
+        });
+        let device = loopback
+            .or_else(|| host.default_input_device())
+            .ok_or("no input device available")?;
+        log::info!(
+            "[capture] using input device: {}",
+            device.name().unwrap_or_else(|_| "unknown".into())
+        );
+        let config = device.default_input_config().map_err(|e| e.to_string())?;
+        return Ok((device, config));
+    }
+}
+
+fn run_capture(path: &Path, stop_rx: mpsc::Receiver<()>) -> Result<PathBuf, String> {
+    let (device, supported) = open_capture_device()?;
     let sample_format = supported.sample_format();
     let channels = supported.channels();
     let sample_rate = supported.sample_rate().0;
