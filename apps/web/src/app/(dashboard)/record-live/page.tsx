@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { isTauri } from '@/lib/tauri';
 import { createClient } from '@/lib/supabase/client';
 import { useLiveRecording } from '@/components/live-recording-provider';
+import { useAudioRecording } from '@/components/audio-recording-provider';
 
 interface ChatMessage {
   id: string;
@@ -16,6 +17,8 @@ export default function RecordLivePage() {
   const [desktop, setDesktop] = useState(false);
   const { status, error, format, lines, interim, elapsed, saving, start, stop, stopAndSave } =
     useLiveRecording();
+  const { recState } = useAudioRecording();
+  const recBusy = recState !== 'idle';
 
   const [chat, setChat] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState('');
@@ -159,13 +162,19 @@ export default function RecordLivePage() {
             </div>
           )}
           {status === 'idle' || status === 'error' ? (
-            <button
-              onClick={start}
-              className="bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2"
-            >
-              <span className="w-2 h-2 rounded-full bg-white" />
-              Start live
-            </button>
+            recBusy ? (
+              <span className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/40 px-3 py-2 rounded-lg">
+                Stop the audio recording first
+              </span>
+            ) : (
+              <button
+                onClick={start}
+                className="bg-red-500 hover:bg-red-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2"
+              >
+                <span className="w-2 h-2 rounded-full bg-white" />
+                Start live
+              </button>
+            )
           ) : null}
           {status === 'connecting' && (
             <button disabled className="bg-white/5 text-gray-400 px-4 py-2 rounded-lg text-sm">
