@@ -10,6 +10,7 @@ import { WorkspaceSwitcher } from '@/components/workspace-switcher';
 import { UploadProvider, useUpload } from '@/components/upload-provider';
 import { LiveRecordingProvider } from '@/components/live-recording-provider';
 import { AudioRecordingProvider } from '@/components/audio-recording-provider';
+import { SidebarCaptureButtons } from '@/components/sidebar-capture-buttons';
 import { ConfirmHost } from '@/components/confirm-dialog';
 import { RouteProgress } from '@/components/route-progress';
 import { Suspense } from 'react';
@@ -213,6 +214,15 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         </div>
         <WorkspaceSwitcher />
       </div>
+
+      {desktop && (
+        <div className="px-3 pb-3">
+          <div className="text-[10px] uppercase tracking-wider text-gray-600 font-semibold mb-1.5 px-1">
+            Capture
+          </div>
+          <SidebarCaptureButtons />
+        </div>
+      )}
 
       <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
