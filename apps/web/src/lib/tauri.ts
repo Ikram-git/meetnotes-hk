@@ -23,6 +23,11 @@ export async function readRecordingBytes(path: string): Promise<Uint8Array> {
   return new Uint8Array(bytes);
 }
 
+/** Whether the Rust process currently has a system-audio recording active. */
+export async function isRecordingActive(): Promise<boolean> {
+  return invokeTauri<boolean>('is_recording');
+}
+
 export interface LiveCaptureFormat {
   sample_rate: number;
   channels: number;
