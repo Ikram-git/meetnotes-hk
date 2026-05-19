@@ -8,6 +8,7 @@ import * as tus from 'tus-js-client';
 import { isTauri } from '@/lib/tauri';
 import { confirmDialog } from '@/components/confirm-dialog';
 import { useAudioRecording } from '@/components/audio-recording-provider';
+import { useLiveRecording } from '@/components/live-recording-provider';
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -47,6 +48,8 @@ export default function UploadPage() {
 
   const [desktopAvailable, setDesktopAvailable] = useState(false);
   const { recState, elapsed, recordingError, begin, finish, cancel } = useAudioRecording();
+  const { status: liveStatus } = useLiveRecording();
+  const liveBusy = liveStatus !== 'idle' && liveStatus !== 'error';
 
   useEffect(() => {
     const tauri = isTauri();
@@ -55,7 +58,8 @@ export default function UploadPage() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('record') === '1') {
       window.history.replaceState({}, '', window.location.pathname);
-      begin();
+      // Don't auto-start if a live meeting is already running.
+      if (!liveBusy) begin();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -225,13 +229,19 @@ export default function UploadPage() {
                     participants are aware this meeting is being recorded — local laws vary.
                   </span>
                 </div>
-                <button
-                  onClick={() => begin()}
-                  disabled={uploading}
-                  className="mt-3 w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white py-2.5 px-4 rounded-lg font-medium text-sm transition"
-                >
-                  Start recording
-                </button>
+                {liveBusy ? (
+                  <p className="mt-3 text-xs text-amber-200 bg-amber-500/15 border border-amber-500/40 px-3 py-2 rounded-lg">
+                    A live meeting is in progress — stop it before recording system audio.
+                  </p>
+                ) : (
+                  <button
+                    onClick={() => begin()}
+                    disabled={uploading}
+                    className="mt-3 w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white py-2.5 px-4 rounded-lg font-medium text-sm transition"
+                  >
+                    Start recording
+                  </button>
+                )}
               </>
             )}
             {recState === 'recording' && (

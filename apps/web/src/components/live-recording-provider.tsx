@@ -161,11 +161,15 @@ export function LiveRecordingProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const stop = useCallback(async () => {
-    setStatus('stopping');
-    await teardownCapture();
+    // Discarding everything — flip the UI back to idle instantly and tear
+    // the capture down in the background. Awaiting the Rust stop here can
+    // leave the button stuck on "Stopping…" if its worker is slow to join.
     setStatus('idle');
     setInterim('');
     setElapsed(0);
+    setLines([]);
+    setFormat(null);
+    teardownCapture().catch(() => {});
   }, [teardownCapture]);
 
   const stopAndSave = useCallback(
@@ -177,7 +181,9 @@ export function LiveRecordingProvider({ children }: { children: ReactNode }) {
       setStatus('stopping');
       const capturedLines = lines;
       const durationSeconds = elapsed;
-      await teardownCapture();
+      // Tear the capture down in the background — the transcript is already
+      // snapshotted above, so the save shouldn't wait on the Rust stop.
+      teardownCapture().catch(() => {});
       setSaving(true);
       try {
         const supabase = createClient();
