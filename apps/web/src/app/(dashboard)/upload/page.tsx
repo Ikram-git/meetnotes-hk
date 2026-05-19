@@ -5,10 +5,9 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { UploadDropzone } from '@/components/upload-dropzone';
 import * as tus from 'tus-js-client';
-import { isTauri, readRecordingBytes, startRecording, stopRecording } from '@/lib/tauri';
+import { isTauri } from '@/lib/tauri';
 import { confirmDialog } from '@/components/confirm-dialog';
-
-type DesktopRecordingState = 'idle' | 'recording' | 'finalizing';
+import { useAudioRecording } from '@/components/audio-recording-provider';
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -47,9 +46,7 @@ export default function UploadPage() {
   const router = useRouter();
 
   const [desktopAvailable, setDesktopAvailable] = useState(false);
-  const [recState, setRecState] = useState<DesktopRecordingState>('idle');
-  const [elapsed, setElapsed] = useState(0);
-  const [recordingError, setRecordingError] = useState<string | null>(null);
+  const { recState, elapsed, recordingError, begin, finish, cancel } = useAudioRecording();
 
   useEffect(() => {
     const tauri = isTauri();
@@ -57,49 +54,21 @@ export default function UploadPage() {
     if (!tauri) return;
     const params = new URLSearchParams(window.location.search);
     if (params.get('record') === '1') {
-      handleStartDesktopRecording();
       window.history.replaceState({}, '', window.location.pathname);
+      begin();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (recState !== 'recording') return;
-    const start = Date.now();
-    setElapsed(0);
-    const id = setInterval(() => setElapsed(Math.floor((Date.now() - start) / 1000)), 250);
-    return () => clearInterval(id);
-  }, [recState]);
 
   // Throughput sampling — we keep a short rolling window so the MB/s reading
   // is responsive but not jumpy.
   const samplesRef = useRef<Array<{ t: number; bytes: number }>>([]);
 
-  const handleStartDesktopRecording = async () => {
-    setRecordingError(null);
-    try {
-      await startRecording();
-      setRecState('recording');
-    } catch (err) {
-      setRecordingError(err instanceof Error ? err.message : String(err));
-    }
-  };
-
   const handleStopDesktopRecording = async () => {
-    setRecState('finalizing');
-    try {
-      const path = await stopRecording();
-      const bytes = await readRecordingBytes(path);
-      const name = path.split(/[\\/]/).pop() || `meeting-${Date.now()}.wav`;
-      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'audio/wav' });
-      const recorded = new File([blob], name, { type: 'audio/wav' });
+    const recorded = await finish();
+    if (recorded) {
       setFile(recorded);
-      setRecState('idle');
-      setElapsed(0);
       await handleUpload(recorded);
-    } catch (err) {
-      setRecState('idle');
-      setRecordingError(err instanceof Error ? err.message : String(err));
     }
   };
 
@@ -112,17 +81,7 @@ export default function UploadPage() {
       variant: 'destructive',
     });
     if (!ok) return;
-    try {
-      // Stop the recording but don't read or upload the bytes. The
-      // local file is left in the OS temp dir and gets overwritten
-      // on the next recording.
-      await stopRecording();
-    } catch {
-      // Ignore — we're discarding anyway.
-    }
-    setRecState('idle');
-    setElapsed(0);
-    setRecordingError(null);
+    await cancel();
   };
 
   const handleUpload = async (override?: File) => {
@@ -267,7 +226,7 @@ export default function UploadPage() {
                   </span>
                 </div>
                 <button
-                  onClick={handleStartDesktopRecording}
+                  onClick={() => begin()}
                   disabled={uploading}
                   className="mt-3 w-full bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white py-2.5 px-4 rounded-lg font-medium text-sm transition"
                 >
