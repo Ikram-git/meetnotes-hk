@@ -45,32 +45,33 @@ export function HeroCtas({ isLoggedIn }: { isLoggedIn: boolean }) {
   const primaryUrl = isMac ? MAC_URL : WIN_URL;
   const primaryIcon = isMac ? macIcon : winIcon;
   const primaryLabel = isMac ? 'Download for Mac' : 'Download for Windows';
-  const otherUrl = isMac ? WIN_URL : MAC_URL;
-  const otherLabel = isMac ? 'Windows' : 'Mac';
+  const secondaryUrl = isMac ? WIN_URL : MAC_URL;
+  const secondaryIcon = isMac ? winIcon : macIcon;
+  const secondaryLabel = isMac ? 'Windows' : 'Mac';
+
+  const PRIMARY_CLS =
+    'inline-flex items-center justify-center gap-2 bg-emerald-500 text-white px-5 py-3 rounded-xl text-sm font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25 whitespace-nowrap';
+  const SECONDARY_CLS =
+    'inline-flex items-center justify-center gap-2 text-gray-300 hover:bg-white/5 border border-gray-800 hover:border-gray-700 px-5 py-3 rounded-xl text-sm font-medium transition whitespace-nowrap';
 
   return (
     <>
-      {/* Hide download CTA when running inside the desktop app — they
-          already have it. Render it by default during SSR so non-JS
-          crawlers see it; the useEffect flips state on mount in Tauri. */}
+      {/* Hide download CTAs when running inside the desktop app — they
+          already have it. Render the primary by default during SSR so
+          non-JS crawlers see it; the useEffect flips state on mount. */}
       {(!mounted || !desktop) && (
-        <div className="flex flex-col items-center gap-1.5">
-          <a
-            href={primaryUrl}
-            className="inline-flex items-center justify-center gap-2 bg-emerald-500 text-white px-5 py-3 rounded-xl text-sm font-semibold hover:bg-emerald-400 transition shadow-lg shadow-emerald-500/25 whitespace-nowrap"
-          >
+        <>
+          <a href={primaryUrl} className={PRIMARY_CLS}>
             {primaryIcon}
             {mounted ? primaryLabel : 'Download'}
           </a>
           {mounted && (
-            <a
-              href={otherUrl}
-              className="text-xs text-gray-400 hover:text-gray-200 transition"
-            >
-              Also available for {otherLabel}
+            <a href={secondaryUrl} className={SECONDARY_CLS}>
+              {secondaryIcon}
+              For {secondaryLabel}
             </a>
           )}
-        </div>
+        </>
       )}
       {isLoggedIn ? (
         <Link
