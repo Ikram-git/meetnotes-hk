@@ -72,9 +72,13 @@ jobs:
         run: |
           BUNDLE_DIR=apps/desktop/src-tauri/target/universal-apple-darwin/release/bundle
           mkdir -p dist-mac
-          # .dmg (installer)
+          # .dmg (installer) — keep the versioned name AND publish a stable
+          # alias `Briva_universal.dmg` so the website download URL doesn't
+          # have to change every version bump.
           if compgen -G "$BUNDLE_DIR/dmg/*.dmg" > /dev/null; then
             cp "$BUNDLE_DIR/dmg/"*.dmg dist-mac/
+            ORIG_DMG=$(ls "$BUNDLE_DIR/dmg/"*.dmg | head -1)
+            cp "$ORIG_DMG" dist-mac/Briva_universal.dmg
           fi
           # .app.tar.gz (raw app bundle, used by Tauri updater)
           if compgen -G "$BUNDLE_DIR/macos/*.app.tar.gz" > /dev/null; then
