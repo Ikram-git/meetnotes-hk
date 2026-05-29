@@ -54,7 +54,7 @@ export async function POST(
       const { Resend } = await import('resend');
       const resend = new Resend(process.env.RESEND_API_KEY);
       const { error } = await resend.emails.send({
-        from: `${emailOpts.senderName} via Briva <notes@briva.hk>`,
+        from: `${emailOpts.senderName} via Briva <noreply@meetbriva.com>`,
         to,
         subject: `Meeting Notes: ${meeting.title || 'Untitled Meeting'}`,
         html: buildEmailHtml(emailOpts),
