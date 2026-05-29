@@ -119,6 +119,8 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const [minutesLimit, setMinutesLimit] = useState(300);
   const [desktop, setDesktop] = useState(false);
   const [overdueCount, setOverdueCount] = useState(0);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [securityNoteShown, setSecurityNoteShown] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
   const { theme, toggleTheme } = useTheme();
 
@@ -201,7 +203,12 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           </svg>
         </div>
         <div className="leading-tight">
-          <div className="text-lg font-bold text-white">Briva</div>
+          <div className="flex items-center gap-1.5">
+            <div className="text-lg font-bold text-white">Briva</div>
+            <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500/70 border border-emerald-500/20">
+              Beta
+            </span>
+          </div>
           <div className="text-[9px] font-medium italic text-emerald-400/90 tracking-wide -mt-0.5">
             Hear Beyond Words.
           </div>
@@ -444,6 +451,30 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
+        {!bannerDismissed && (
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-2 bg-amber-500/8 border-b border-amber-500/15 text-xs text-amber-300/70">
+            <span>
+              Briva is in private beta — some features are still rough.{' '}
+              Found a bug?{' '}
+              <a
+                href="mailto:support@meetbriva.com?subject=Briva+feedback"
+                className="underline hover:text-amber-200 transition"
+              >
+                Send feedback
+              </a>
+            </span>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              aria-label="Dismiss"
+              className="flex-shrink-0 text-amber-400/50 hover:text-amber-300 transition"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         <main className="flex-1 px-4 sm:px-6 py-6">{children}</main>
 
         <footer className="border-t border-emerald-900/20">
@@ -457,6 +488,32 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           </div>
         </footer>
       </div>
+      {desktop && securityNoteShown && (
+        <div className="fixed bottom-5 left-5 z-[60] max-w-xs rounded-xl border border-gray-700/60 bg-[#111916] px-4 py-3 shadow-xl shadow-black/40 text-xs text-gray-400">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="font-semibold text-gray-200 mb-1">First launch note</p>
+              <p>
+                Your OS may show a security warning (Gatekeeper on Mac, SmartScreen on Windows) because Briva isn&apos;t code-signed yet.
+              </p>
+              <p className="mt-1">
+                <strong className="text-gray-300">Mac:</strong> Right-click → Open, then confirm.
+                <br />
+                <strong className="text-gray-300">Windows:</strong> Click &ldquo;More info&rdquo; → Run anyway.
+              </p>
+            </div>
+            <button
+              onClick={() => setSecurityNoteShown(false)}
+              aria-label="Dismiss"
+              className="flex-shrink-0 text-gray-600 hover:text-gray-300 transition mt-0.5"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
