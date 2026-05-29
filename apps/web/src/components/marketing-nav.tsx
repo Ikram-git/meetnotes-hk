@@ -51,7 +51,12 @@ export function MarketingNav({ isLoggedIn }: { isLoggedIn: boolean }) {
             </svg>
           </div>
           <div className="leading-tight">
-            <div className="text-xl font-bold text-white">Briva</div>
+            <div className="flex items-center gap-1.5">
+              <div className="text-xl font-bold text-white">Briva</div>
+              <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500/70 border border-emerald-500/20">
+                Beta
+              </span>
+            </div>
             <div className="text-[10px] font-medium italic text-emerald-400/90 tracking-wide">
               Hear Beyond Words.
             </div>

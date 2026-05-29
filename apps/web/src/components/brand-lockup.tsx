@@ -31,7 +31,12 @@ export function BrandLockup({
         </svg>
       </div>
       <div className="leading-tight">
-        <div className={`${nameSize} font-bold text-white tracking-tight`}>Briva</div>
+        <div className="flex items-center gap-1.5">
+          <div className={`${nameSize} font-bold text-white tracking-tight`}>Briva</div>
+          <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500/70 border border-emerald-500/20">
+            Beta
+          </span>
+        </div>
         {showSlogan && (
           <div className={`${tagSize} font-medium text-emerald-400/90 italic tracking-wide`}>
             {BRIVA_SLOGAN}
