@@ -452,13 +452,13 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         </header>
 
         {!bannerDismissed && (
-          <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-2 bg-amber-500/8 border-b border-amber-500/15 text-xs text-amber-300/70">
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-2 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-800 dark:text-amber-300">
             <span>
               Briva is in private beta — some features are still rough.{' '}
               Found a bug?{' '}
               <a
                 href="mailto:support@meetbriva.com?subject=Briva+feedback"
-                className="underline hover:text-amber-200 transition"
+                className="underline hover:text-amber-600 dark:hover:text-amber-200 transition"
               >
                 Send feedback
               </a>
@@ -466,7 +466,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => setBannerDismissed(true)}
               aria-label="Dismiss"
-              className="flex-shrink-0 text-amber-400/50 hover:text-amber-300 transition"
+              className="flex-shrink-0 text-amber-700/50 hover:text-amber-700 dark:text-amber-400/50 dark:hover:text-amber-300 transition"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
