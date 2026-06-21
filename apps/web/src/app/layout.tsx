@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { DM_Sans } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import { ToastProvider } from '@/components/toast';
 import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
@@ -34,6 +35,7 @@ export default function RootLayout({
         <ThemeProvider>
           <ToastProvider>{children}</ToastProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
