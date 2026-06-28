@@ -1,11 +1,11 @@
 # Briva
 
-AI-powered meeting notes tool optimised for Hong Kong professionals. Handles English + Cantonese code-mixed meetings.
+AI-powered meeting notes tool optimised for Hong Kong professionals. Handles code-mixed meetings.
 
 ## Features
 
 - 🎙️ Record or upload meeting audio
-- 🗣️ Bilingual transcription (English + Cantonese)
+- 🗣️ Multilingual transcription 
 - 🤖 AI-generated summaries, action items, and key decisions
 - 📤 Export to PDF or Email
 - 🔒 Secure and private (your data, your control)
